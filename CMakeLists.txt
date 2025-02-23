@@ -1,12 +1,12 @@
 # необходимая минимальная версия cmake
 cmake_minimum_required(VERSION 3.16)
 # даем название проекта и задаем версию сборки
-project(marat VERSION 0.1)
+project(A3 VERSION 0.1)
 # указываем что проект собирается на основе си кода 11 стандарта
 set(CMAKE_C_STANDARD 11)
 
 # задаем переменную SOURCES как набор твоих исходников
-set(SOURCES src/main.c src/func.c src/hexagons.c src/input.c src/main.c src/text.c src/video.c)
+set(SOURCES src/main.c src/func.c src/hexagons.c src/input.c src/main.c src/text.c src/video.c src/tiles.png src/font.png src/ui.txt src/interface.c)
 
 # задаем цель сборки под именем main и указываем исходники
 add_executable(main ${SOURCES})
