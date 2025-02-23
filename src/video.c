@@ -1,7 +1,7 @@
 #include "video.h"
 
 extern int pixelsize;
-extern InputState_t inpst;
+
 SDL_Window * m_window;
 SDL_Renderer * m_renderer;
 int rgb[8][3] = {
@@ -17,6 +17,12 @@ int rgb[8][3] = {
 SDL_Rect hexel;
 Sprite_t* s1 = NULL;
 
+void point(int x, int y, int r, int g, int b)
+{
+    SDL_SetRenderDrawColor(m_renderer, r, g, b, 100);
+    SDL_RenderDrawPoint(m_renderer, x, y);
+}
+
 void VideoInitialize()
 {
     SDL_Init(SDL_INIT_EVERYTHING);
@@ -31,7 +37,7 @@ void VideoInitialize()
     SDL_RenderSetIntegerScale(m_renderer, SDL_TRUE);
     SDL_RenderSetLogicalSize(m_renderer, 640, 360);
 
-    hexel.x = 0; hexel.y = 0; hexel.w = 5; hexel.h = 5;
+    hexel.x = 0; hexel.y = 0; hexel.w = 9; hexel.h = 9;
 
     IMG_Init(IMG_INIT_PNG);
     
@@ -41,6 +47,8 @@ void VideoInitialize()
 
 void VideoTerminate()
 {
+    SpriteTerminate(s1);
+
     SDL_DestroyWindow( m_window );
     SDL_DestroyRenderer( m_renderer );
     SDL_Quit();
@@ -57,104 +65,33 @@ void ScreenRefresh()
     SDL_RenderPresent( m_renderer );
 }
 
-void HexelDraw(Display_t* d, int z, int n, int val)
+void HexelDraw(Display_t* d, int z, int n, Cell_t* c)
 {
-
-    //shx = 0, shy = 0;
-
     hexel.x = d->screen.x + d->screen.w / 2 + d->hshift.w * 1 +
     (z + d->hshift.x) * hcos(d->angle) + (n + d->hshift.y) * hcos(d->angle + 8);
     hexel.y = d->screen.y + d->screen.h / 2 + d->hshift.h * 1 +
     (z + d->hshift.x) * hsin(d->angle) + (n + d->hshift.y) * hsin(d->angle + 8);
 
-    int srcx = (d->angle % 8) * 9;
-    int srcy = val * 9;
+    int srcx = d->angle * 9;
+    int srcy = c->mat * 9;
 
-    SDL_SetRenderDrawColor( m_renderer, rgb[val][0], rgb[val][1], rgb[val][2], 255 );
-
+    SDL_SetTextureColorMod(s1->texture, rgb[c->clr][0], rgb[c->clr][1], rgb[c->clr][2]);
     SpriteDraw(s1, srcx, srcy, hexel.x, hexel.y);
-    //SDL_RenderFillRect( m_renderer, &hexel );
 }
 
 void KvadRender(Kvad_t* ptr, Display_t* d, int x, int y)
 {
     SDL_SetRenderDrawColor( m_renderer, rgb[3][0], rgb[3][1], rgb[3][2], 255 );
-    //SDL_RenderDrawRect( m_renderer, &d->screen );
-
-    int sx = ptr->width / 2 * 0, sy = ptr->height / 2 * 0;
     for (int i = 0; i < ptr->height; i++)
     {
         for (int j = 0; j < ptr->width; j++)
         {
-            switch(ptr->arr[i][j].mat)
-            {
-            case 10:
-                HexelDraw(d, j - sx, i - sy, 3);
-                break;
-
-            default:
-                HexelDraw(d, j - sx, i - sy, ptr->arr[i][j].mat);
-                break;
-            }
+            HexelDraw(d, j, i, &ptr->arr[i][j]);
         }
     }
 }
 
-void KvadPanning(Kvad_t* ptr, Display_t* d)
-{
-    int wx, wy, pwx, pwy;
-    int x, y;
 
-        if(inpst.mouse.pressed)
-        {
-            MouseToHex(d, &x, &y);
-
-            if(inpst.mouse.lmc)
-                KvadSetBlob(ptr, x, y, 1, 1);
-            if(inpst.mouse.rmc)
-                KvadSetBlob(ptr, x, y, 0, 1);
-            if(inpst.mouse.mmc)
-            {
-                MouseToPixels(&wx, &wy);
-                PMouseToPixels(&pwx, &pwy);
-
-                d->screen_shift.x = d->screen_shift.w + wx - pwx;
-                d->screen_shift.y = d->screen_shift.h + wy - pwy;
-
-                d->hshift.x = d->screen_shift.x, d->hshift.y = d->screen_shift.y;
-                PixelToHex(d, &d->hshift.x, &d->hshift.y);
-
-                d->hshift.w = d->screen_shift.x -
-                (d->hshift.x) * hcos(d->angle) - (d->hshift.y) * hcos(d->angle + 8);
-                d->hshift.h = d->screen_shift.y -
-                (d->hshift.x) * hsin(d->angle) - (d->hshift.y) * hsin(d->angle + 8);
-            }
-        }
-        if(inpst.mouse.up)
-        {
-                d->screen_shift.w = d->screen_shift.x;
-                d->screen_shift.h = d->screen_shift.y;
-                printf( "UP\n");
-        }
-        if(inpst.mouse.wheel)
-        {
-            d->angle = (d->angle + 48 + inpst.mouse.scroll) % 48;
-            inpst.mouse.wheel = 0;
-
-            d->screen_shift.x = 1 * d->hshift.w +
-            (d->hshift.x) * hcos(d->angle) + (d->hshift.y) * hcos(d->angle + 8);
-            d->screen_shift.y = 1 * d->hshift.h +
-            (d->hshift.x) * hsin(d->angle) + (d->hshift.y) * hsin(d->angle + 8);
-            //printf( "screen_shift %i:%i \n",  screen_shift.x, screen_shift.y );
-
-            inpst.mouse.px = inpst.mouse.x;
-            inpst.mouse.py = inpst.mouse.y;
-
-            d->screen_shift.w = d->screen_shift.x;
-            d->screen_shift.h = d->screen_shift.y;
-
-        }
-}
 
 Display_t* DisplayInitialize(int x, int y, int w, int h) // 17 1 43 43
 {
@@ -185,11 +122,11 @@ Sprite_t* SpriteInitialize(int width, int height, const char* file)
     
     s->texture = SDL_CreateTexture(m_renderer, 0, 
         SDL_TEXTUREACCESS_STATIC, s->source.w, s->source.h);
-    //s->texture = IMG_LoadTexture(m_renderer, "tiles.png");
-
-    //SDL_Surface* loadedSurface = IMG_Load( "/home/marat/Programming/A3/src/tiles.png" );
+    
     s->texture = SDL_CreateTextureFromSurface( m_renderer, 
     IMG_Load(file) );
+    
+    //SDL_SetTextureBlendMode(s->texture, SDL_BLENDMODE_ADD);
 
     return s;
 }

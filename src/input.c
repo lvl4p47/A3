@@ -96,6 +96,7 @@ void InputRegister()
         case SDL_MOUSEWHEEL:
             inpst.mouse.wheel = 1;
             inpst.mouse.scroll = event.wheel.y;
+            SDL_GetMouseState(&inpst.mouse.x, &inpst.mouse.y);
             printf( "%i \n", inpst.mouse.scroll );
             break;
 
@@ -132,6 +133,12 @@ void PMouseToPixels(int *x, int *y)
     *y = inpst.mouse.py / pixelsize;
 }
 
+void MouseResetPrev()
+{
+    inpst.mouse.px = inpst.mouse.x;
+    inpst.mouse.py = inpst.mouse.y;
+}
+
 void MouseToGrid(int *x, int *y)
 {
     MouseToPixels(x, y);
@@ -144,18 +151,26 @@ void MouseToHex(Display_t* d, int *z, int *n)
     int a = d->angle;
     int det = hcos(a) * hsin(a + 8) - hsin(a) * hcos(a + 8);
 
-    int x, y, dz, dn, dx, dy;
+    int x, y;
     MouseToPixels(&x, &y);
 
-    dx = -d->screen.x - d->screen.w / 2 - d->screen_shift.x;
-    dy = -d->screen.y - d->screen.h / 2 - d->screen_shift.y;
+    PixelToHex(d, &x, &y);
 
-    *z = ( x * hsin(a + 8) - y * hcos(a + 8) ) / det;
-    *n = (-x * hsin(  a  ) + y * hcos(  a  ) ) / det;
+    *z = x;
+    *n = y;
 
-    dz = ( dx * hsin(a + 8) - dy * hcos(a + 8) ) / det;
-    dn = (-dx * hsin(  a  ) + dy * hcos(  a  ) ) / det;
+    /*
+    x += -d->screen.x - d->screen.w / 2 - d->screen_shift.x;
+    y += -d->screen.y - d->screen.h / 2 - d->screen_shift.y;
+
+    *z = hdiv( x * hsin(a + 8) - y * hcos(a + 8), det );
+    *n = hdiv(-x * hsin(  a  ) + y * hcos(  a  ), det);
+    */
+    /*
+    dz = hdiv( dx * hsin(a + 8) - dy * hcos(a + 8), det );
+    dn = hdiv(-dx * hsin(  a  ) + dy * hcos(  a  ), det );
 
     *z += dz;
     *n += dn;
+    */
 }

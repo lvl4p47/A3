@@ -15,6 +15,8 @@ void MouseToPixels(int *x, int *y);
 
 void PMouseToPixels(int *x, int *y);
 
+void MouseResetPrev();
+
 void MouseToGrid(int *x, int *y);
 
 void MouseToHex(Display_t* d, int *z, int *n);

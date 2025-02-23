@@ -26,7 +26,7 @@ typedef struct
 
 typedef struct
 {
-    int mat, num, fld, vel;
+    int mat, tmp, num, fld, vel, st8, clr;
 } Cell_t;
 
 typedef struct
@@ -70,6 +70,14 @@ int hcos(int a);
 int64_t hmax(int64_t a, int64_t b);
 
 int64_t hmin(int64_t a, int64_t b);
+
+int mod(int a, int t);
+
+int hdiv(int a, int t);
+
+void swap(int* a, int* b);
+
+int isinrec(int x, int y, int w, int h, int cx, int cy);
 
 void PixelToHex(Display_t* d, int *z, int *n);
 

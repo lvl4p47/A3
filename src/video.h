@@ -3,6 +3,8 @@
 
 #include "hexagons.h"
 
+void point(int x, int y, int r, int g, int b);
+
 void VideoInitialize();
 
 void VideoTerminate();
@@ -11,11 +13,9 @@ void ScreenClear();
 
 void ScreenRefresh();
 
-void HexelDraw(Display_t* d, int z, int n, int val);
+void HexelDraw(Display_t* d, int z, int n, Cell_t* c);
 
 void KvadRender(Kvad_t* ptr, Display_t* d, int x, int y);
-
-void KvadPanning(Kvad_t* ptr, Display_t* d);
 
 Display_t* DisplayInitialize(int x, int y, int w, int h);
 
