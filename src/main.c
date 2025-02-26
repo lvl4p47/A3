@@ -49,10 +49,11 @@ void update_frame(uint64_t* ft, int64_t* dr)
 
     KvadRender(k1, d1, 1, 1);
     
-    ListCheck();
+    InterfaceUpdate();
 
     FontUIDraw(f1, d1);
-    ListDraw(f1);
+    InterfaceDraw(f1);
+    //ButtonListDraw(f1);
     //ButtonDraw(b1, f1);
 
     ScreenRefresh();
@@ -62,8 +63,11 @@ void update_frame(uint64_t* ft, int64_t* dr)
 
 void update_step(uint64_t* st, int64_t* ds)
 {
-    KvadUpdate(k1);
-
+    if(b_pause == 0 || b_step == 1)
+    {
+        KvadUpdate(k1);
+        b_step = 0;
+    }
 	*st = (int64_t)SDL_GetPerformanceCounter();
 	*ds = 0;
 }
@@ -87,8 +91,8 @@ int main( int argc, char * argv[] )
     uint64_t fps = 60;
     uint64_t sps = 60;
 
-    uint64_t t_f = SDL_GetPerformanceFrequency() / fps;
-    uint64_t t_s = SDL_GetPerformanceFrequency() / sps;
+    //uint64_t t_f = SDL_GetPerformanceFrequency() / fps;
+    //uint64_t t_s = SDL_GetPerformanceFrequency() / sps;
 
     int64_t dr, ds;
 	uint64_t frame_time, step_time, cur_time;
@@ -102,7 +106,7 @@ int main( int argc, char * argv[] )
     k1 = KvadInitialize(side, side);
     d1 = DisplayInitialize(17, 1, 43, 43);
     f1 = FontInitialise();
-    ListInitialize();
+    InterfaceInitialize();
     //b1 = ButtonInitialize(1, 1, 3, 3, L"000000000");
 
 
@@ -126,7 +130,7 @@ int main( int argc, char * argv[] )
     KvadTerminate(k1);
     DisplayTerminate(d1);
     FontTerminate(f1);
-    ListTerminate();
+    InterfaceTerminate();
     VideoTerminate();
 
     return 1;

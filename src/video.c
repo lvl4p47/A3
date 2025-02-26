@@ -100,9 +100,15 @@ Display_t* DisplayInitialize(int x, int y, int w, int h) // 17 1 43 43
     d->screen.w = 8 * w;    d->screen.h = 8 * h;
     d->screen_shift.x = 0;  d->screen_shift.y = 0;
     d->screen_shift.w = 0;  d->screen_shift.h = 0;
-    d->hshift.x = 0;        d->hshift.y = 0;
+    d->hshift.x = -24;        d->hshift.y = -24;
     d->hshift.w = 0;        d->hshift.h = 0;
     d->angle = 0;
+    
+    d->screen_shift.x = 1 * d->hshift.w +
+        (d->hshift.x) * hcos(0) + (d->hshift.y) * hcos(8);
+        d->screen_shift.y = 1 * d->hshift.h +
+        (d->hshift.x) * hsin(0) + (d->hshift.y) * hsin(8);
+
 
     return d;
 }

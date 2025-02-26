@@ -15,9 +15,15 @@ Cell_t* KvadGetHexel(Kvad_t* ptr, int z, int n);
 
 void KvadSetBlob(Kvad_t* ptr, int z, int n, int value, int rad);
 
+void WaveUpdate(Kvad_t* ptr);
+
+void SolidUpdate(Kvad_t* ptr);
+
+void GasUpdate(Kvad_t* ptr);
+
 void KvadUpdate(Kvad_t* ptr);
 
-int NeighbourCount(Kvad_t* ptr, int z, int n);
+int NeighbourCount(Kvad_t* ptr, int z, int n, int val);
 
 int ReflectionAngle(Kvad_t* ptr, int z, int n, int val, int dirz, int diry);
 

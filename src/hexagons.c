@@ -1,5 +1,85 @@
 #include "hexagons.h"
 
+int rules2[7][7] = // 0 - skip, 1 - and
+{ 
+    {0, 0, 0, 0, 0, 0, 0},
+    {1, 0, 1, 0, 0, 0, 0},
+    {1, 0, 0, 0, 0, 0, 0},
+    {0, 1, 0, 1, 0, 0, 0},
+    {0, 0, 0, 1, 0, 1, 0},
+    {0, 0, 0, 1, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0}
+};
+
+int rules[7][7][7] = 
+{//nghbrs 0 1 2 3 4 5 6
+    {// 0
+        { 0,0,0,0,2,0,0 },  // 0
+        { 0,0,0,0,0,0,0 },  // 1
+        { 0,2,2,0,0,0,0 },  // 2
+        { 0,0,0,0,0,0,0 },  // 3
+        { 0,0,0,0,0,0,0 },  // 4
+        { 0,0,0,0,0,0,0 },  // 5
+        { 0,2,0,0,0,0,0 }   // 6
+    },
+    {// 1
+        { 1,2,2,2,2,2,2 },  // 0
+        { 1,1,1,1,1,1,1 },  // 1
+        { 1,2,2,2,2,2,2 },  // 2
+        { 1,1,5,5,5,5,5 },  // 3
+        { 1,1,1,1,1,1,1 },  // 4
+        { 1,1,1,1,1,1,1 },  // 5
+        { 1,1,1,1,1,1,1 }   // 6
+    },
+    {// 2
+        { 0,0,0,0,0,0,0 },  // 0
+        { 0,2,2,1,1,1,1 },  // 1
+        { 0,0,0,0,2,2,2 },  // 2
+        { 2,2,2,2,2,2,2 },  // 3
+        { 2,2,2,2,2,2,2 },  // 4
+        { 2,2,2,2,2,2,2 },  // 5
+        { 0,2,0,0,0,0,0 }   // 6
+    },
+    {// 3
+        { 3,1,1,1,1,1,1 },  // 0
+        { 3,1,1,1,1,1,1 },  // 1
+        { 3,3,3,3,3,3,3 },  // 2
+        { 1,3,3,3,3,3,3 },  // 3
+        { 3,3,3,3,3,3,3 },  // 4
+        { 3,3,3,3,3,3,3 },  // 5
+        { 3,3,3,3,3,3,3 }   // 6
+    },
+    {// 4
+        { 4,4,4,4,4,4,4 },  // 0
+        { 4,4,4,4,4,4,4 },  // 1
+        { 4,4,4,4,4,4,4 },  // 2
+        { 5,4,4,4,4,4,4 },  // 3
+        { 4,5,5,5,5,5,5 },  // 4
+        { 4,5,5,5,5,5,5 },  // 5
+        { 4,4,4,4,4,4,4 }   // 6
+    },
+    {// 5
+        { 5,5,5,5,5,5,5 },  // 0
+        { 5,5,5,5,5,5,5 },  // 1
+        { 5,5,5,5,5,5,5 },  // 2
+        { 5,5,4,4,4,4,4 },  // 3
+        { 5,5,5,5,5,5,5 },  // 4
+        { 5,5,5,5,5,5,5 },  // 5
+        { 5,5,5,5,5,5,5 }   // 6
+    },
+    {// 6
+        { 2,2,2,2,2,2,2 },  // 0
+        { 6,6,6,6,6,6,6 },  // 1
+        { 6,2,2,2,2,2,2 },  // 2
+        { 6,6,6,6,6,6,6 },  // 3
+        { 6,6,6,6,6,6,6 },  // 4
+        { 6,6,6,6,6,6,6 },  // 5
+        { 0,0,0,0,6,6,6 }   // 6
+    }
+};
+
+int t;
+
 Kvad_t* KvadInitialize(int width, int height)
 {
     Kvad_t* ptr = (Kvad_t*)malloc(sizeof(Kvad_t));
@@ -14,6 +94,7 @@ Kvad_t* KvadInitialize(int width, int height)
     }
 
     KvadZero(ptr);
+    t = 0;
 
     return ptr;
 }
@@ -38,7 +119,8 @@ void KvadZero(Kvad_t* ptr)
             ptr->arr[i][j].tmp = 0;
             ptr->arr[i][j].num = 0;
             ptr->arr[i][j].fld = 0;
-            ptr->arr[i][j].vel = 0;
+            ptr->arr[i][j].dx = 0;
+            ptr->arr[i][j].dy = 0;
             ptr->arr[i][j].st8 = 0;
         }
     }
@@ -69,6 +151,18 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
         cptr->st8 = 1;
         cptr->clr = 3;
         break;
+    case 4:
+        cptr->st8 = 1;
+        cptr->clr = 6;
+        break;
+    case 5:
+        cptr->st8 = 2;
+        cptr->clr = 1;
+        break;
+    case 6:
+        cptr->st8 = 1;
+        cptr->clr = 2;
+        break;
     default:
         cptr->st8 = 2;
         cptr->clr = 7;
@@ -94,12 +188,128 @@ void KvadSetBlob(Kvad_t* ptr, int z, int n, int value, int rad)
         for(int j = -rad; j <= rad; j++)
         {
             if( i + j >= -rad && i + j <= rad)
-                KvadSetMat(ptr, z + j, n + i, value);
+                if(KvadGetHexel(ptr, z + j, n + i)->mat == 0 || value == 0)
+                    KvadSetMat(ptr, z + j, n + i, value);
+                //KvadGetHexel(ptr, z + j, n + i)->num += value;
         }
     }
 }
 
-void KvadUpdate(Kvad_t* ptr)
+void WaveUpdate(Kvad_t* ptr)
+{
+
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->num;
+        }
+    }
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            if(KvadGetHexel(ptr, j, i)->num <= 3 || 1)
+            {
+                for(int di = -1; di < 2; di++)
+                {
+                    for(int dj = -1; dj < 2; dj++)
+                    {
+                        if( di - dj != 0)
+                        {
+                            
+                            KvadGetHexel(ptr, j + dj, i + di)->tmp -= 1;
+                            KvadGetHexel(ptr, j, i)->tmp += 1;
+                        }
+                    }
+                }
+                //KvadGetHexel(ptr, j, i)->tmp -= 6;
+                /*
+                for(int di = -1; di < 2; di++)
+                {
+                    for(int dj = -1; dj < 2; dj++)
+                    {
+                        if( di - dj != 0)
+                        {
+                            KvadGetHexel(ptr, j + dj, i + di)->tmp += 1;
+                            KvadGetHexel(ptr, j, i)->tmp -= 1;
+                        }
+                    }
+                }
+                */
+                
+            }
+        }
+    }
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            KvadGetHexel(ptr, j, i)->num = KvadGetHexel(ptr, j, i)->tmp;
+            
+            if(KvadGetHexel(ptr, j, i)->num != 0)
+                KvadSetMat(ptr, j, i, 2);
+            else
+                KvadSetMat(ptr, j, i, 0);
+            KvadGetHexel(ptr, j, i)->clr = 1 + mod(KvadGetHexel(ptr, j, i)->tmp, 7);
+        }
+    }
+}
+
+void SolidUpdate(Kvad_t* ptr)
+{
+    int new;
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            new = -1;
+            for(int m = 0; m < 7; m++)
+            {
+                if(rules2[KvadGetHexel(ptr, j, i)->mat][m] != 0)
+                {
+                    if(new == (KvadGetHexel(ptr, j, i)->tmp = rules
+                            [KvadGetHexel(ptr, j, i)->mat]
+                            [m]
+                            [NeighbourCount(ptr, j, i, m)]) || new == -1)
+                {
+                    new = (KvadGetHexel(ptr, j, i)->tmp = rules
+                            [KvadGetHexel(ptr, j, i)->mat]
+                            [m]
+                            [NeighbourCount(ptr, j, i, m)]);
+                }
+                else
+                {
+                    new = -1;
+                    m = 6;
+                }
+                    
+                    
+                }
+            }
+            if(new == -1)
+            {
+                new = KvadGetHexel(ptr, j, i)->mat;
+            }
+            KvadGetHexel(ptr, j, i)->tmp = new;
+            /*
+            KvadGetHexel(ptr, j, i)->tmp = rules
+            [KvadGetHexel(ptr, j, i)->mat]
+            [rules2[KvadGetHexel(ptr, j, i)->mat]]
+            [NeighbourCount(ptr, j, i, rules2[KvadGetHexel(ptr, j, i)->mat])];
+            */
+        }
+    }
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp);
+        }
+    }
+}
+
+void GasUpdate(Kvad_t* ptr)
 {
     int dz, dn;
     for(int i = 0; i < ptr->height; i++)
@@ -138,19 +348,30 @@ void KvadUpdate(Kvad_t* ptr)
             }
         }
     }
-
+    
     for(int i = 0; i < ptr->height; i++)
     {
         for(int j = 0; j < ptr->width; j++)
         {
-            
+               
             KvadGetHexel(ptr, j, i)->fld = 0;
             KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp);
+
         }
     }
 }
 
-int NeighbourCount(Kvad_t* ptr, int z, int n)
+void KvadUpdate(Kvad_t* ptr)
+{
+    //WaveUpdate(ptr);
+    GasUpdate(ptr);
+    SolidUpdate(ptr);
+    
+
+    t = mod(t + 1, 12);
+}
+
+int NeighbourCount(Kvad_t* ptr, int z, int n, int val)
 {
     int N = 0;
     int type = KvadGetHexel(ptr, z, n)->mat;
@@ -160,7 +381,7 @@ int NeighbourCount(Kvad_t* ptr, int z, int n)
         {
             if( i - j != 0)
                 
-                N += (KvadGetHexel(ptr, z + j, n + i)->mat == 1) ? 1 : 0;
+                N += (KvadGetHexel(ptr, z + j, n + i)->mat == val) ? 1 : 0;
         }
     }
     return N;
@@ -198,6 +419,14 @@ void Repulsion(Kvad_t* ptr, int z, int n, int val, int* dz, int* dn)
             }
         }
     }
+
+    /*
+    if( *dz == 0 && *dn == 0 && mod(z + n * 64, 12) == t)
+    {
+        *dz = -1;
+        *dn = +1;
+    }
+    */
     /*
     if(*dz - *dn == 0 || 2 * *dz + *dn == 0 || *dz + 2 * *dn == 0)
     {

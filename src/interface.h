@@ -3,38 +3,81 @@
 
 #include "text.h"
 
+extern int b_pause, b_step;
+extern uint64_t t_f;
+extern uint64_t t_s;
+
 typedef struct
 {
     int x, y, w, h, act_b, down, up, lmc, mmc;
     int type;
+    int text;
+    int b_grab;
     wchar_t* string;
+    wchar_t* sscndr;
 } Button_t;
+
+typedef struct
+{
+    int x, y, w, h, act_b, down, up, lmc, mmc;
+    int a, d, c;
+    int type;
+    int b_grab;
+} Slider_t;
 
 typedef struct
 {
     int lm, rm, lrad, rrad;
 } Cursor_t;
 
-void ListInitialize();
+void InterfaceInitialize();
 
-void ListTerminate();
+void InterfaceTerminate();
 
-Button_t* ButtonInitialize(int x, int y, int w, int h, int type, wchar_t* s);
+void InterfaceDraw(Font_t* f);
+
+void InterfaceUpdate();
+
+void ButtonListInitialize();
+
+void ButtonListTerminate();
+
+Button_t* ButtonInitialize(int x, int y, int w, int h, int type, wchar_t* s, wchar_t* ss);
 
 void ButtonTerminate(Button_t* b);
 
 void ButtonDraw(Button_t* b, Font_t* f);
 
-void ListDraw(Font_t* f);
+void ButtonListDraw(Font_t* f);
 
-void ListCheck();
+void ButtonListCheck();
 
-void ButtonAction(Button_t* b);
+void ButtonDown(Button_t* b);
+
+void ButtonUp(Button_t* b);
 
 void DisplayPanning(Kvad_t* ptr, Display_t* d);
 
 void ScreenInput(Kvad_t* ptr, Display_t* d);
 
-void ButtonText(Button_t* b, wchar_t* s);
+void ButtonText(Button_t* b, int n);
+
+Slider_t* SliderInitialize(int x, int y, int w, int h, int a, int d, int c, int type);
+
+void SliderTerminate(Slider_t* s);
+
+void SliderListInitialize();
+
+void SliderListTerminate();
+
+void SliderDraw(Slider_t* s, Font_t* f);
+
+void SliderListDraw(Font_t* f);
+
+void SliderListCheck();
+
+void SliderDown(Slider_t* s, int c);
+
+void SliderUp(Slider_t* s);
 
 #endif

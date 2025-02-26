@@ -9,6 +9,8 @@ void FontTerminate(Font_t* f);
 
 void FontCharDraw(Font_t* f, wchar_t c, int x, int y);
 
+void FontCharFill(Font_t* f, wchar_t c, int x, int y, int w, int h);
+
 void FontStringDraw(Font_t* f, int ax, int ay, int w, int h, wchar_t* s);
 
 void FontNumberDraw(Font_t* f, int ax, int ay, int w, int h, int num);

@@ -70,6 +70,7 @@ void InputRegister()
                     break;
                 case SDL_BUTTON_MIDDLE:
                     inpst.mouse.mmc = 1;
+                    SDL_GetMouseState(&inpst.mouse.px, &inpst.mouse.py);
                     break;
                 case SDL_BUTTON_RIGHT:
                     inpst.mouse.rmc = 1;
@@ -78,26 +79,36 @@ void InputRegister()
 
             inpst.mouse.pressed = 1;
             SDL_GetMouseState(&inpst.mouse.x, &inpst.mouse.y);
-            SDL_GetMouseState(&inpst.mouse.px, &inpst.mouse.py);
-            printf( "down %i \n",  inpst.mouse.x - inpst.mouse.px );
+            
             //
             break;
         case SDL_MOUSEBUTTONUP:
             inpst.mouse.up   = 1;
-            inpst.mouse.pressed = 0;
-            inpst.mouse.lmc = 0;
-            inpst.mouse.mmc = 0;
-            inpst.mouse.rmc = 0;
+            
+            switch( event.button.button ){
+                case SDL_BUTTON_LEFT:
+                    inpst.mouse.lmc = 0;
+                    break;
+                case SDL_BUTTON_MIDDLE:
+                    inpst.mouse.mmc = 0;
+                    //inpst.mouse.px = inpst.mouse.x;
+                    //inpst.mouse.py = inpst.mouse.y;
+                    break;
+                case SDL_BUTTON_RIGHT:
+                    inpst.mouse.rmc = 0;
+                    break;
+            }
+            if(inpst.mouse.lmc == 0 && inpst.mouse.mmc == 0 && inpst.mouse.rmc == 0)
+                inpst.mouse.pressed = 0;
+
             SDL_GetMouseState(&inpst.mouse.x, &inpst.mouse.y);
-            inpst.mouse.px = inpst.mouse.x;
-            inpst.mouse.py = inpst.mouse.y;
+            
 
             break;
         case SDL_MOUSEWHEEL:
             inpst.mouse.wheel = 1;
             inpst.mouse.scroll = event.wheel.y;
             SDL_GetMouseState(&inpst.mouse.x, &inpst.mouse.y);
-            printf( "%i \n", inpst.mouse.scroll );
             break;
 
 

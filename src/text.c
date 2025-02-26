@@ -35,6 +35,23 @@ void FontCharDraw(Font_t* f, wchar_t c, int x, int y)
     SpriteDraw(f->sprite, srcx, srcy, dstx, dsty);
 }
 
+void FontCharFill(Font_t* f, wchar_t c, int x, int y, int w, int h)
+{
+    int cx = x, cy = y;
+    int i = 0;
+    while(i < w * h)
+    {
+        if(cx >= x + w)
+            {
+                cx = x;
+                cy += 1;
+            }
+            FontCharDraw(f, c, cx, cy);
+            cx += 1;
+        i++;
+    }
+}
+
 void FontStringDraw(Font_t* f, int ax, int ay, int w, int h, wchar_t* s)
 {
     int cx = ax, cy = ay;
@@ -88,7 +105,7 @@ void FontUIDraw(Font_t* f, Display_t* d)
     fclose(fl1);
 
     int x, y;
-    MouseToPixels(&x, &y);
+    MouseToGrid(&x, &y);
     wchar_t str[240];
     swprintf(str, 240, L"угол: %i\nсдвиг по х: %i\nсдвиг по y: %i\nмышь х: %i\nмышь y: %i\n", 
     d->angle, d->hshift.x, d->hshift.y, x, y);
