@@ -448,17 +448,26 @@ void DirtUpdate(Kvad_t* ptr)
             {
                 Force(ptr, j, i, gx, gy, &dz, &dn);
                 f_direct = 0;
-                if(dz == gx && dn == gy  && (HalfNeighCount(ptr, j, i, 0, gx, gy) == 3 || NeighbourCount(ptr, j, i, 0) >= 5))
+                if(dz == gx && dn == gy  && (HalfNeighCount(ptr, j, i, 5, gx, gy) == 0 || NeighbourCount(ptr, j, i, 5)  <= 2))
                 {
                     f_direct = 1;
-                    KvadGetHexel(ptr, j + dz, i + dn)->fld = 2;
+                    
+                    if( KvadGetHexel(ptr, j + dz, i + dn)->fld != -2
+                      && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = 2;
+                    }
+                    else
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -2;
+                    }
                 }
-                else 
+                else if(HalfNeighCount(ptr, j, i, 5, gx, gy) == 2 && NeighbourCount(ptr, j, i, 5)  == 2)
                 {
                     if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 0
                       && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
                     {
-                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -1;
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = 1;
                     }
                     else if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 1)
                     {
