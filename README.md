@@ -13,7 +13,7 @@ Middle (Mouse wheel) click allows to pan around. Scrolling Mouse wheel rotates t
 This Button adds 1 to the value of the cursor (right-click adds to the right value of the cursor, left-click adds to the left value of the cursor).
 
 ![Alt text](/readme_pngs/Button_eraser.png "")
-This Button sets corresponding cursor value tp 0 (right-click sets the right value of the cursor, left-click sets the left value of the cursor).
+This Button sets corresponding cursor value to 0 (right-click sets the right value of the cursor, left-click sets the left value of the cursor).
 #### Buttons on the right side of the screen
 ![Alt text](/readme_pngs/Button_pause.png "")
 This Button toggles pause state.
