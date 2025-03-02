@@ -4,10 +4,7 @@
 //FUNC
 
 //INPUT
-SDL_Event event;
-int quit;
-int pixelsize = 2;
-InputState_t inpst;
+
 
 //HEXAGONS
 int side = 64;
@@ -303,4 +300,15 @@ void PixelToHex(Display_t* d, int *z, int *n)
         
     }
     
+}
+
+void HexToGrid(Display_t* d, int *z, int *n)
+{
+    int xnew, ynew;
+    xnew = d->screen.x / 8 + d->screen.w / 16 +
+    *z * hcos(d->angle) / 8 + *n * hcos(d->angle + 8) / 8;
+    ynew = d->screen.y / 8 + d->screen.h / 16 +
+    *z * hsin(d->angle) / 8 + *n * hsin(d->angle + 8) / 8;
+    *z = xnew;
+    *n = ynew;
 }

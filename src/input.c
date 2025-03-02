@@ -1,13 +1,13 @@
 #include "input.h"
 
-extern SDL_Event event;
-extern int quit;
-extern int pixelsize;
-extern InputState_t inpst;
+int b_quit;
+SDL_Event event;
+int pixelsize = 2;
+InputState_t inpst;
 
 void InputInitialize()
 {
-    quit = 0;
+    b_quit = 0;
 
     inpst.mouse.pressed = 0;
     inpst.mouse.down    = 0;
@@ -59,7 +59,7 @@ void InputRegister()
             break;
 
         case SDL_QUIT:
-            quit = 1;
+            b_quit = 1;
             break;
 
         case SDL_MOUSEBUTTONDOWN:

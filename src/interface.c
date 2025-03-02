@@ -1,6 +1,6 @@
 #include "interface.h"
 
-const int buttonlistsize = 6;
+const int buttonlistsize = 7;
 
 const int sliderlistsize = 2;
 
@@ -24,8 +24,8 @@ void InterfaceInitialize()
     
     cursor.lm = 3;
     cursor.rm = 0;
-    cursor.lrad = 4;
-    cursor.rrad = 4;
+    cursor.lrad = sliderlist[0]->a + sliderlist[0]->d * (sliderlist[0]->c - 1);
+    cursor.rrad = sliderlist[0]->a + sliderlist[0]->d * (sliderlist[0]->c - 1);
 
     b_panning = 0;
     b_pause = 0;
@@ -70,6 +70,7 @@ void ButtonListInitialize()
     buttonlist[3] = ButtonInitialize(66, 20, 3, 3, 3, L"ъеъеъеъеъ", L"еъеъеъеъе");
     buttonlist[4] = ButtonInitialize(71, 20, 3, 3, 4, L"\\ | >|/ |", L" \\   > / ");
     buttonlist[5] = ButtonInitialize(76, 20, 3, 3, 5, L" _ <o> - ", L"\\_/<X>/-\\");
+    buttonlist[6] = ButtonInitialize(79, 0, 1, 1, 6, L"X", L"+");
 }
 
 void ButtonListTerminate()
@@ -194,6 +195,11 @@ void ButtonDown(Button_t* b)
             break;
         case 5:
             
+            b->act_b = 1;
+            b->text = 3 - b->text;
+            break;
+        case 6:
+            b_quit = 1;
             b->act_b = 1;
             b->text = 3 - b->text;
             break;
@@ -335,8 +341,8 @@ Slider_t* SliderInitialize(int x, int y, int w, int h, int a, int d, int c, int 
     Slider_t* s = (Slider_t*)malloc(sizeof(Slider_t));
     s->x = x;
     s->y = y;
-    s->w = w;
-    s->h = h;
+    s->w = hmax(w, 3);
+    s->h = hmax(h, 3);
     s->a = a;
     s->d = d;
     s->c = c;
@@ -374,7 +380,7 @@ void SliderListTerminate()
 void SliderDraw(Slider_t* s, Font_t* f)
 {
     FontCharFill(f, L'-', s->x + 1, s->y + 1, s->w - 2, 1);
-    FontStringDraw(f, s->x + s->c, s->y, 1, 2, L"v+");
+    FontStringDraw(f, s->x + s->c, s->y, 1, 2, L"V+");
     int value = s->a + s->d * (s->c - 1);
     int raz = 0;
     int dva = 100;

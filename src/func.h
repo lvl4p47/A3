@@ -11,6 +11,8 @@
 
 //INPUT
 
+
+
 typedef struct
 {
     int x, y, pressed, down, up, lmc, mmc, rmc, px, py, wheel, scroll;
@@ -80,5 +82,7 @@ void swap(int* a, int* b);
 int isinrec(int x, int y, int w, int h, int cx, int cy);
 
 void PixelToHex(Display_t* d, int *z, int *n);
+
+void HexToGrid(Display_t* d, int *z, int *n);
 
 #endif

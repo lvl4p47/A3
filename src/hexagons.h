@@ -21,12 +21,18 @@ void SolidUpdate(Kvad_t* ptr);
 
 void GasUpdate(Kvad_t* ptr);
 
+void SandUpdate(Kvad_t* ptr);
+
 void KvadUpdate(Kvad_t* ptr);
 
 int NeighbourCount(Kvad_t* ptr, int z, int n, int val);
 
+int HalfNeighCount(Kvad_t* ptr, int z, int n, int val, int dz, int dn);
+
 int ReflectionAngle(Kvad_t* ptr, int z, int n, int val, int dirz, int diry);
 
 void Repulsion(Kvad_t* ptr, int z, int n, int val, int* dz, int* dn);
+
+void Force(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 #endif

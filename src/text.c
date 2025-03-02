@@ -122,28 +122,45 @@ void FontUIDraw(Font_t* f, Display_t* d)
     FontStringDraw(f, 5, 10, 3, 3, L"n n>>>u u");
 
     FontStringDraw(f, 1, 18, 3, 4, L"c=\\ // u  o ");
-    FontStringDraw(f, 1, 23, 3, 4, L"r\\ |l\\| |l-№");
-    FontStringDraw(f, 5, 23, 3, 4, L" Л /‖\\ ‖ c=э");
-    FontStringDraw(f, 9, 23, 3, 4, L" ‖ \\‖/ V c=э");
-    FontStringDraw(f, 13, 23, 3, 4, L" n qhpdчb u ");
+    FontStringDraw(f, 1, 23, 3, 4, L"r\\ |l\\| |l-№");r\ 
+    FontStringDraw(f, 5, 23, 3, 4, L" Л /‖\\ ‖ c=э"); |l\
+    FontStringDraw(f, 9, 23, 3, 4, L" ‖ \\‖/ V c=э"); | |
+    FontStringDraw(f, 13, 23, 3, 4, L" n qhpdчb u "); l-№
     */
-    int r = 8;
+    int r = 16;
     x = 38, y = 22;
-    int ang = d->angle / 8;
-    int res = d->angle % 8;
+    int ang = d->angle;
 
     wchar_t angstr[4];
     swprintf(angstr, 4, L"%i", ang * 60);
 
-    FontStringDraw(f, x - 1 + r * 2 - res   , y + res * 2           , 3, 1, angstr);
-    swprintf(angstr, 4, L"%i", (ang + 5) % 6 * 60);
-    FontStringDraw(f, x - 1 + r - res * 2   , y + r * 2             , 3, 1, angstr);
-    swprintf(angstr, 4, L"%i", (ang + 4) % 6 * 60);
-    FontStringDraw(f, x - 1 - r - res       , y + r * 2 - res * 2   , 3, 1, angstr);
-    swprintf(angstr, 4, L"%i", (ang + 3) % 6 * 60);
-    FontStringDraw(f, x - 1 - r * 2 + res   , y - res * 2           , 3, 1, angstr);
-    swprintf(angstr, 4, L"%i", (ang + 2) % 6 * 60);
-    FontStringDraw(f, x - 1 - r + res * 2   , y - r * 2             , 3, 1, angstr);
-    swprintf(angstr, 4, L"%i", (ang + 1) % 6 * 60);
-    FontStringDraw(f, x - 1 + r + res       , y - r * 2 + res * 2   , 3, 1, angstr);
+    int zang, nang;
+    int xang, yang;
+
+    zang = r, nang = 0;
+    FontNumberDraw(f, zang, nang, 3, 1, ang);    
+
+    HexToGrid(d, &zang, &nang);
+    FontNumberDraw(f, zang, nang, 3, 1, 0);
+
+    zang = r, nang = -r;
+    HexToGrid(d, &zang, &nang);
+    FontNumberDraw(f, zang, nang, 3, 1, 90);
+
+    zang = 0, nang = -r;
+    HexToGrid(d, &zang, &nang);
+    FontNumberDraw(f, zang, nang, 3, 1, 120);
+
+    zang = -r, nang = 0;
+    HexToGrid(d, &zang, &nang);
+    FontNumberDraw(f, zang, nang, 3, 1, 180);
+
+    zang = -r, nang = r;
+    HexToGrid(d, &zang, &nang);
+    FontNumberDraw(f, zang, nang, 3, 1, 240);
+
+    zang = 0, nang = r;
+    HexToGrid(d, &zang, &nang);
+    FontNumberDraw(f, zang, nang, 3, 1, 300);
+    
 }

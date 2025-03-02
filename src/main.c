@@ -1,6 +1,5 @@
 #include "interface.h"
 
-extern int quit;
 extern int side;
 
 Kvad_t* k1;
@@ -110,7 +109,7 @@ int main( int argc, char * argv[] )
     //b1 = ButtonInitialize(1, 1, 3, 3, L"000000000");
 
 
-    while(!quit)
+    while(!b_quit)
     {
         cur_time = SDL_GetPerformanceCounter();
 		calculate_delta(&dr, &ds, cur_time, frame_time, step_time, t_f, t_s);

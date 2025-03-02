@@ -1,14 +1,14 @@
 #include "hexagons.h"
 
 int rules2[7][7] = // 0 - skip, 1 - and
-{ 
-    {0, 0, 0, 0, 0, 0, 0},
-    {1, 0, 1, 0, 0, 0, 0},
-    {1, 0, 0, 0, 0, 0, 0},
-    {0, 1, 0, 1, 0, 0, 0},
-    {0, 0, 0, 1, 0, 1, 0},
-    {0, 0, 0, 1, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0}
+{//  0  1  2  3  4  5  6
+    {0, 0, 1, 0, 0, 0, 1},  // 0
+    {1, 0, 1, 0, 0, 0, 0},  // 1
+    {1, 0, 0, 0, 0, 0, 0},  // 2
+    {0, 1, 0, 1, 0, 0, 0},  // 3
+    {0, 0, 0, 0, 0, 0, 0},  // 4
+    {0, 0, 0, 1, 0, 0, 0},  // 5
+    {1, 0, 1, 0, 0, 0, 0}   // 6
 };
 
 int rules[7][7][7] = 
@@ -16,11 +16,11 @@ int rules[7][7][7] =
     {// 0
         { 0,0,0,0,2,0,0 },  // 0
         { 0,0,0,0,0,0,0 },  // 1
-        { 0,2,2,0,0,0,0 },  // 2
+        { 0,2,2,2,2,2,2 },  // 2
         { 0,0,0,0,0,0,0 },  // 3
         { 0,0,0,0,0,0,0 },  // 4
-        { 0,0,0,0,0,0,0 },  // 5
-        { 0,2,0,0,0,0,0 }   // 6
+        { 2,2,2,2,2,2,3 },  // 5
+        { 0,2,2,2,2,2,2 }   // 6
     },
     {// 1
         { 1,2,2,2,2,2,2 },  // 0
@@ -28,7 +28,7 @@ int rules[7][7][7] =
         { 1,2,2,2,2,2,2 },  // 2
         { 1,1,5,5,5,5,5 },  // 3
         { 1,1,1,1,1,1,1 },  // 4
-        { 1,1,1,1,1,1,1 },  // 5
+        { 2,2,5,5,5,5,5 },  // 5
         { 1,1,1,1,1,1,1 }   // 6
     },
     {// 2
@@ -50,25 +50,25 @@ int rules[7][7][7] =
         { 3,3,3,3,3,3,3 }   // 6
     },
     {// 4
-        { 4,4,4,4,4,4,4 },  // 0
+        { 5,5,5,4,4,4,4 },  // 0
         { 4,4,4,4,4,4,4 },  // 1
         { 4,4,4,4,4,4,4 },  // 2
         { 5,4,4,4,4,4,4 },  // 3
-        { 4,5,5,5,5,5,5 },  // 4
-        { 4,5,5,5,5,5,5 },  // 5
+        { 4,4,4,4,5,5,5 },  // 4
+        { 4,4,5,5,5,5,5 },  // 5
         { 4,4,4,4,4,4,4 }   // 6
     },
     {// 5
-        { 5,5,5,5,5,5,5 },  // 0
-        { 5,5,5,5,5,5,5 },  // 1
+        { 5,5,5,4,4,4,4 },  // 0
+        { 4,4,1,1,1,1,1 },  // 1
         { 5,5,5,5,5,5,5 },  // 2
         { 5,5,4,4,4,4,4 },  // 3
         { 5,5,5,5,5,5,5 },  // 4
-        { 5,5,5,5,5,5,5 },  // 5
+        { 4,4,4,4,5,5,1 },  // 5
         { 5,5,5,5,5,5,5 }   // 6
     },
     {// 6
-        { 2,2,2,2,2,2,2 },  // 0
+        { 6,2,2,2,2,2,2 },  // 0
         { 6,6,6,6,6,6,6 },  // 1
         { 6,2,2,2,2,2,2 },  // 2
         { 6,6,6,6,6,6,6 },  // 3
@@ -77,6 +77,8 @@ int rules[7][7][7] =
         { 0,0,0,0,6,6,6 }   // 6
     }
 };
+
+int Yrot[6] = {1, 0, -1, -1, 0, 1};
 
 int t;
 
@@ -152,11 +154,11 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
         cptr->clr = 3;
         break;
     case 4:
-        cptr->st8 = 1;
+        cptr->st8 = 3;
         cptr->clr = 6;
         break;
     case 5:
-        cptr->st8 = 2;
+        cptr->st8 = 4;
         cptr->clr = 1;
         break;
     case 6:
@@ -361,20 +363,161 @@ void GasUpdate(Kvad_t* ptr)
     }
 }
 
+void SandUpdate(Kvad_t* ptr)
+{
+    int gx = 0, gy = 1;
+    int dz = 0, dn = 0;
+    int f_direct = 0;
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            
+            KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
+            if(KvadGetHexel(ptr, j, i)->st8 == 3)
+            {
+                Force(ptr, j, i, gx, gy, &dz, &dn);
+                f_direct = 0;
+                if(dz == gx && dn == gy)
+                {
+                    f_direct = 1;
+                    KvadGetHexel(ptr, j + dz, i + dn)->fld = 2;
+                }
+                else 
+                {
+                    if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 0
+                      && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = 1;
+                    }
+                    else if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 1)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -1;
+                    }
+                }
+            }
+        }
+    }
+
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            if(KvadGetHexel(ptr, j, i)->st8 == 3)
+            {
+                Force(ptr, j, i, gx, gy, &dz, &dn);
+                f_direct = 0;
+                if(dz == gx && dn == gy)
+                {    
+                    f_direct = 1;
+                    
+                }
+                if(KvadGetHexel(ptr, j + dz, i + dn)->fld == 1 + f_direct)
+                {
+                    swap(&KvadGetHexel(ptr, j     , i     )->tmp,
+                        &KvadGetHexel(ptr, j + dz, i + dn)->tmp);
+                }
+            }
+        }
+    }
+    
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+               
+            KvadGetHexel(ptr, j, i)->fld = 0;
+            KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp);
+
+        }
+    }
+}
+
+void DirtUpdate(Kvad_t* ptr)
+{
+    int gx = 0, gy = 1;
+    int dz = 0, dn = 0;
+    int f_direct = 0;
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            
+            KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
+            if(KvadGetHexel(ptr, j, i)->st8 == 4)
+            {
+                Force(ptr, j, i, gx, gy, &dz, &dn);
+                f_direct = 0;
+                if(dz == gx && dn == gy  && (HalfNeighCount(ptr, j, i, 0, gx, gy) == 3 || NeighbourCount(ptr, j, i, 0) >= 5))
+                {
+                    f_direct = 1;
+                    KvadGetHexel(ptr, j + dz, i + dn)->fld = 2;
+                }
+                else 
+                {
+                    if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 0
+                      && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -1;
+                    }
+                    else if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 1)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -1;
+                    }
+                }
+            }
+        }
+    }
+
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            if(KvadGetHexel(ptr, j, i)->st8 == 4)
+            {
+                Force(ptr, j, i, gx, gy, &dz, &dn);
+                f_direct = 0;
+                if(dz == gx && dn == gy)
+                {    
+                    f_direct = 1;
+                    
+                }
+                if(KvadGetHexel(ptr, j + dz, i + dn)->fld == 1 + f_direct)
+                {
+                    swap(&KvadGetHexel(ptr, j     , i     )->tmp,
+                        &KvadGetHexel(ptr, j + dz, i + dn)->tmp);
+                }
+            }
+        }
+    }
+    
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+               
+            KvadGetHexel(ptr, j, i)->fld = 0;
+            KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp);
+
+        }
+    }
+}
+
 void KvadUpdate(Kvad_t* ptr)
 {
     //WaveUpdate(ptr);
     GasUpdate(ptr);
+    SandUpdate(ptr);
+    DirtUpdate(ptr);
     SolidUpdate(ptr);
     
 
-    t = mod(t + 1, 12);
+    //t = mod(t + 1, 12);
 }
 
 int NeighbourCount(Kvad_t* ptr, int z, int n, int val)
 {
     int N = 0;
-    int type = KvadGetHexel(ptr, z, n)->mat;
     for(int i = -1; i < 2; i++)
     {
         for(int j = -1; j < 2; j++)
@@ -385,6 +528,33 @@ int NeighbourCount(Kvad_t* ptr, int z, int n, int val)
         }
     }
     return N;
+}
+
+int HalfNeighCount(Kvad_t* ptr, int z, int n, int val, int dz, int dn)
+{
+    int dx, dy, dir = 0;
+
+    for(int i = 0; i < 6; i++)
+    {
+        if(dz == Yrot[i] && dn == Yrot[mod(i - 2, 6)])
+        {
+            dir = i;
+            i = 6;
+        }
+    }
+    dx = dz, dy = dn;
+    int front = 0, left = 0, right = 0;
+    front = (KvadGetHexel(ptr, z + dx, n + dy)->mat == val) ? 1 : 0;
+    
+    dx = Yrot[mod(dir + 1    , 6)];
+    dy = Yrot[mod(dir + 1 - 2, 6)];
+    
+    right = (KvadGetHexel(ptr, z + dx, n + dy)->mat == val) ? 1 : 0;
+    dx = Yrot[mod(dir - 1    , 6)];
+    dy = Yrot[mod(dir - 1 - 2, 6)];
+    left = (KvadGetHexel(ptr, z + dx, n + dy)->mat == val) ? 1 : 0;
+
+    return (front + right + left);
 }
 
 int ReflectionAngle(Kvad_t* ptr, int z, int n, int val, int dirz, int diry)
@@ -419,26 +589,51 @@ void Repulsion(Kvad_t* ptr, int z, int n, int val, int* dz, int* dn)
             }
         }
     }
+}
 
-    /*
-    if( *dz == 0 && *dn == 0 && mod(z + n * 64, 12) == t)
+void Force(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
+{
+    *dz = 0, *dn = 0;
+    int dx, dy, dir = 0;
+    dx = fx, dy = fy;
+
+    for(int i = 0; i < 6; i++)
     {
-        *dz = -1;
-        *dn = +1;
+        if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
+        {
+            dir = i;
+            i = 6;
+        }
     }
-    */
-    /*
-    if(*dz - *dn == 0 || 2 * *dz + *dn == 0 || *dz + 2 * *dn == 0)
+    int front = 0, left = 0, right = 0;
+    front = KvadGetHexel(ptr, z + dx, n + dy)->mat;
+    dx = Yrot[mod(dir + 1    , 6)];
+    dy = Yrot[mod(dir + 1 - 2, 6)];
+    right = KvadGetHexel(ptr, z + dx, n + dy)->mat;
+    dx = Yrot[mod(dir - 1    , 6)];
+    dy = Yrot[mod(dir - 1 - 2, 6)];
+    left = KvadGetHexel(ptr, z + dx, n + dy)->mat;
+    
+    dx = fx, dy = fy;
+    if(front == 0)
     {
-        *dz = 0;
-        *dn = 0;
+        *dz = dx;
+        *dn = dy;
     }
-    else
+    else if( right != left )
     {
-        if(*dz == 2) *dz = 1;
-        if(*dn == 2) *dn = 1;
-        if(*dz == -2) *dz = -1;
-        if(*dn == -2) *dn = -1;
+        if(right == 0)
+        {
+            *dz = Yrot[mod(dir + 1    , 6)];
+            *dn = Yrot[mod(dir + 1 - 2, 6)];
+        }
+        
+        if(left == 0)
+        {
+            *dz = Yrot[mod(dir - 1    , 6)];
+            *dn = Yrot[mod(dir - 1 - 2, 6)];
+        }
+    
     }
-    */
+    
 }

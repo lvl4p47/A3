@@ -3,6 +3,11 @@
 
 #include "func.h"
 
+extern int b_quit;
+extern SDL_Event event;
+extern int pixelsize;
+extern InputState_t inpst;
+
 void InputInitialize();
 
 void InputRegister();
