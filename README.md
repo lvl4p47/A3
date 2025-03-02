@@ -9,26 +9,26 @@ Right and Left click changes cells according to the values of the cursor in the 
 Middle (Mouse wheel) click allows to pan around. Scrolling Mouse wheel rotates the grid.
 ### Buttons
 #### Buttons on the left side of the screen
-![Alt text](/readme/Button_circle.png "")
+![Alt text](/readme_pngs/Button_circle.png "")
 This Button adds 1 to the value of the cursor (right-click adds to the right value of the cursor, left-click adds to the left value of the cursor).
 
-![Alt text](/readme/Button_eraser.png "")
+![Alt text](/readme_pngs/Button_eraser.png "")
 This Button sets corresponding cursor value tp 0 (right-click sets the right value of the cursor, left-click sets the left value of the cursor).
 #### Buttons on the right side of the screen
-![Alt text](/readme/Button_pause.png "")
+![Alt text](/readme_pngs/Button_pause.png "")
 This Button toggles pause state.
 
-![Alt text](/readme/Button_step.png "")
+![Alt text](/readme_pngs/Button_step.png "")
 This Button does one step of the cellular automaton (only useful while paused).
 
-![Alt text](/readme/Button_exit.png "")
+![Alt text](/readme_pngs/Button_exit.png "")
 This Button (in the top-right corner) exits the program.
 ### Sliders
 #### Sliders on the left side of the screen
-![Alt text](/readme/Slider_size.png "")
+![Alt text](/readme_pngs/Slider_size.png "")
 This slider changes the size of the cursor (brush-size). Setting this size to 0 means that the cursor will change only one cell.
 #### Sliders on the right side of the screen
-![Alt text](/readme/Slider_time.png "")
+![Alt text](/readme_pngs/Slider_time.png "")
 This slider changes the time between each step of the of the cellular automaton (in ms). Setting this time to 0 means that the cellular automaton will update as fast as it can.
 # Cells
 There are 7 types of cells:
