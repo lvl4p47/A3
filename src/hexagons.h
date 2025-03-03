@@ -3,6 +3,10 @@
 
 #include "input.h"
 
+void RulesInitialize();
+
+void RulesTerminate();
+
 Kvad_t* KvadInitialize(int width, int height);
 
 void KvadTerminate(Kvad_t*);
