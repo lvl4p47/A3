@@ -43,7 +43,7 @@ There are 7 types of cells:
 
 4 -- Sand. Falls down, but if this direction is blocked can go to the adjacent empty cell.
 
-5 -- Dirt. Falls down, if there are no supporting cells nearby.
+5 -- Dirt. Falls, if there are no supporting cells on both sides.
 
 6 -- Gas. Gas cells repel each other. Can be set on Fire (2).
 

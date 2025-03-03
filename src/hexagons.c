@@ -437,7 +437,11 @@ void DirtUpdate(Kvad_t* ptr)
 {
     int gx = 0, gy = 1;
     int dz = 0, dn = 0;
+    int dz1 = 0, dn1 = 0;
+    int dz2 = 0, dn2 = 0;
     int f_direct = 0;
+    int b_dir_fall = 0;
+    int b_side_fall = 0;
     for(int i = 0; i < ptr->height; i++)
     {
         for(int j = 0; j < ptr->width; j++)
@@ -447,8 +451,16 @@ void DirtUpdate(Kvad_t* ptr)
             if(KvadGetHexel(ptr, j, i)->st8 == 4)
             {
                 Force(ptr, j, i, gx, gy, &dz, &dn);
+                RelToAbs(ptr, gx, gy, 2, &dz1, &dn1);
+                RelToAbs(ptr, gx, gy, -2, &dz2, &dn2);
+                b_dir_fall = (KvadGetHexel(ptr, j + dz1, i + dn1)->st8 != 4
+                            || KvadGetHexel(ptr, j + dz2, i + dn2)->st8 != 4)
+                            && dz == gx && dn == gy;
+                b_side_fall = (KvadGetHexel(ptr, j + dz1, i + dn1)->st8 != 4
+                            && KvadGetHexel(ptr, j + dz2, i + dn2)->st8 != 4)
+                            && (dz != gx || dn != gy);
                 f_direct = 0;
-                if(dz == gx && dn == gy  && (HalfNeighCount(ptr, j, i, 5, gx, gy) == 0 || NeighbourCount(ptr, j, i, 5)  <= 2))
+                if(b_dir_fall)
                 {
                     f_direct = 1;
                     
@@ -462,7 +474,7 @@ void DirtUpdate(Kvad_t* ptr)
                         KvadGetHexel(ptr, j + dz, i + dn)->fld = -2;
                     }
                 }
-                else if(HalfNeighCount(ptr, j, i, 5, gx, gy) == 2 && NeighbourCount(ptr, j, i, 5)  == 2)
+                else if(b_side_fall)
                 {
                     if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 0
                       && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
@@ -598,6 +610,21 @@ void Repulsion(Kvad_t* ptr, int z, int n, int val, int* dz, int* dn)
             }
         }
     }
+}
+
+void RelToAbs(Kvad_t* ptr, int fx, int fy, int rel, int* dz, int* dn)
+{
+    int dir = 0;
+    for(int i = 0; i < 6; i++)
+    {
+        if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
+        {
+            dir = i;
+            i = 6;
+        }
+    }
+    *dz = Yrot[mod(dir + rel    , 6)];
+    *dn = Yrot[mod(dir + rel - 2, 6)];
 }
 
 void Force(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
