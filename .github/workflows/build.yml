@@ -11,5 +11,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: install SDL2
+      run: sudo apt-get install libsdl2-dev
     - name: build project
       run: ./build.sh
