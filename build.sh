@@ -5,6 +5,8 @@ if [ ! -d "build" ]; then
     mkdir build
 fi
 
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:./lib"
+
 cd build
 rm -rf *
 cmake ..
