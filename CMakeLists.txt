@@ -16,7 +16,8 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 set(CMAKE_BUILD_TYPE Debug)
 
 # задаем пути поиска библиотек для линкера
-target_link_directories(main PUBLIC "third_party/SDL2/lib" "third_party/SDL2_image/lib")
+# потребуется при использовании сторонних библиотек
+#target_link_directories(main PUBLIC "third_party/mylib")
 
 # говорим cmake что надо будет линковать бибку к нашей цели main
 target_link_libraries(main SDL2-2.0 SDL2_image-2.0)
