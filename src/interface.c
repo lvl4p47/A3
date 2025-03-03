@@ -13,6 +13,7 @@ Slider_t** sliderlist;
 Cursor_t cursor;
 
 int b_panning, b_pause, b_step, b_drawing, b_button, b_slider;
+int max_curs;
 
 uint64_t t_f;
 uint64_t t_s;
@@ -35,6 +36,8 @@ void InterfaceInitialize()
     b_drawing = 0;
     b_button = -1;
     b_slider = -1;
+    
+    max_curs = 7;
 
     t_f = SDL_GetPerformanceFrequency() / 60;
     t_s = (sliderlist[1]->a + sliderlist[1]->d * (sliderlist[1]->c - 1))
@@ -167,9 +170,9 @@ void ButtonDown(Button_t* b)
         {
         case 0:
             if(inpst.mouse.lmc)
-                cursor.lm = 1 + (cursor.lm) % 6;
+                cursor.lm = 1 + (cursor.lm) % max_curs;
             if(inpst.mouse.rmc)
-                cursor.rm = 1 + (cursor.rm) % 6;
+                cursor.rm = 1 + (cursor.rm) % max_curs;
             b->act_b = 1;
             b->text = 2;
             break;
