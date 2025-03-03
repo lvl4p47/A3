@@ -3,7 +3,7 @@
 #define FUNC_H_INCLUDED
 
 #include <SDL2/SDL.h>
-#include "SDL_image.h"
+#include "../third_party/SDL2_image/include/SDL_image.h"
 #include <stdlib.h>
 #include <time.h>
 
