@@ -11,9 +11,5 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: install SDL2
-      run: sudo apt-get install libsdl2-dev
-    - name: install SDL2-image
-      run: sudo apt install libsdl2-image-dev
     - name: build project
       run: ./build.sh
