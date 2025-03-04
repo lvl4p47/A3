@@ -1,6 +1,6 @@
 #include "hexagons.h"
 
-int mat_amount = 8;
+int mat_amount = 9;
 int*** p_rules;
 int* neighbours_required;
 
@@ -33,6 +33,15 @@ void RulesInitialize()
     
     p_rules[3][7][0] = 0;
     p_rules[3][7][1] = 7;
+
+    p_rules[3][0][0] = 0;
+    p_rules[3][0][1] = 2;
+    
+    p_rules[4][5][0] = 0;
+    p_rules[4][5][1] = 3;
+    
+    p_rules[7][3][0] = 0;
+    p_rules[7][3][1] = 2;
 }
 
 void RulesTerminate()
@@ -426,7 +435,6 @@ void DirtUpdate(Kvad_t* ptr)
     int dz = 0, dn = 0;
     int dz1 = 0, dn1 = 0;
     int dz2 = 0, dn2 = 0;
-    int dz3 = 0, dn3 = 0;
     int f_direct = 0;
     int b_dir_fall = 0;
     int b_side_fall = 0;
@@ -441,7 +449,6 @@ void DirtUpdate(Kvad_t* ptr)
                 Force(ptr, j, i, gx, gy, &dz, &dn);
                 RelToAbs(ptr, gx, gy, 2, &dz1, &dn1);
                 RelToAbs(ptr, gx, gy, -2, &dz2, &dn2);
-                RelToAbs(ptr, gx, gy, 3, &dz3, &dn3);
                 b_dir_fall = ((KvadGetHexel(ptr, j + dz1, i + dn1)->st8 != 4)
                              || (KvadGetHexel(ptr, j + dz2, i + dn2)->st8 != 4))
                             && dz == gx && dn == gy;

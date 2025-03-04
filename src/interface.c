@@ -37,7 +37,7 @@ void InterfaceInitialize()
     b_button = -1;
     b_slider = -1;
     
-    max_curs = 7;
+    max_curs = 8;
 
     t_f = SDL_GetPerformanceFrequency() / 60;
     t_s = (sliderlist[1]->a + sliderlist[1]->d * (sliderlist[1]->c - 1))
