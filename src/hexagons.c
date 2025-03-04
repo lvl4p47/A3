@@ -554,7 +554,12 @@ void RopeUpdate(Kvad_t* ptr)
                 b_dir_fall = 
                 (
                     (KvadGetHexel(ptr, j + dz1, i + dn1)->st8 == 5) &&
-                    (KvadGetHexel(ptr, j + dz2, i + dn2)->st8 == 5)
+                    (KvadGetHexel(ptr, j + dz2, i + dn2)->st8 == 5) &&
+                    !(
+                        (KvadGetHexel(ptr, j - gx, i - gy)->st8 == 5) &&
+                        (KvadGetHexel(ptr, j + dz3, i + dn3)->st8 == 0) && 
+                        (KvadGetHexel(ptr, j + dz4, i + dn4)->st8 == 0)
+                    )
                 ) || 
                 (
                     (KvadGetHexel(ptr, j + dz3, i + dn3)->st8 != 5) && 
