@@ -123,7 +123,7 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
         break;
     case 1:
         cptr->st8 = 5;
-        cptr->clr = 7;
+        cptr->clr = 2;
         break;
     case 2:
         cptr->st8 = 2;
@@ -143,7 +143,7 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
         break;
     case 6:
         cptr->st8 = 1;
-        cptr->clr = 2;
+        cptr->clr = 4;
         break;
     case 7:
         cptr->st8 = 2;
@@ -520,13 +520,170 @@ void DirtUpdate(Kvad_t* ptr)
     }
 }
 
+void RopeUpdate(Kvad_t* ptr)
+{
+    int gx = 0, gy = 1;
+    int dz = 0, dn = 0;
+    int dz1 = 0, dn1 = 0;
+    int dz2 = 0, dn2 = 0;
+    int dz3 = 0, dn3 = 0;
+    int dz4 = 0, dn4 = 0;
+    int f_direct = 0;
+    int b_dir_fall = 0;
+    int b_side_fall = 0;
+    int b_up_fall = 0;
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            
+            KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
+            if(KvadGetHexel(ptr, j, i)->st8 == 5)
+            {
+                ForceTension(ptr, j, i, gx, gy, &dz, &dn);
+                RelToAbs(ptr, gx, gy, 1, &dz1, &dn1);
+                RelToAbs(ptr, gx, gy, -1, &dz2, &dn2);
+                RelToAbs(ptr, gx, gy, 2, &dz3, &dn3);
+                RelToAbs(ptr, gx, gy, -2, &dz4, &dn4);
+
+                b_up_fall = 
+                (
+                dz == -gx && dn == -gy
+                )
+                ;
+                b_dir_fall = 
+                (
+                    (KvadGetHexel(ptr, j + dz1, i + dn1)->st8 == 5) &&
+                    (KvadGetHexel(ptr, j + dz2, i + dn2)->st8 == 5)
+                ) || 
+                (
+                    (KvadGetHexel(ptr, j + dz3, i + dn3)->st8 != 5) && 
+                    (KvadGetHexel(ptr, j + dz4, i + dn4)->st8 != 5) && 
+                    (KvadGetHexel(ptr, j - gx, i - gy)->st8 != 5)
+                ) || 
+                (
+                    (
+                        (KvadGetHexel(ptr, j + dz1, i + dn1)->st8 == 5) && 
+                        (KvadGetHexel(ptr, j + dz4, i + dn4)->st8 != 5) &&
+                        !(
+                            (KvadGetHexel(ptr, j - gx, i - gy)->st8 == 5) &&
+                            (KvadGetHexel(ptr, j + dz3, i + dn3)->st8 != 5)
+                        )
+                    ) ||
+                    (
+                        (KvadGetHexel(ptr, j + dz2, i + dn2)->st8 == 5) && 
+                        (KvadGetHexel(ptr, j + dz3, i + dn3)->st8 != 5) &&
+                        !(
+                            (KvadGetHexel(ptr, j - gx, i - gy)->st8 == 5) &&
+                            (KvadGetHexel(ptr, j + dz4, i + dn4)->st8 != 5)
+                        )
+                    )
+                )
+                && dz == gx && dn == gy;
+                b_side_fall = 
+                (
+                //KvadGetHexel(ptr, j + dz3, i + dn3)->st8 == 5 && 
+                //KvadGetHexel(ptr, j + dz4, i + dn4)->st8 != 5
+                dz != gx || dn != gy
+                )
+                ;
+                //b_side_fall = 1;
+                //b_dir_fall = 0;
+                f_direct = 0;
+                if(b_up_fall)
+                {
+                    f_direct = 2;
+                    
+                    if( KvadGetHexel(ptr, j + dz, i + dn)->fld != -3
+                      && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = 3;
+                    }
+                    else
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -3;
+                    }
+                }
+                else if(b_dir_fall)
+                {
+                    f_direct = 1;
+                    
+                    if( (KvadGetHexel(ptr, j + dz, i + dn)->fld != -2 && 
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld != -3)
+                      && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = 2;
+                    }
+                    else
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -2;
+                    }
+                }
+                else if(b_side_fall)
+                {
+                    //dz = dz1, dn = dn1;
+                    if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 0
+                      && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = 1;
+                    }
+                    else if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 1)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -1;
+                    }
+                }
+            }
+        }
+    }
+
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            if(KvadGetHexel(ptr, j, i)->st8 == 5)
+            {
+                ForceTension(ptr, j, i, gx, gy, &dz, &dn);
+                f_direct = 0;
+                if(dz == gx && dn == gy)
+                {    
+                    f_direct = 1;
+                    
+                }
+                if(dz == -gx && dn == -gy)
+                {    
+                    f_direct = 2;
+                    
+                }
+                if(KvadGetHexel(ptr, j + dz, i + dn)->fld == 1 + f_direct)
+                {
+                    swap(&KvadGetHexel(ptr, j     , i     )->tmp,
+                        &KvadGetHexel(ptr, j + dz, i + dn)->tmp);
+                }
+            }
+        }
+    }
+    
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+               
+            KvadGetHexel(ptr, j, i)->fld = 0;
+            KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp);
+
+        }
+    }
+}
+
 void KvadUpdate(Kvad_t* ptr)
 {
     //WaveUpdate(ptr);
     GasUpdate(ptr);
     SandUpdate(ptr);
     DirtUpdate(ptr);
+    RopeUpdate(ptr);
     SolidUpdate(ptr);
+    
     
 
     //t = mod(t + 1, 12);
@@ -668,4 +825,85 @@ void Force(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     
     }
     
+}
+
+void ForceTension(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
+{
+    *dz = 0, *dn = 0;
+    int dx, dy, dir = 0;
+    dx = fx, dy = fy;
+
+    int left = 0, right = 0;
+    int left1 = 0, right1 = 0;
+
+    int rx, ry, lx, ly, r1x, r1y, l1x, l1y;
+
+    for(int i = 0; i < 6; i++)
+    {
+        if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
+        {
+            dir = i;
+            i = 6;
+        }
+    }
+
+    RelToAbs(ptr, fx, fy, 2, &rx, &ry);
+    RelToAbs(ptr, fx, fy, -2, &lx, &ly);
+
+    RelToAbs(ptr, fx, fy, 1, &r1x, &r1y);
+    RelToAbs(ptr, fx, fy, -1, &l1x, &l1y);
+
+    if
+    (
+        KvadGetHexel(ptr, z + r1x, n + r1y)->st8 != 5 && 
+        KvadGetHexel(ptr, z + l1x, n + l1y)->st8 != 5 && 
+        KvadGetHexel(ptr, z + rx, n + ry)->st8 != 5 && 
+        KvadGetHexel(ptr, z + lx, n + ly)->st8 != 5 && 
+        KvadGetHexel(ptr, z + fx, n + fy)->st8 == 5
+    )
+    {
+        *dz = -fx, *dn = -fy;
+    }
+    else if(KvadGetHexel(ptr, z + r1x, n + r1y)->st8 == 0 &&
+        KvadGetHexel(ptr, z + l1x, n + l1y)->st8 == 0)
+    {
+        
+        
+        right = KvadGetHexel(ptr, z + rx, n + ry)->st8;
+        left = KvadGetHexel(ptr, z + lx, n + ly)->st8;
+        
+        dx = fx, dy = fy;
+        
+        if(right == 5)
+        {
+            dx += rx, dy += ry;
+        }
+        if(left == 5)
+        {
+            dx += lx, dy += ly;
+        }
+
+        *dz = dx, *dn = dy;
+    }
+    else if(KvadGetHexel(ptr, z + fx, n + fy)->st8 != 5)
+    {
+        *dz = fx, *dn = fy;
+    }
+    else
+    {
+        //right1 = KvadGetHexel(ptr, z + r1x, n + r1y)->st8;
+        //left1 = KvadGetHexel(ptr, z + l1x, n + l1y)->st8;
+        
+        dx = fx, dy = fy;
+
+        if(right1 == 5)
+        {
+            dx -= r1x, dy -= r1y;
+        }
+        if(left1 == 5)
+        {
+            dx -= l1x, dy -= l1y;
+        }
+        *dz = dx, *dn = dy;
+    }
 }
