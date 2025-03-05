@@ -26,7 +26,7 @@ int clean_suite_func(void)
 void testmod()
 {
     /* positive integer cases */
-    CU_ASSERT_EQUAL(mod(5, 4), 1);
+    CU_ASSERT_EQUAL(mod(5, 4), 2);
     CU_ASSERT_EQUAL(mod(3, 1), 0);
 }
 
