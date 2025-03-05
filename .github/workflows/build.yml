@@ -17,3 +17,13 @@ jobs:
       run: sudo apt-get install libsdl2-image-dev
     - name: build project
       run: ./build.sh
+  
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: install cunit
+      run: sudo apt-get install libcunit1-dev
+    - name: run unit tests
+      run: ./test.sh
