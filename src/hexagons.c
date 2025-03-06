@@ -34,11 +34,17 @@ void RulesInitialize()
     p_rules[3][7][0] = 0;
     p_rules[3][7][1] = 7;
 
-    p_rules[3][0][0] = 0;
-    p_rules[3][0][1] = 2;
+    p_rules[3][6][0] = 0;
+    p_rules[3][6][1] = 2;
     
     p_rules[4][5][0] = 0;
     p_rules[4][5][1] = 3;
+
+    p_rules[5][4][0] = 0;
+    p_rules[5][4][1] = 2;
+
+    p_rules[6][3][0] = 0;
+    p_rules[6][3][1] = 3;
     
     p_rules[7][3][0] = 0;
     p_rules[7][3][1] = 2;
@@ -130,7 +136,7 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
         cptr->clr = 1;
         break;
     case 3:
-        cptr->st8 = 1;
+        cptr->st8 = 6;
         cptr->clr = 3;
         break;
     case 4:
@@ -159,10 +165,8 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
 
 Cell_t* KvadGetHexel(Kvad_t* ptr, int z, int n)
 {
-    z = z % ptr->width;
-	z += z < 0 ? ptr->width : 0;
-    n = n % ptr->height;
-    n += n < 0 ? ptr->height : 0;
+    z = mod(z, ptr->width);
+    n = mod(n, ptr->height);
 
     return &ptr->arr[n][z];
 }
@@ -554,12 +558,12 @@ void RopeUpdate(Kvad_t* ptr)
                 b_dir_fall = 
                 (
                     (KvadGetHexel(ptr, j + dz1, i + dn1)->st8 == 5) &&
-                    (KvadGetHexel(ptr, j + dz2, i + dn2)->st8 == 5) &&
-                    !(
-                        (KvadGetHexel(ptr, j - gx, i - gy)->st8 == 5) &&
-                        (KvadGetHexel(ptr, j + dz3, i + dn3)->st8 == 0) && 
-                        (KvadGetHexel(ptr, j + dz4, i + dn4)->st8 == 0)
-                    )
+                    (KvadGetHexel(ptr, j + dz2, i + dn2)->st8 == 5)// &&
+                    //!(
+                    //    (KvadGetHexel(ptr, j - gx, i - gy)->st8 == 5) &&
+                    //    (KvadGetHexel(ptr, j + dz3, i + dn3)->st8 == 0) && 
+                    //    (KvadGetHexel(ptr, j + dz4, i + dn4)->st8 == 0)
+                    //)
                 ) || 
                 (
                     (KvadGetHexel(ptr, j + dz3, i + dn3)->st8 != 5) && 
@@ -680,6 +684,146 @@ void RopeUpdate(Kvad_t* ptr)
     }
 }
 
+void LiquidUpdate(Kvad_t* ptr)
+{
+    int gx = 0, gy = 1;
+    int dz = 0, dn = 0;
+    int f_direct = 0;
+    int b_dir_fall = 0;
+    int b_side_fall = 0;
+    int b_up_fall = 0;
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            
+            KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
+            if(KvadGetHexel(ptr, j, i)->st8 == 6)
+            {
+                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+
+                b_up_fall = 
+                (
+                    (dz == -gx && dn == -gy) ||
+                    (dz == -2 * gx && dn == -2 * gy)
+                    
+                );
+                b_dir_fall = 
+                (
+                    (dz == gx && dn == gy) ||
+                    (dz == 2 * gx && dn == 2 * gy)
+                )
+                ;
+                b_side_fall =
+                (
+                    
+                    (dz != gx || dn != gy)
+                );
+
+                f_direct = 0;
+                
+                if(b_up_fall)
+                {
+                    f_direct = 2;
+                    
+                    if( KvadGetHexel(ptr, j + dz, i + dn)->fld != -3
+                      && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = 3;
+                    }
+                    else
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -3;
+                    }
+                }
+                else if(b_dir_fall)
+                {
+                    f_direct = 1;
+                    
+                    if( (KvadGetHexel(ptr, j + dz, i + dn)->fld != 2 && 
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld != -3)
+                      && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = 2;
+                    }
+                    else
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -2;
+                    }
+                }
+                else if(b_side_fall)
+                {
+                    if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 0
+                      && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = 1;
+                    }
+                    else if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 1)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -1;
+                    }
+                }
+            }
+        }
+    }
+
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            if(KvadGetHexel(ptr, j, i)->st8 == 6)
+            {
+                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                
+                b_up_fall = 
+                (
+                    (dz == -gx && dn == -gy) ||
+                    (dz == -2 * gx && dn == -2 * gy)
+                    
+                );
+                b_dir_fall = 
+                (
+                    (dz == gx && dn == gy) ||
+                    (dz == 2 * gx && dn == 2 * gy)
+                )
+                ;
+                b_side_fall =
+                (
+                    
+                    (dz != gx || dn != gy)
+                );
+
+                f_direct = 0;
+                if(b_dir_fall)
+                {    
+                    f_direct = 1;
+                    
+                }
+                if(b_up_fall)
+                {    
+                    f_direct = 2;
+                    
+                }
+                if(KvadGetHexel(ptr, j + dz, i + dn)->fld == 1 + f_direct)
+                {
+                    swap(&KvadGetHexel(ptr, j     , i     )->tmp,
+                        &KvadGetHexel(ptr, j + dz, i + dn)->tmp);
+                }
+            }
+        }
+    }
+    
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            
+            KvadGetHexel(ptr, j, i)->fld = 0;
+            KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp);
+        }
+    }
+}
+
 void KvadUpdate(Kvad_t* ptr)
 {
     //WaveUpdate(ptr);
@@ -687,6 +831,7 @@ void KvadUpdate(Kvad_t* ptr)
     SandUpdate(ptr);
     DirtUpdate(ptr);
     RopeUpdate(ptr);
+    LiquidUpdate(ptr);
     SolidUpdate(ptr);
     
     
@@ -772,7 +917,8 @@ void Repulsion(Kvad_t* ptr, int z, int n, int val, int* dz, int* dn)
 
 void RelToAbs(Kvad_t* ptr, int fx, int fy, int rel, int* dz, int* dn)
 {
-    int dir = 0;
+    int dir = -1;
+    *dz = 0, *dn = 0;
     for(int i = 0; i < 6; i++)
     {
         if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
@@ -781,14 +927,17 @@ void RelToAbs(Kvad_t* ptr, int fx, int fy, int rel, int* dz, int* dn)
             i = 6;
         }
     }
-    *dz = Yrot[mod(dir + rel    , 6)];
-    *dn = Yrot[mod(dir + rel - 2, 6)];
+    if(dir != -1)
+    {
+        *dz = Yrot[mod(dir + rel    , 6)];
+        *dn = Yrot[mod(dir + rel - 2, 6)];
+    }
 }
 
 void Force(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
-    int dx, dy, dir = 0;
+    int dx, dy, dir = -1;
     dx = fx, dy = fy;
 
     for(int i = 0; i < 6; i++)
@@ -835,7 +984,7 @@ void Force(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 void ForceTension(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
-    int dx, dy, dir = 0;
+    int dx, dy, dir = -1;
     dx = fx, dy = fy;
 
     int left = 0, right = 0;
@@ -896,19 +1045,74 @@ void ForceTension(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     }
     else
     {
-        //right1 = KvadGetHexel(ptr, z + r1x, n + r1y)->st8;
-        //left1 = KvadGetHexel(ptr, z + l1x, n + l1y)->st8;
-        
-        dx = fx, dy = fy;
-
-        if(right1 == 5)
-        {
-            dx -= r1x, dy -= r1y;
-        }
-        if(left1 == 5)
-        {
-            dx -= l1x, dy -= l1y;
-        }
-        *dz = dx, *dn = dy;
+        *dz = 0, *dn = 0;
     }
+}
+
+void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
+{
+    *dz = 0, *dn = 0;
+    int dir = -1;
+
+    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    
+    int b_back = 0, b_forward = 0, 
+    b_rightfront = 0, b_leftfront = 0, 
+    b_rightback = 0, b_leftback = 0;
+
+    for(int i = 0; i < 6; i++)
+    {
+        if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
+        {
+            dir = i;
+            i = 6;
+        }
+    }
+
+    RelToAbs(ptr, fx, fy, 2, &rbx, &rby);
+    RelToAbs(ptr, fx, fy, -2, &lbx, &lby);
+
+    RelToAbs(ptr, fx, fy, 1, &rfx, &rfy);
+    RelToAbs(ptr, fx, fy, -1, &lfx, &lfy);
+
+    b_back =
+    (
+        KvadGetHexel(ptr, z + fx, n + fy)->st8 != 0
+    );
+    b_forward = 
+    (
+        KvadGetHexel(ptr, z - fx, n - fy)->st8 != 0 ||
+        (
+            KvadGetHexel(ptr, z + fx, n + fy)->st8 != 6 &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->st8 != 6 &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->st8 != 6 &&
+            KvadGetHexel(ptr, z - fx, n - fy)->st8 != 6 &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->st8 != 6 &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->st8 != 6
+            
+        )
+    );
+    b_rightfront =
+    (
+        KvadGetHexel(ptr, z + lbx, n + lby)->st8 != 0
+    );
+    b_leftfront = 
+    (
+        KvadGetHexel(ptr, z + rbx, n + rby)->st8 != 0
+    );
+    b_rightback =
+    (
+        KvadGetHexel(ptr, z + lfx, n + lfy)->st8 != 0
+    );
+    b_leftback =
+    (
+        KvadGetHexel(ptr, z + rfx, n + rfy)->st8 != 0
+    );
+
+    *dz -= fx * b_back, *dn -= fy * b_back;
+    *dz += fx * b_forward, *dn += fy * b_forward;
+    *dz += rfx * b_rightfront, *dn += rfy * b_rightfront;
+    *dz += lfx * b_leftfront, *dn += lfy * b_leftfront;
+    *dz += rbx * b_rightback, *dn += rby * b_rightback;
+    *dz += lbx * b_leftback, *dn += lby * b_leftback;
 }

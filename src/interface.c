@@ -23,12 +23,10 @@ void InterfaceInitialize()
     ButtonListInitialize();
     SliderListInitialize();
     
-    cursor.lm = 3;
+    cursor.lm = 8;
     cursor.rm = 0;
     cursor.lrad = sliderlist[0]->a + sliderlist[0]->d * (sliderlist[0]->c - 1);
     cursor.rrad = sliderlist[0]->a + sliderlist[0]->d * (sliderlist[0]->c - 1);
-    cursor.lrad = 1;
-    cursor.rrad = 1;
 
     b_panning = 0;
     b_pause = 0;
@@ -369,7 +367,7 @@ void SliderListInitialize()
 	{
 		sliderlist[i] = NULL;
     }
-    sliderlist[0] = SliderInitialize(1, 5, 11, 3, 0, 1, 2, 0);
+    sliderlist[0] = SliderInitialize(1, 5, 11, 3, 0, 1, 4, 0);
     sliderlist[1] = SliderInitialize(61, 24, 18, 3, 0, 20, 3, 1);
 }
 

@@ -31,19 +31,31 @@ This slider changes the size of the cursor (brush-size). Setting this size to 0 
 ![Alt text](/readme_pngs/Slider_time.png "")
 This slider changes the time between each step of the of the cellular automaton (in ms). Setting this time to 0 means that the cellular automaton will update as fast as it can.
 # Cells
-There are 7 types of cells:
+There are 9 types of cells:
 
-0 -- empty cell.
-
-1 -- Wall. Can be set on Fire (2). Turns water (3) to Wall (1).
-
-2 -- Fire. Lights Wall (1) and Gas (6).
-
-3 -- Water. Water cells repel each other. Turns into Wall (1) when in contact with it.
-
-4 -- Sand. Falls down, but if this direction is blocked can go to the adjacent empty cell.
-
-5 -- Dirt. Falls, if there are no supporting cells on both sides.
-
-6 -- Gas. Gas cells repel each other. Can be set on Fire (2).
+### 0 -- empty cell.
+### 1 -- Rope. 
+* Falls.
+* Can be suspended by Rope (1) cells on both sides.
+* Can be set on Fire (2).
+### 2 -- Fire.
+* Ignites Rope (1), boils Water (3), dries Dirt (5), melts Ice (7).
+### 3 -- Water.
+* Falls.
+* Water cells repel each other.
+* Turns into Ice (7) when in contact with it.
+### 4 -- Sand. 
+* Falls down, but if this direction is blocked can go to the adjacent empty cell.
+* Turns into Dirt (5) when in contact with Water (3).
+### 5 -- Dirt. 
+* Falls.
+* Can be supported by Dirt (5) cells on both sides.
+* Turns into Sand (4) when in contact with Fire (2).
+### 6 -- Steam. 
+* Steam cells repel each other.
+* Turns into Water (3) when in contact with Ice (7).
+### 7 -- Ice.
+* Turns water (3) to Ice (7). 
+* Turns into Water (3) when in contact with Fire (2).
+### 8 -- Rock.
 
