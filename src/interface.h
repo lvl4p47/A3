@@ -4,6 +4,7 @@
 #include "text.h"
 
 extern int b_pause, b_step;
+extern int b_ui;
 extern uint64_t t_f;
 extern uint64_t t_s;
 

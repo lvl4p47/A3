@@ -13,9 +13,9 @@ void ScreenClear();
 
 void ScreenRefresh();
 
-void HexelDraw(Display_t* d, int z, int n, Cell_t* c);
+void HexelDraw(Display_t* d, int z, int n, Cell_t* c, int b_ui);
 
-void KvadRender(Kvad_t* ptr, Display_t* d, int x, int y);
+void KvadRender(Kvad_t* ptr, Display_t* d, int x, int y, int b_ui);
 
 Display_t* DisplayInitialize(int x, int y, int w, int h);
 

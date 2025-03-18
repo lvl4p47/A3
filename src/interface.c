@@ -14,6 +14,7 @@ Cursor_t cursor;
 
 int b_panning, b_pause, b_step, b_drawing, b_button, b_slider;
 int max_curs;
+int b_ui;
 
 uint64_t t_f;
 uint64_t t_s;
@@ -23,7 +24,7 @@ void InterfaceInitialize()
     ButtonListInitialize();
     SliderListInitialize();
     
-    cursor.lm = 8;
+    cursor.lm = 3;
     cursor.rm = 0;
     cursor.lrad = sliderlist[0]->a + sliderlist[0]->d * (sliderlist[0]->c - 1);
     cursor.rrad = sliderlist[0]->a + sliderlist[0]->d * (sliderlist[0]->c - 1);
@@ -31,6 +32,7 @@ void InterfaceInitialize()
     b_panning = 0;
     b_pause = 0;
     b_step = 0;
+    b_ui = 0;
     b_drawing = 0;
     b_button = -1;
     b_slider = -1;
@@ -197,7 +199,7 @@ void ButtonDown(Button_t* b)
             b->text = 2;
             break;
         case 5:
-            
+            b_ui = 1 - b_ui;
             b->act_b = 1;
             b->text = 3 - b->text;
             break;
@@ -367,7 +369,7 @@ void SliderListInitialize()
 	{
 		sliderlist[i] = NULL;
     }
-    sliderlist[0] = SliderInitialize(1, 5, 11, 3, 0, 1, 4, 0);
+    sliderlist[0] = SliderInitialize(1, 5, 11, 3, 0, 1, 1, 0);
     sliderlist[1] = SliderInitialize(61, 24, 18, 3, 0, 20, 3, 1);
 }
 

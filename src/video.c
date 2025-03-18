@@ -16,6 +16,7 @@ int rgb[8][3] = {
                 };
 SDL_Rect hexel;
 Sprite_t* s1 = NULL;
+Sprite_t* s2 = NULL;
 
 void point(int x, int y, int r, int g, int b)
 {
@@ -42,12 +43,13 @@ void VideoInitialize()
     IMG_Init(IMG_INIT_PNG);
     
     s1 = SpriteInitialize(9, 9, "./src/tiles.png");
-
+    s2 = SpriteInitialize(9, 9, "./src/ui_tiles.png");
 }
 
 void VideoTerminate()
 {
     SpriteTerminate(s1);
+    SpriteTerminate(s2);
 
     SDL_DestroyWindow( m_window );
     SDL_DestroyRenderer( m_renderer );
@@ -65,7 +67,7 @@ void ScreenRefresh()
     SDL_RenderPresent( m_renderer );
 }
 
-void HexelDraw(Display_t* d, int z, int n, Cell_t* c)
+void HexelDraw(Display_t* d, int z, int n, Cell_t* c, int b_ui)
 {
     hexel.x = d->screen.x + d->screen.w / 2 + d->hshift.w * 1 +
     (z + d->hshift.x) * hcos(d->angle) + (n + d->hshift.y) * hcos(d->angle + 8);
@@ -76,17 +78,28 @@ void HexelDraw(Display_t* d, int z, int n, Cell_t* c)
     int srcy = c->mat * 9;
 
     SDL_SetTextureColorMod(s1->texture, rgb[c->clr][0], rgb[c->clr][1], rgb[c->clr][2]);
-    SpriteDraw(s1, srcx, srcy, hexel.x, hexel.y);
+    if(b_ui == 1)
+    {
+        srcx = d->angle * 9;
+        srcy = (mod(c->fld2, 10)) * 9;
+        SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y);
+    }
+    else
+    {
+        srcx = d->angle * 9;
+        srcy = c->mat * 9;
+        SpriteDraw(s1, srcx, srcy, hexel.x, hexel.y);
+    }
 }
 
-void KvadRender(Kvad_t* ptr, Display_t* d, int x, int y)
+void KvadRender(Kvad_t* ptr, Display_t* d, int x, int y, int b_ui)
 {
     SDL_SetRenderDrawColor( m_renderer, rgb[3][0], rgb[3][1], rgb[3][2], 255 );
     for (int i = 0; i < ptr->height; i++)
     {
         for (int j = 0; j < ptr->width; j++)
         {
-            HexelDraw(d, j, i, &ptr->arr[i][j]);
+            HexelDraw(d, j, i, &ptr->arr[i][j], b_ui);
         }
     }
 }

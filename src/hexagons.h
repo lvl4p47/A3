@@ -55,4 +55,6 @@ void Expand(Kvad_t* ptr, int z, int n);
 
 void PressureIncrease(Kvad_t* ptr, int z, int n, int fx, int fy, int* gout, int* nout);
 
+void Border(Kvad_t* ptr);
+
 #endif

@@ -46,7 +46,7 @@ void update_frame(uint64_t* ft, int64_t* dr)
     }
     */
 
-    KvadRender(k1, d1, 1, 1);
+    KvadRender(k1, d1, 1, 1, b_ui);
     
     InterfaceUpdate();
 

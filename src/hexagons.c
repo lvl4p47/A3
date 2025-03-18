@@ -31,8 +31,9 @@ void RulesInitialize()
 
     p_rules[2][0][0] = 0;
     
-    //p_rules[3][7][0] = 0;
-    //p_rules[3][7][1] = 7;
+    p_rules[3][7][0] = 0;
+    p_rules[3][7][1] = 7;
+    p_rules[3][7][2] = 7;
 
     p_rules[3][6][0] = 0;
     p_rules[3][6][1] = 2;
@@ -42,7 +43,7 @@ void RulesInitialize()
 
     p_rules[5][4][0] = 0;
     p_rules[5][4][1] = 2;
-
+    
     p_rules[6][3][0] = 0;
     p_rules[6][3][1] = 6;
     p_rules[6][3][2] = 6;
@@ -51,9 +52,12 @@ void RulesInitialize()
     p_rules[6][3][5] = 6;
     p_rules[6][3][6] = 6;
     
-    p_rules[7][0][0] = 0;
-    p_rules[7][0][1] = 0;
-    p_rules[7][0][2] = 0;
+    p_rules[6][7][0] = 0;
+    p_rules[6][7][1] = 7;
+    
+    p_rules[7][3][0] = 0;
+    p_rules[7][3][1] = 2;
+    
 }
 
 void RulesTerminate()
@@ -112,8 +116,9 @@ void KvadZero(Kvad_t* ptr)
             ptr->arr[i][j].mat = 0;
             ptr->arr[i][j].tmp = 0;
             ptr->arr[i][j].prs_grav = 0;
-            ptr->arr[i][j].prs_nongrav = 0;
+            ptr->arr[i][j].prs_dist = 0;
             ptr->arr[i][j].fld = 0;
+            ptr->arr[i][j].fld2 = 0;
             ptr->arr[i][j].dx = 0;
             ptr->arr[i][j].dy = 0;
             ptr->arr[i][j].st8 = 0;
@@ -155,12 +160,12 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
         cptr->clr = 1;
         break;
     case 6:
-        cptr->st8 = 7;
-        cptr->clr = 4;
+        cptr->st8 = 1;
+        cptr->clr = 7;
         break;
     case 7:
-        cptr->st8 = 7;
-        cptr->clr = 7;
+        cptr->st8 = 4;
+        cptr->clr = 4;
         break;
     default:
         cptr->st8 = 2;
@@ -187,9 +192,12 @@ void KvadSetBlob(Kvad_t* ptr, int z, int n, int value, int rad)
             {
                 if(KvadGetHexel(ptr, z + j, n + i)->mat == 0 || value == 0)
                 {
+                    
                     KvadSetMat(ptr, z + j, n + i, value);
                     KvadGetHexel(ptr, z + j, n + i)->prs_grav = 0;
-                    KvadGetHexel(ptr, z + j, n + i)->prs_nongrav = 0;
+                    KvadGetHexel(ptr, z + j, n + i)->prs_dist = 0;
+                    
+                    //KvadGetHexel(ptr, z + j, n + i)->prs_dist = value;
                 }
             }
         }
@@ -203,14 +211,14 @@ void WaveUpdate(Kvad_t* ptr)
     {
         for(int j = 0; j < ptr->width; j++)
         {
-            KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->prs_nongrav;
+            KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->prs_dist;
         }
     }
     for(int i = 0; i < ptr->height; i++)
     {
         for(int j = 0; j < ptr->width; j++)
         {
-            if(KvadGetHexel(ptr, j, i)->prs_nongrav <= 3 || 1)
+            if(KvadGetHexel(ptr, j, i)->prs_dist >= 6)
             {
                 for(int di = -1; di < 2; di++)
                 {
@@ -218,13 +226,15 @@ void WaveUpdate(Kvad_t* ptr)
                     {
                         if( di - dj != 0)
                         {
+                            if( KvadGetHexel(ptr, j + dj, i + di)->prs_dist == 0 || 1)
+                            {
                             
-                            KvadGetHexel(ptr, j + dj, i + di)->tmp -= 1;
-                            KvadGetHexel(ptr, j, i)->tmp += 1;
+                                KvadGetHexel(ptr, j + dj, i + di)->tmp += 1;//KvadGetHexel(ptr, j, i)->prs_dist - 1;
+                            }
                         }
                     }
                 }
-                //KvadGetHexel(ptr, j, i)->tmp -= 6;
+                KvadGetHexel(ptr, j, i)->tmp -= 6;
                 /*
                 for(int di = -1; di < 2; di++)
                 {
@@ -246,13 +256,14 @@ void WaveUpdate(Kvad_t* ptr)
     {
         for(int j = 0; j < ptr->width; j++)
         {
-            KvadGetHexel(ptr, j, i)->prs_nongrav = KvadGetHexel(ptr, j, i)->tmp;
-            
+            KvadGetHexel(ptr, j, i)->prs_dist = KvadGetHexel(ptr, j, i)->tmp;
+            /*
             if(KvadGetHexel(ptr, j, i)->prs_nongrav != 0)
                 KvadSetMat(ptr, j, i, 2);
             else
                 KvadSetMat(ptr, j, i, 0);
             KvadGetHexel(ptr, j, i)->clr = 1 + mod(KvadGetHexel(ptr, j, i)->tmp, 7);
+            */
         }
     }
 }
@@ -699,17 +710,55 @@ void RopeUpdate(Kvad_t* ptr)
 void LiquidUpdate(Kvad_t* ptr)
 {
     int gx = 0, gy = 1;
+    int dz = 0, dn = 0;
     int gout = 0, nout = 0;
     
     for(int i = 0; i < ptr->height; i++)
     {
         for(int j = 0; j < ptr->width; j++)
         {
+            KvadGetHexel(ptr, j, i)->fld2 = 0;
+            KvadGetHexel(ptr, j, i)->fld = 0;
+        }
+    }
+
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
             KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
             if(KvadGetHexel(ptr, j, i)->st8 == 6)
             {
-                PressureIncrease(ptr, j, i, gx, gy, &gout, &nout);
-                KvadGetHexel(ptr, j, i)->tmp = gout;
+                for(int di = -1; di < 2; di++)
+                {
+                    for(int dj = -1; dj < 2; dj++)
+                    {
+                        if( di * dj != 1)
+                            KvadGetHexel(ptr, j + dj, i + di)->fld2 += 1;
+                    }
+                }
+                //KvadGetHexel(ptr, j + 2, i - 1)->fld2 += 3;
+                //KvadGetHexel(ptr, j - 2, i + 1)->fld2 += 3;
+                for(int di = -2; di < 3; di++)
+                {
+                    for(int dj = -2; dj < 3; dj++)
+                    {
+                        if( abs(di + dj) < 3)
+                            KvadGetHexel(ptr, j + dj, i + di)->fld2 += 0;
+                    }
+                }
+                for(int di = -3; di < 4; di++)
+                {
+                    for(int dj = -3; dj < 4; dj++)
+                    {
+                        if( abs(di + dj) < 4)
+                            KvadGetHexel(ptr, j + dj, i + di)->fld2 += 0;
+                    }
+                }
+            }
+            else if(KvadGetHexel(ptr, j, i)->st8 != 0)
+            {
+                KvadGetHexel(ptr, j, i)->fld2 += 2;
             }
         }
     }
@@ -719,8 +768,15 @@ void LiquidUpdate(Kvad_t* ptr)
         {
             if(KvadGetHexel(ptr, j, i)->st8 == 6)
             {
-                KvadGetHexel(ptr, j, i)->prs_grav = KvadGetHexel(ptr, j, i)->tmp;
-                KvadGetHexel(ptr, j, i)->clr = 1 + mod(KvadGetHexel(ptr, j, i)->prs_grav / 7, 7);
+                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                if(KvadGetHexel(ptr, j + dz, i + dn)->fld == 0 && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
+                {
+                    KvadGetHexel(ptr, j + dz, i + dn)->fld = 1;
+                }
+                else
+                {
+                    KvadGetHexel(ptr, j + dz, i + dn)->fld = -1;
+                }
             }
         }
     }
@@ -730,8 +786,12 @@ void LiquidUpdate(Kvad_t* ptr)
         {
             if(KvadGetHexel(ptr, j, i)->st8 == 6)
             {
-                PressureIncrease(ptr, j, i, gx, gy, &gout, &nout);
-                KvadGetHexel(ptr, j, i)->tmp = nout;
+                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                if(KvadGetHexel(ptr, j + dz, i + dn)->fld == 1)
+                {
+                    swap(&KvadGetHexel(ptr, j     , i     )->tmp,
+                        &KvadGetHexel(ptr, j + dz, i + dn)->tmp);
+                }
             }
         }
     }
@@ -740,53 +800,18 @@ void LiquidUpdate(Kvad_t* ptr)
     {
         for(int j = 0; j < ptr->width; j++)
         {
-            //KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
-            if(KvadGetHexel(ptr, j, i)->st8 == 6)
-            {
-                KvadGetHexel(ptr, j, i)->prs_nongrav = KvadGetHexel(ptr, j, i)->tmp;
-            }
-        }
-    }
-    for(int i = 0; i < ptr->height; i++)
-    {
-        for(int j = 0; j < ptr->width; j++)
-        {
-            KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
-        }
-    }
-    for(int i = 0; i < ptr->height; i++)
-    {
-        for(int j = 0; j < ptr->width; j++)
-        {
-            if(KvadGetHexel(ptr, j, i)->st8 == 6)
-            {
-                if(hmax(KvadGetHexel(ptr, j, i)->prs_grav, KvadGetHexel(ptr, j, i)->prs_nongrav) > 7)
-                {
-                    Expand(ptr, j, i);
-                }
-                if(hmax(KvadGetHexel(ptr, j, i)->prs_grav, KvadGetHexel(ptr, j, i)->prs_nongrav) < 2)
-                {
-                    KvadGetHexel(ptr, j, i)->tmp = 0;
-                }
-            }
-        }
-    }
-    for(int i = 0; i < ptr->height; i++)
-    {
-        for(int j = 0; j < ptr->width; j++)
-        {
+               
+            KvadGetHexel(ptr, j, i)->fld = 0;
             KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp);
-            if(KvadGetHexel(ptr, j, i)->st8 == 6)
-            {
-                KvadGetHexel(ptr, j, i)->clr = 1 
-            + mod(hmax(KvadGetHexel(ptr, j, i)->prs_grav, KvadGetHexel(ptr, j, i)->prs_nongrav) / 7, 7);
-            }
+
         }
     }
 }
 
 void KvadUpdate(Kvad_t* ptr)
 {
+    Border(ptr);
+    SolidUpdate(ptr);
     //WaveUpdate(ptr);
     GasUpdate(ptr);
     SandUpdate(ptr);
@@ -795,7 +820,7 @@ void KvadUpdate(Kvad_t* ptr)
     
     LiquidUpdate(ptr);
 
-    //SolidUpdate(ptr);
+    
 
     //t = mod(t + 1, 12);
 }
@@ -876,7 +901,7 @@ void Repulsion(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn, int 
     }
     if( *dz == 0 && *dn == 0 )
     {
-        //*dz = -fx, *dn = -fy;
+        *dz = -fx, *dn = -fy;
     }
 }
 
@@ -1016,7 +1041,8 @@ void ForceTension(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 
 void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
-    *dz = fx, *dn = fy;
+    //*dz = fx, *dn = fy;
+    *dz = 0, *dn = 0;
     int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
@@ -1040,150 +1066,76 @@ void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     RelToAbs(ptr, fx, fy, 1, &rfx, &rfy);
     RelToAbs(ptr, fx, fy, -1, &lfx, &lfy);
 
+    int neut = 1;
+
     b_back =
     (
-        (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8    != 0 &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8    != 0 &&
-            KvadGetHexel(ptr, z - fx, n - fy)->st8      == 0 &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8    != 0 &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8    != 0
-        ) ||
-        (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8    != 0 &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8    == 0 &&
-            KvadGetHexel(ptr, z - fx, n - fy)->st8      == 0 &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8    == 0 &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8    != 0// && 0
-        )
+        KvadGetHexel(ptr, z + fx, n + fy)->fld2 > KvadGetHexel(ptr, z, n)->fld2
+        || KvadGetHexel(ptr, z - fx, n - fy)->fld2 < KvadGetHexel(ptr, z, n)->fld2
     );
     b_forward =
     (
-        (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8      == 0 &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8    != 0 &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8    != 0 &&
-            KvadGetHexel(ptr, z - fx, n - fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8    != 0 &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8    != 0
-        ) ||
-        (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8      == 0 &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8    == 0 &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8    != 0 &&
-            KvadGetHexel(ptr, z - fx, n - fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8    != 0 &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8    == 0// && 0
-        ) ||
-        (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8      == 0 &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8    == 0 &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8    == 0 &&
-            KvadGetHexel(ptr, z - fx, n - fy)->st8      == 0 &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8    == 0 &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8    == 0// && 0
-            
+        KvadGetHexel(ptr, z - fx, n - fy)->fld2 > KvadGetHexel(ptr, z, n)->fld2
+        || KvadGetHexel(ptr, z + fx, n + fy)->fld2 < KvadGetHexel(ptr, z, n)->fld2
+        || (
+        KvadGetHexel(ptr, z + fx, n + fy)->fld2      == neut &&
+        KvadGetHexel(ptr, z + rfx, n + rfy)->fld2    == neut &&
+        KvadGetHexel(ptr, z + rbx, n + rby)->fld2    == neut &&
+        KvadGetHexel(ptr, z - fx, n - fy)->fld2      == neut &&
+        KvadGetHexel(ptr, z + lbx, n + lby)->fld2    == neut &&
+        KvadGetHexel(ptr, z + lfx, n + lfy)->fld2    == neut
         )
     );
     b_rightfront =
     (
-        (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8    == 0 &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8    != 0 &&
-            KvadGetHexel(ptr, z - fx, n - fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8    != 0 &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8    != 0
-        ) ||
-        (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8      == 0 &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8    == 0 &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8    == 0 &&
-            KvadGetHexel(ptr, z - fx, n - fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8    != 0 &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8    != 0// && 0
-        )
+        KvadGetHexel(ptr, z + lbx, n + lby)->fld2 > KvadGetHexel(ptr, z, n)->fld2
+        || KvadGetHexel(ptr, z + rfx, n + rfy)->fld2 < KvadGetHexel(ptr, z, n)->fld2
+        
     );
     b_leftfront =
     (
-        (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8    != 0 &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8    != 0 &&
-            KvadGetHexel(ptr, z - fx, n - fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8    != 0 &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8    == 0
-        ) ||
-        (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8      == 0 &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8    != 0 &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8    != 0 &&
-            KvadGetHexel(ptr, z - fx, n - fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8    == 0 &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8    == 0// && 0
-        )
+        KvadGetHexel(ptr, z + rbx, n + rby)->fld2 > KvadGetHexel(ptr, z, n)->fld2
+        || KvadGetHexel(ptr, z + lfx, n + lfy)->fld2 < KvadGetHexel(ptr, z, n)->fld2
     );
     b_rightback =
     (
-        (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8    != 0 &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8    == 0 &&
-            KvadGetHexel(ptr, z - fx, n - fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8    != 0 &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8    != 0
-        ) ||
-        (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8    == 0 &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8    == 0 &&
-            KvadGetHexel(ptr, z - fx, n - fy)->st8      == 0 &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8    != 0 &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8    != 0// && 0
-        )
+        KvadGetHexel(ptr, z + lfx, n + lfy)->fld2 > KvadGetHexel(ptr, z, n)->fld2
+        || KvadGetHexel(ptr, z + rbx, n + rby)->fld2 < KvadGetHexel(ptr, z, n)->fld2
     );
     b_leftback =
     (
-        (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8    != 0 &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8    != 0 &&
-            KvadGetHexel(ptr, z - fx, n - fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8    == 0 &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8    != 0
-        ) ||
-        (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8      != 0 &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8    != 0 &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8    != 0 &&
-            KvadGetHexel(ptr, z - fx, n - fy)->st8      == 0 &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8    == 0 &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8    == 0// && 0
-        )
+        KvadGetHexel(ptr, z + rfx, n + rfy)->fld2 > KvadGetHexel(ptr, z, n)->fld2
+        || KvadGetHexel(ptr, z + lbx, n + lby)->fld2 < KvadGetHexel(ptr, z, n)->fld2
     );
 
-    *dz -= fx * b_back, *dn -= fy * b_back;
-    *dz += fx * b_forward, *dn += fy * b_forward;
-    *dz += rfx * b_rightfront, *dn += rfy * b_rightfront;
-    *dz += lfx * b_leftfront, *dn += lfy * b_leftfront;
-    *dz += rbx * b_rightback, *dn += rby * b_rightback;
-    *dz += lbx * b_leftback, *dn += lby * b_leftback;
+    //*dz -= fx * b_back, *dn -= fy * b_back;
+    //*dz += fx * b_forward, *dn += fy * b_forward;
+    //*dz += rfx * b_rightfront, *dn += rfy * b_rightfront;
+    //*dz += lfx * b_leftfront, *dn += lfy * b_leftfront;
+    //*dz += rbx * b_rightback, *dn += rby * b_rightback;
+    //*dz += lbx * b_leftback, *dn += lby * b_leftback;
+
+    if(b_forward || (b_rightfront && b_rightfront)) *dz += fx * b_forward, *dn += fy * b_forward;
+    if(b_back || (b_rightback && b_leftback)) *dz -= fx * b_back, *dn -= fy * b_back;
+    if(b_rightfront || (b_forward && b_rightback)) *dz += rfx * b_rightfront, *dn += rfy * b_rightfront;
+    if(b_leftfront || (b_forward && b_leftback)) *dz += lfx * b_leftfront, *dn += lfy * b_leftfront;
+    if(b_rightback || (b_rightfront && b_back)) *dz += rbx * b_rightback, *dn += rby * b_rightback;
+    if(b_leftback || (b_leftfront && b_back)) *dz += lbx * b_leftback, *dn += lby * b_leftback;
+    //*dz = fx, *dn = fy;
 }
 
 int LiquidWaveUpdate(Kvad_t* ptr, int z, int n, int fx, int fy)
 {
     KvadGetHexel(ptr, z, n)->tmp = 0;
-    if(KvadGetHexel(ptr, z, n)->prs_nongrav == -1)
+    if(KvadGetHexel(ptr, z, n)->prs_dist == -1)
     {
         KvadGetHexel(ptr, z, n)->tmp = 0;
     }
-    else if(KvadGetHexel(ptr, z, n)->prs_nongrav == 1)
+    else if(KvadGetHexel(ptr, z, n)->prs_dist == 1)
     {
         KvadGetHexel(ptr, z, n)->tmp = -1;
     }
-    else if(KvadGetHexel(ptr, z, n)->prs_nongrav == 0)
+    else if(KvadGetHexel(ptr, z, n)->prs_dist == 0)
     {
         for(int i = -1; i < 2; i++)
         {
@@ -1191,7 +1143,7 @@ int LiquidWaveUpdate(Kvad_t* ptr, int z, int n, int fx, int fy)
             {
                 if( i - j != 0)
                 {
-                    if(KvadGetHexel(ptr, z + j, n + i)->st8 == 6 && KvadGetHexel(ptr, z + j, n + i)->prs_nongrav == 1)
+                    if(KvadGetHexel(ptr, z + j, n + i)->st8 == 6 && KvadGetHexel(ptr, z + j, n + i)->prs_dist == 1)
                     {
                         KvadGetHexel(ptr, z, n)->tmp = 1;
                     }
@@ -1236,8 +1188,8 @@ b_forward =
 void PressureIncrease(Kvad_t* ptr, int z, int n, int fx, int fy, int* gout, int* nout)
 {
     int dir = -1;
-    int gpres_center = KvadGetHexel(ptr, z, n)->prs_grav * 0;
-    int npres_center = KvadGetHexel(ptr, z, n)->prs_nongrav * 0;
+    int gpres_center = KvadGetHexel(ptr, z, n)->prs_grav;
+    int npres_center = KvadGetHexel(ptr, z, n)->prs_dist;
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
         
     *gout = 0, *nout = 0;
@@ -1245,6 +1197,10 @@ void PressureIncrease(Kvad_t* ptr, int z, int n, int fx, int fy, int* gout, int*
     int pres_back = 0, pres_forward = 0, 
     pres_rightfront = 0, pres_leftfront = 0, 
     pres_rightback = 0, pres_leftback = 0;
+
+    int dist_back = 0, dist_forward = 0, 
+    dist_rightfront = 0, dist_leftfront = 0, 
+    dist_rightback = 0, dist_leftback = 0;
 
     int b_back = 0, b_forward = 0, 
     b_rightfront = 0, b_leftfront = 0, 
@@ -1265,59 +1221,215 @@ void PressureIncrease(Kvad_t* ptr, int z, int n, int fx, int fy, int* gout, int*
     RelToAbs(ptr, fx, fy, 1, &rfx, &rfy);
     RelToAbs(ptr, fx, fy, -1, &lfx, &lfy);
 
-    int mult = 1;
+    pres_back =         KvadGetHexel(ptr, z - fx, n - fy)->prs_grav + 2;
+    dist_back =         KvadGetHexel(ptr, z - fx, n - fy)->prs_dist;
+    b_back =            KvadGetHexel(ptr, z - fx, n - fy)->st8 == 6 &&
+                        (npres_center >= dist_back ||
+                        (npres_center == 0 && dist_back != 0)
+                        ) && 
+                        gpres_center < pres_back;
 
-    pres_back =         hmax(KvadGetHexel(ptr, z - fx, n - fy)->prs_grav, 
-                            KvadGetHexel(ptr, z - fx, n - fy)->prs_grav) + 2 * 1;
-    b_back =            KvadGetHexel(ptr, z - fx, n - fy)->st8 == 6;
+    pres_forward =      KvadGetHexel(ptr, z + fx, n + fy)->prs_grav - 2;
+    dist_forward =      KvadGetHexel(ptr, z + fx, n + fy)->prs_dist;
+    b_forward =         KvadGetHexel(ptr, z + fx, n + fy)->st8 == 6 &&
+                        (npres_center >= dist_forward ||
+                        (npres_center == 0 && dist_forward != 0)
+                        ) && 
+                        gpres_center < pres_forward;
 
-    pres_forward =      hmax(KvadGetHexel(ptr, z + fx, n + fy)->prs_grav, 
-                            KvadGetHexel(ptr, z + fx, n + fy)->prs_nongrav) - 2 * 1;
-    b_forward =         KvadGetHexel(ptr, z + fx, n + fy)->st8 == 6;
+    pres_rightfront =   KvadGetHexel(ptr, z + rfx, n + rfy)->prs_grav - 1;
+    dist_rightfront =   KvadGetHexel(ptr, z + rfx, n + rfy)->prs_dist;
+    b_rightfront =      KvadGetHexel(ptr, z + rfx, n + rfy)->st8 == 6 &&
+                        (npres_center >= dist_rightfront ||
+                        (npres_center == 0 && dist_rightfront != 0)
+                        ) &&
+                        gpres_center < pres_rightfront;
 
-    pres_rightfront =   hmax(KvadGetHexel(ptr, z + rfx, n + rfy)->prs_grav, 
-                            KvadGetHexel(ptr, z + rfx, n + rfy)->prs_nongrav) - 1 * 1;
-    b_rightfront =      KvadGetHexel(ptr, z + rfx, n + rfy)->st8 == 6;
+    pres_leftfront =    KvadGetHexel(ptr, z + lfx, n + lfy)->prs_grav - 1;
+    dist_leftfront =    KvadGetHexel(ptr, z + lfx, n + lfy)->prs_dist;
+    b_leftfront =       KvadGetHexel(ptr, z + lfx, n + lfy)->st8 == 6 &&
+                        (npres_center >= dist_leftfront ||
+                        (npres_center == 0 && dist_leftfront != 0)
+                        ) && 
+                        gpres_center < pres_leftfront;
 
-    pres_leftfront =    hmax(KvadGetHexel(ptr, z + lfx, n + lfy)->prs_grav, 
-                            KvadGetHexel(ptr, z + lfx, n + lfy)->prs_nongrav) - 1 * 1;
-    b_leftfront =       KvadGetHexel(ptr, z + lfx, n + lfy)->st8 == 6;
+    pres_rightback =    KvadGetHexel(ptr, z + rbx, n + rby)->prs_grav + 1;
+    dist_rightback =    KvadGetHexel(ptr, z + rbx, n + rby)->prs_dist;
+    b_rightback =       KvadGetHexel(ptr, z + rbx, n + rby)->st8 == 6 &&
+                        (npres_center >= dist_rightback ||
+                        (npres_center == 0 && dist_rightback != 0)
+                        ) && 
+                        gpres_center < pres_rightback;
 
-    pres_rightback =    hmax(KvadGetHexel(ptr, z + rbx, n + rby)->prs_grav, 
-                            KvadGetHexel(ptr, z + rbx, n + rby)->prs_grav) + 1 * 1;
-    b_rightback =       KvadGetHexel(ptr, z + rbx, n + rby)->st8 == 6;
-
-    pres_leftback =     hmax(KvadGetHexel(ptr, z + lbx, n + lby)->prs_grav, 
-                            KvadGetHexel(ptr, z + lbx, n + lby)->prs_grav) + 1 * 1;
-    b_leftback =        KvadGetHexel(ptr, z + lbx, n + lby)->st8 == 6;
-
-    
-
+    pres_leftback =     KvadGetHexel(ptr, z + lbx, n + lby)->prs_grav + 1;
+    dist_leftback =     KvadGetHexel(ptr, z + lbx, n + lby)->prs_dist;
+    b_leftback =        KvadGetHexel(ptr, z + lbx, n + lby)->st8 == 6 &&
+                        (npres_center >= dist_leftback ||
+                        (npres_center == 0 && dist_leftback != 0)
+                        ) && 
+                        gpres_center < pres_leftback;
     if(b_back)
     {
-        gpres_center = hmax(gpres_center, pres_back);
+        gpres_center = pres_back;
+        npres_center = dist_back + 1;
     }
     if(b_forward)
     {
-        npres_center = hmax(npres_center, pres_forward);
+        gpres_center = pres_forward;
+        npres_center = dist_forward + 1;
     }
     if(b_rightfront)
     {
-        npres_center = hmax(npres_center, pres_rightfront);
+        gpres_center = pres_rightfront;
+        npres_center = dist_rightfront + 1;
     }
     if(b_leftfront)
     {
-        npres_center = hmax(npres_center, pres_leftfront);
+        gpres_center = pres_leftfront;
+        npres_center = dist_leftfront + 1;
     }
     if(b_rightback)
     {
-        gpres_center = hmax(gpres_center, pres_rightback);
+    
+        gpres_center = pres_rightback;
+        npres_center = dist_rightback + 1;
     }
     if(b_leftback)
     {
-        gpres_center = hmax(gpres_center, pres_leftback);
+        gpres_center = pres_leftback;
+        npres_center = dist_leftback + 1;
     }
     
     *gout = gpres_center;
     *nout = npres_center;
 }
+
+void Border(Kvad_t* ptr)
+{
+    for(int i = 0; i < ptr->height; i++)
+    {
+        KvadSetMat(ptr, 0, i, 8);
+        KvadSetMat(ptr, ptr->width - 1, i, 8);
+    }
+    for(int j = 0; j < ptr->width; j++)
+    {
+        KvadSetMat(ptr, j, 0, 8);
+        KvadSetMat(ptr, j, ptr->height - 1, 8);
+    }
+}
+
+/*
+pres_back =         hmax(KvadGetHexel(ptr, z - fx, n - fy)->prs_grav, 
+                            KvadGetHexel(ptr, z - fx, n - fy)->prs_nongrav) + 2 * 1;
+    b_back =            KvadGetHexel(ptr, z - fx, n - fy)->st8 == 6;
+
+    pres_forward =      hmax(KvadGetHexel(ptr, z + fx, n + fy)->prs_nongrav, 
+                            KvadGetHexel(ptr, z + fx, n + fy)->prs_nongrav) - 2 * 0;
+    b_forward =         KvadGetHexel(ptr, z + fx, n + fy)->st8 == 6;
+
+    pres_rightfront =   hmax(KvadGetHexel(ptr, z + rfx, n + rfy)->prs_nongrav, 
+                            KvadGetHexel(ptr, z + rfx, n + rfy)->prs_nongrav) - 1 * 0;
+    b_rightfront =      KvadGetHexel(ptr, z + rfx, n + rfy)->st8 == 6;
+
+    pres_leftfront =    hmax(KvadGetHexel(ptr, z + lfx, n + lfy)->prs_nongrav, 
+                            KvadGetHexel(ptr, z + lfx, n + lfy)->prs_nongrav) - 1 * 0;
+    b_leftfront =       KvadGetHexel(ptr, z + lfx, n + lfy)->st8 == 6;
+
+    pres_rightback =    hmax(KvadGetHexel(ptr, z + rbx, n + rby)->prs_grav, 
+                            KvadGetHexel(ptr, z + rbx, n + rby)->prs_nongrav) + 1 * 1;
+    b_rightback =       KvadGetHexel(ptr, z + rbx, n + rby)->st8 == 6;
+
+    pres_leftback =     hmax(KvadGetHexel(ptr, z + lbx, n + lby)->prs_grav, 
+                            KvadGetHexel(ptr, z + lbx, n + lby)->prs_nongrav) + 1 * 1;
+    b_leftback =        KvadGetHexel(ptr, z + lbx, n + lby)->st8 == 6;
+
+if(b_back)
+    {
+        if(npres_center == 0) npres_center = dist_back + 1;
+        else
+        {
+            npres_center = hmin(npres_center, dist_back) + 1;
+        }
+        gpres_center = pres_back;
+    }
+    if(b_forward)
+    {
+        gpres_center = pres_forward;
+        if(npres_center == 0) npres_center = dist_forward + 1;
+        else
+        {
+            npres_center = hmin(npres_center, dist_forward) + 1;
+        }
+        
+    }
+    if(b_rightfront)
+    {
+        gpres_center = pres_rightfront;
+        if(npres_center == 0) npres_center = dist_rightfront + 1;
+        else
+        {
+            npres_center = hmin(npres_center, dist_rightfront) + 1;
+        }
+        
+    }
+    if(b_leftfront)
+    {
+        gpres_center = pres_leftfront;
+        if(npres_center == 0) npres_center = dist_leftfront + 1;
+        else
+        {
+            npres_center = hmin(npres_center, dist_leftfront) + 1;
+        }
+        
+    }
+    if(b_rightback)
+    {
+    
+        gpres_center = pres_rightback;
+        if(npres_center == 0) npres_center = dist_rightback + 1;
+        else
+        {
+            npres_center = hmin(npres_center, dist_rightback) + 1;
+        }
+        
+    }
+    if(b_leftback)
+    {
+        gpres_center = pres_leftback;
+        if(npres_center == 0) npres_center = dist_leftback + 1;
+        else
+        {
+            npres_center = hmin(npres_center, dist_leftback) + 1;
+        }
+        
+    }
+
+( 0 &&
+        (
+            KvadGetHexel(ptr, z + fx, n + fy)->fld2      == 1 &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->fld2    != 1 &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->fld2    != 1 &&
+            KvadGetHexel(ptr, z - fx, n - fy)->fld2      != 1 &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->fld2    != 1 &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->fld2    != 1 && 0
+        ) ||
+        (
+            KvadGetHexel(ptr, z + fx, n + fy)->st8      == 0 &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->st8    == 0 &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->st8    != 0 &&
+            KvadGetHexel(ptr, z - fx, n - fy)->st8      != 0 &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->st8    != 0 &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->st8    == 0 && 0
+        ) ||
+        (
+            KvadGetHexel(ptr, z + fx, n + fy)->st8      == 0 &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->st8    == 0 &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->st8    == 0 &&
+            KvadGetHexel(ptr, z - fx, n - fy)->st8      == 0 &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->st8    == 0 &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->st8    == 0 && 0
+            
+        )
+    );
+
+*/
