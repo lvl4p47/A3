@@ -1066,7 +1066,7 @@ void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     RelToAbs(ptr, fx, fy, 1, &rfx, &rfy);
     RelToAbs(ptr, fx, fy, -1, &lfx, &lfy);
 
-    int neut = 1;
+    int neut = 0;
 
     b_back =
     (
@@ -1077,14 +1077,6 @@ void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     (
         KvadGetHexel(ptr, z - fx, n - fy)->fld2 > KvadGetHexel(ptr, z, n)->fld2
         || KvadGetHexel(ptr, z + fx, n + fy)->fld2 < KvadGetHexel(ptr, z, n)->fld2
-        || (
-        KvadGetHexel(ptr, z + fx, n + fy)->fld2      == neut &&
-        KvadGetHexel(ptr, z + rfx, n + rfy)->fld2    == neut &&
-        KvadGetHexel(ptr, z + rbx, n + rby)->fld2    == neut &&
-        KvadGetHexel(ptr, z - fx, n - fy)->fld2      == neut &&
-        KvadGetHexel(ptr, z + lbx, n + lby)->fld2    == neut &&
-        KvadGetHexel(ptr, z + lfx, n + lfy)->fld2    == neut
-        )
     );
     b_rightfront =
     (
@@ -1121,6 +1113,7 @@ void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     if(b_leftfront || (b_forward && b_leftback)) *dz += lfx * b_leftfront, *dn += lfy * b_leftfront;
     if(b_rightback || (b_rightfront && b_back)) *dz += rbx * b_rightback, *dn += rby * b_rightback;
     if(b_leftback || (b_leftfront && b_back)) *dz += lbx * b_leftback, *dn += lby * b_leftback;
+    if(*dz == 0 && *dn == 0) *dz += fx, *dn += fy;
     //*dz = fx, *dn = fy;
 }
 
