@@ -37,8 +37,6 @@ int NeighbourCount(Kvad_t* ptr, int z, int n, int val);
 
 int HalfNeighCount(Kvad_t* ptr, int z, int n, int val, int dz, int dn);
 
-int ReflectionAngle(Kvad_t* ptr, int z, int n, int val, int dirz, int diry);
-
 void Repulsion(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn, int empty_st8);
 
 void RelToAbs(Kvad_t* ptr, int fx, int fy, int rel, int* dz, int* dn);
@@ -48,12 +46,6 @@ void Force(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 void ForceTension(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
-
-int LiquidWaveUpdate(Kvad_t* ptr, int z, int n, int fx, int fy);
-
-void Expand(Kvad_t* ptr, int z, int n);
-
-void PressureIncrease(Kvad_t* ptr, int z, int n, int fx, int fy, int* gout, int* nout);
 
 void Border(Kvad_t* ptr);
 
