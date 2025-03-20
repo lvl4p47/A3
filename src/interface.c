@@ -4,6 +4,10 @@ const int buttonlistsize = 7;
 
 const int sliderlistsize = 2;
 
+const int inform_color = 2;
+const int interact_color = 7;
+const int frame_color = 3;
+
 extern InputState_t inpst;
 
 Button_t** buttonlist;
@@ -49,8 +53,9 @@ void InterfaceTerminate()
     ButtonListTerminate();
 }
 
-void InterfaceDraw(Font_t* f)
+void InterfaceDraw(Font_t* f, Display_t* d)
 {
+    FontUIDraw(f, d);
     ButtonListDraw(f);
     SliderListDraw(f);
 }
@@ -110,9 +115,9 @@ void ButtonTerminate(Button_t* b)
 void ButtonDraw(Button_t* b, Font_t* f)
 {
     if(b->text == 1)
-        FontStringDraw(f, b->x, b->y, b->w, b->h, b->string);
+        FontStringDraw(f, b->x, b->y, b->w, b->h, b->string, interact_color);
     else
-        FontStringDraw(f, b->x, b->y, b->w, b->h, b->sscndr);
+        FontStringDraw(f, b->x, b->y, b->w, b->h, b->sscndr, interact_color);
 }
 
 void ButtonListDraw(Font_t* f)
@@ -121,8 +126,8 @@ void ButtonListDraw(Font_t* f)
     {
         ButtonDraw(buttonlist[i], f);
     }
-    FontNumberDraw(f, 9, 1, 1, 1, cursor.lm);
-    FontNumberDraw(f, 11, 1, 1, 1, cursor.rm);
+    FontNumberDraw(f, 9, 1, 1, 1, cursor.lm, interact_color);
+    FontNumberDraw(f, 11, 1, 1, 1, cursor.rm, interact_color);
 }
 
 void ButtonListCheck()
@@ -384,8 +389,8 @@ void SliderListTerminate()
 
 void SliderDraw(Slider_t* s, Font_t* f)
 {
-    FontCharFill(f, L'-', s->x + 1, s->y + 1, s->w - 2, 1);
-    FontStringDraw(f, s->x + s->c, s->y, 1, 2, L"V+");
+    FontCharFill(f, L'-', s->x + 1, s->y + 1, s->w - 2, 1, interact_color);
+    FontStringDraw(f, s->x + s->c, s->y, 1, 2, L"V+", interact_color);
     int value = s->a + s->d * (s->c - 1);
     int raz = 0;
     int dva = 100;
@@ -395,7 +400,7 @@ void SliderDraw(Slider_t* s, Font_t* f)
         dva = dva * 100;
     }
     
-    FontNumberDraw(f, s->x + s->c - raz, s->y + 2, 3, 1, value);
+    FontNumberDraw(f, s->x + s->c - raz, s->y + 2, 3, 1, value, interact_color);
 }
 
 void SliderListDraw(Font_t* f)
@@ -466,5 +471,73 @@ void SliderDown(Slider_t* s, int c)
 
 void SliderUp(Slider_t* s)
 {
+    
+}
+
+void FontUIDraw(Font_t* f, Display_t* d)
+{
+    wchar_t reading[82];
+
+    FILE* fl1 = NULL;
+    fl1 = fopen("./src/ui.txt", "r");
+    for(int i = 0; i < 45; i++)
+    {
+        fgetws(reading, 82, fl1);
+        FontStringDraw(f, 0, i, 80, 1, reading, frame_color); 
+    }
+    fclose(fl1);
+
+    int x, y;
+    MouseToGrid(&x, &y);
+    wchar_t str[240];
+    swprintf(str, 240, L"угол: %i\nсдвиг по х: %i\nсдвиг по y: %i\nмышь х: %i\nмышь y: %i\n", 
+    d->angle, d->hshift.x, d->hshift.y, x, y);
+    
+    FontStringDraw(f, 1, 28, 15, 16,
+    str, inform_color);
+    /*
+    FontStringDraw(f, 1, 1, 3, 3, L"/=\\‖o‖\\=/");
+    FontStringDraw(f, 5, 1, 3, 3, L"r `   l №");
+    FontStringDraw(f, 9, 1, 3, 3, L"o\\ \\ \\ \\o");
+    FontStringDraw(f, 1, 5, 3, 3, L" n <ш>iV ");
+
+    FontStringDraw(f, 1, 10, 3, 3, L":::r`/`№ъ");
+    FontStringDraw(f, 5, 10, 3, 3, L"n n>>>u u");
+
+    FontStringDraw(f, 1, 18, 3, 4, L"c=\\ // u  o ");
+    FontStringDraw(f, 1, 23, 3, 4, L"r\\ |l\\| |l-№");r\ 
+    FontStringDraw(f, 5, 23, 3, 4, L" Л /‖\\ ‖ c=э"); |l\
+    FontStringDraw(f, 9, 23, 3, 4, L" ‖ \\‖/ V c=э"); | |
+    FontStringDraw(f, 13, 23, 3, 4, L" n qhpdчb u "); l-№
+    */
+    int r = 16;
+    int ang = d->angle;
+
+    int zang, nang;
+
+    zang = r, nang = 0;   
+
+    HexToGrid(d, &zang, &nang);
+    FontNumberDraw(f, zang, nang, 3, 1, 0, inform_color);
+
+    zang = r, nang = -r;
+    HexToGrid(d, &zang, &nang);
+    FontNumberDraw(f, zang, nang, 3, 1, 90, inform_color);
+
+    zang = 0, nang = -r;
+    HexToGrid(d, &zang, &nang);
+    FontNumberDraw(f, zang, nang, 3, 1, 120, inform_color);
+
+    zang = -r, nang = 0;
+    HexToGrid(d, &zang, &nang);
+    FontNumberDraw(f, zang, nang, 3, 1, 180, inform_color);
+
+    zang = -r, nang = r;
+    HexToGrid(d, &zang, &nang);
+    FontNumberDraw(f, zang, nang, 3, 1, 240, inform_color);
+
+    zang = 0, nang = r;
+    HexToGrid(d, &zang, &nang);
+    FontNumberDraw(f, zang, nang, 3, 1, 300, inform_color);
     
 }

@@ -50,8 +50,8 @@ void update_frame(uint64_t* ft, int64_t* dr)
     
     InterfaceUpdate();
 
-    FontUIDraw(f1, d1);
-    InterfaceDraw(f1);
+    //
+    InterfaceDraw(f1, d1);
     //ButtonListDraw(f1);
     //ButtonDraw(b1, f1);
 

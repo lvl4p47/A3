@@ -7,14 +7,14 @@ Font_t* FontInitialise();
 
 void FontTerminate(Font_t* f);
 
-void FontCharDraw(Font_t* f, wchar_t c, int x, int y);
+void FontCharDraw(Font_t* f, wchar_t c, int x, int y, int color);
 
-void FontCharFill(Font_t* f, wchar_t c, int x, int y, int w, int h);
+void FontCharFill(Font_t* f, wchar_t c, int x, int y, int w, int h, int color);
 
-void FontStringDraw(Font_t* f, int ax, int ay, int w, int h, wchar_t* s);
+void FontStringDraw(Font_t* f, int ax, int ay, int w, int h, wchar_t* s, int color);
 
-void FontNumberDraw(Font_t* f, int ax, int ay, int w, int h, int num);
+void FontNumberDraw(Font_t* f, int ax, int ay, int w, int h, int num, int color);
 
-void FontUIDraw(Font_t* f, Display_t* d);
+
 
 #endif

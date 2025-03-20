@@ -77,18 +77,18 @@ void HexelDraw(Display_t* d, int z, int n, Cell_t* c, int b_ui)
     int srcx = d->angle * 9;
     int srcy = c->mat * 9;
 
-    SDL_SetTextureColorMod(s1->texture, rgb[c->clr][0], rgb[c->clr][1], rgb[c->clr][2]);
+    //SDL_SetTextureColorMod(s1->texture, rgb[c->clr][0], rgb[c->clr][1], rgb[c->clr][2]);
     if(b_ui == 1)
     {
         srcx = d->angle * 9;
         srcy = (mod(c->fld2, 10)) * 9;
-        SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y);
+        SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y, c->clr);
     }
     else
     {
         srcx = d->angle * 9;
         srcy = c->mat * 9;
-        SpriteDraw(s1, srcx, srcy, hexel.x, hexel.y);
+        SpriteDraw(s1, srcx, srcy, hexel.x, hexel.y, c->clr);
     }
 }
 
@@ -155,9 +155,10 @@ void SpriteTerminate(Sprite_t* s)
     free(s);
 }
 
-void SpriteDraw(Sprite_t* s, int x1, int y1, int x2, int y2)
+void SpriteDraw(Sprite_t* s, int x1, int y1, int x2, int y2, int color)
 {
     s->source.x = x1;            s->source.y = y1;
     s->destination.x = x2;       s->destination.y =  y2;
+    SDL_SetTextureColorMod(s->texture, rgb[color][0], rgb[color][1], rgb[color][2]);
     SDL_RenderCopy(m_renderer, s->texture, &s->source, &s->destination);
 }

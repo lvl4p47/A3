@@ -35,7 +35,7 @@ void InterfaceInitialize();
 
 void InterfaceTerminate();
 
-void InterfaceDraw(Font_t* f);
+void InterfaceDraw(Font_t* f, Display_t* d);
 
 void InterfaceUpdate();
 
@@ -80,5 +80,7 @@ void SliderListCheck();
 void SliderDown(Slider_t* s, int c);
 
 void SliderUp(Slider_t* s);
+
+void FontUIDraw(Font_t* f, Display_t* d);
 
 #endif

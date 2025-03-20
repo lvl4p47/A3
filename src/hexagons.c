@@ -39,10 +39,12 @@ void RulesInitialize()
     p_rules[3][6][1] = 2;
     
     p_rules[4][5][0] = 0;
-    p_rules[4][5][1] = 3;
+    p_rules[4][5][1] = 2;
 
     p_rules[5][4][0] = 0;
-    p_rules[5][4][1] = 2;
+    p_rules[5][4][1] = 3;
+    p_rules[5][4][2] = 3;
+    p_rules[5][4][3] = 0;
     
     p_rules[6][3][0] = 0;
     p_rules[6][3][1] = 6;
@@ -57,6 +59,11 @@ void RulesInitialize()
     
     p_rules[7][3][0] = 0;
     p_rules[7][3][1] = 2;
+    
+    p_rules[8][4][0] = 0;
+    p_rules[8][4][1] = 3;
+    p_rules[8][4][2] = 3;
+    p_rules[8][4][3] = 3;
     
 }
 
