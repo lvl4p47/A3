@@ -25,10 +25,10 @@ uint64_t t_s;
 
 void InterfaceInitialize()
 {
-    cursor.lm = 3;
+    cursor.lm = 1;
     cursor.rm = 0;
-    cursor.lrad = 1;
-    cursor.rrad = 1;
+    cursor.lrad = 0;
+    cursor.rrad = 0;
     
     t_f = SDL_GetPerformanceFrequency() / 60;
     t_s = SDL_GetPerformanceFrequency() / 25;

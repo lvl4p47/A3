@@ -49,6 +49,8 @@ void ForceTension(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
+void ForceGas(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
+
 void Border(Kvad_t* ptr);
 
 #endif
