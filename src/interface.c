@@ -25,13 +25,16 @@ uint64_t t_s;
 
 void InterfaceInitialize()
 {
-    ButtonListInitialize();
-    SliderListInitialize();
-    
     cursor.lm = 3;
     cursor.rm = 0;
-    cursor.lrad = sliderlist[0]->a + sliderlist[0]->d * (sliderlist[0]->c - 1);
-    cursor.rrad = sliderlist[0]->a + sliderlist[0]->d * (sliderlist[0]->c - 1);
+    cursor.lrad = 1;
+    cursor.rrad = 1;
+    
+    t_f = SDL_GetPerformanceFrequency() / 60;
+    t_s = SDL_GetPerformanceFrequency() / 25;
+    
+    ButtonListInitialize();
+    SliderListInitialize();
 
     b_panning = 0;
     b_pause = 0;
@@ -42,10 +45,8 @@ void InterfaceInitialize()
     b_slider = -1;
     
     max_curs = 8;
-
-    t_f = SDL_GetPerformanceFrequency() / 60;
-    t_s = (sliderlist[1]->a + sliderlist[1]->d * (sliderlist[1]->c - 1))
-         * SDL_GetPerformanceFrequency() / 1000;
+    // t_s = (sliderlist[1]->a + sliderlist[1]->d * (sliderlist[1]->c - 1))
+    //      * SDL_GetPerformanceFrequency() / 1000;
 }
 
 void InterfaceTerminate()
@@ -374,8 +375,11 @@ void SliderListInitialize()
 	{
 		sliderlist[i] = NULL;
     }
-    sliderlist[0] = SliderInitialize(1, 5, 11, 3, 0, 1, 1, 0);
-    sliderlist[1] = SliderInitialize(61, 24, 18, 3, 0, 20, 3, 1);
+    int c0, c1;
+    c0 = 1 + (cursor.lrad - 0) / 1;
+    c1 = 1 + (t_s - 0) * 1000 / (20 * SDL_GetPerformanceFrequency());
+    sliderlist[0] = SliderInitialize(1, 5, 11, 3, 0, 1, c0, 0);
+    sliderlist[1] = SliderInitialize(61, 24, 18, 3, 0, 20, c1, 1);
 }
 
 void SliderListTerminate()

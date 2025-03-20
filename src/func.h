@@ -28,7 +28,7 @@ typedef struct
 
 typedef struct
 {
-    int mat, tmp, prs_grav, prs_dist, fld, fld2, dx, dy, st8, clr;
+    int mat, tmp, prs_grav, prs_dist, fld, fld2, dx, dy, st8, dns, clr;
 } Cell_t;
 
 typedef struct

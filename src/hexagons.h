@@ -41,7 +41,9 @@ void Repulsion(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn, int 
 
 void RelToAbs(Kvad_t* ptr, int fx, int fy, int rel, int* dz, int* dn);
 
-void Force(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
+void ForceDirt(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
+
+void ForceSand(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void ForceTension(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 

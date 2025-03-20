@@ -39,12 +39,10 @@ void RulesInitialize()
     p_rules[3][6][1] = 2;
     
     p_rules[4][5][0] = 0;
-    p_rules[4][5][1] = 2;
+    p_rules[4][5][1] = 3;
 
     p_rules[5][4][0] = 0;
-    p_rules[5][4][1] = 3;
-    p_rules[5][4][2] = 3;
-    p_rules[5][4][3] = 0;
+    p_rules[5][4][1] = 2;
     
     p_rules[6][3][0] = 0;
     p_rules[6][3][1] = 6;
@@ -129,6 +127,7 @@ void KvadZero(Kvad_t* ptr)
             ptr->arr[i][j].dx = 0;
             ptr->arr[i][j].dy = 0;
             ptr->arr[i][j].st8 = 0;
+            ptr->arr[i][j].dns = 0;
         }
     }
 }
@@ -144,38 +143,51 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
     {
     case 0:
         cptr->st8 = 0;
+        cptr->dns = 0;
         cptr->clr = 7;
         break;
     case 1:
         cptr->st8 = 5;
+        cptr->dns = 4;
         cptr->clr = 2;
         break;
     case 2:
         cptr->st8 = 2;
+        cptr->dns = 1;
         cptr->clr = 1;
         break;
     case 3:
         cptr->st8 = 6;
+        cptr->dns = 2;
         cptr->clr = 3;
         break;
     case 4:
         cptr->st8 = 3;
+        cptr->dns = 3;
         cptr->clr = 6;
         break;
     case 5:
         cptr->st8 = 4;
+        cptr->dns = 5;
         cptr->clr = 1;
         break;
     case 6:
         cptr->st8 = 1;
+        cptr->dns = 1;
         cptr->clr = 7;
         break;
     case 7:
         cptr->st8 = 4;
+        cptr->dns = 1;
         cptr->clr = 4;
         break;
+    case 8:
+        cptr->st8 = 2;
+        cptr->dns = 5;
+        cptr->clr = 7;
     default:
         cptr->st8 = 2;
+        cptr->dns = 5;
         cptr->clr = 7;
         break;
     }
@@ -406,17 +418,28 @@ void SandUpdate(Kvad_t* ptr)
             KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
             if(KvadGetHexel(ptr, j, i)->st8 == 3)
             {
-                Force(ptr, j, i, gx, gy, &dz, &dn);
+                ForceSand(ptr, j, i, gx, gy, &dz, &dn);
                 f_direct = 0;
                 if(dz == gx && dn == gy)
                 {
                     f_direct = 1;
-                    KvadGetHexel(ptr, j + dz, i + dn)->fld = 2;
                 }
-                else 
+                if(f_direct)
+                {
+                    if( KvadGetHexel(ptr, j + dz, i + dn)->fld != -2
+                      && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = 2;
+                    }
+                    else
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -2;
+                    }
+                }
+                else
                 {
                     if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 0
-                      && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
+                      && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
                     {
                         KvadGetHexel(ptr, j + dz, i + dn)->fld = 1;
                     }
@@ -435,7 +458,7 @@ void SandUpdate(Kvad_t* ptr)
         {
             if(KvadGetHexel(ptr, j, i)->st8 == 3)
             {
-                Force(ptr, j, i, gx, gy, &dz, &dn);
+                ForceSand(ptr, j, i, gx, gy, &dz, &dn);
                 f_direct = 0;
                 if(dz == gx && dn == gy)
                 {    
@@ -480,7 +503,7 @@ void DirtUpdate(Kvad_t* ptr)
             KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
             if(KvadGetHexel(ptr, j, i)->st8 == 4)
             {
-                Force(ptr, j, i, gx, gy, &dz, &dn);
+                ForceDirt(ptr, j, i, gx, gy, &dz, &dn);
                 RelToAbs(ptr, gx, gy, 2, &dz1, &dn1);
                 RelToAbs(ptr, gx, gy, -2, &dz2, &dn2);
                 b_dir_fall = ((KvadGetHexel(ptr, j + dz1, i + dn1)->st8 != 4)
@@ -495,7 +518,7 @@ void DirtUpdate(Kvad_t* ptr)
                     f_direct = 1;
                     
                     if( KvadGetHexel(ptr, j + dz, i + dn)->fld != -2
-                      && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
+                      && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
                     {
                         KvadGetHexel(ptr, j + dz, i + dn)->fld = 2;
                     }
@@ -507,7 +530,7 @@ void DirtUpdate(Kvad_t* ptr)
                 else if(b_side_fall)
                 {
                     if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 0
-                      && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
+                      && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
                     {
                         KvadGetHexel(ptr, j + dz, i + dn)->fld = 1;
                     }
@@ -526,7 +549,7 @@ void DirtUpdate(Kvad_t* ptr)
         {
             if(KvadGetHexel(ptr, j, i)->st8 == 4)
             {
-                Force(ptr, j, i, gx, gy, &dz, &dn);
+                ForceDirt(ptr, j, i, gx, gy, &dz, &dn);
                 f_direct = 0;
                 if(dz == gx && dn == gy)
                 {    
@@ -758,7 +781,8 @@ void LiquidUpdate(Kvad_t* ptr)
             if(KvadGetHexel(ptr, j, i)->st8 == 6)
             {
                 ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
-                if(KvadGetHexel(ptr, j + dz, i + dn)->fld == 0 && KvadGetHexel(ptr, j + dz, i + dn)->mat == 0)
+                if(KvadGetHexel(ptr, j + dz, i + dn)->fld == 0
+                 && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
                 {
                     KvadGetHexel(ptr, j + dz, i + dn)->fld = 1;
                 }
@@ -800,7 +824,7 @@ void LiquidUpdate(Kvad_t* ptr)
 void KvadUpdate(Kvad_t* ptr)
 {
     Border(ptr);
-    SolidUpdate(ptr);
+    //SolidUpdate(ptr);
     //WaveUpdate(ptr);
     GasUpdate(ptr);
     SandUpdate(ptr);
@@ -894,7 +918,7 @@ void RelToAbs(Kvad_t* ptr, int fx, int fy, int rel, int* dz, int* dn)
     }
 }
 
-void Force(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
+void ForceDirt(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
     int dx, dy, dir = -1;
@@ -939,6 +963,64 @@ void Force(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     
     }
     
+}
+
+void ForceSand(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
+{
+    *dz = 0, *dn = 0;
+    int dir = -1;
+
+    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    
+    int b_forward = 0, 
+    b_rightfront = 0, b_leftfront = 0;
+
+    int right_sum = 0, left_sum = 0, back_sum = 0, front_sum = 0;
+
+    for(int i = 0; i < 6; i++)
+    {
+        if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
+        {
+            dir = i;
+            i = 6;
+        }
+    }
+
+    RelToAbs(ptr, fx, fy, 2, &rbx, &rby);
+    RelToAbs(ptr, fx, fy, -2, &lbx, &lby);
+
+    RelToAbs(ptr, fx, fy, 1, &rfx, &rfy);
+    RelToAbs(ptr, fx, fy, -1, &lfx, &lfy);
+
+    right_sum =
+    (
+        (KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns)
+    );
+    left_sum =
+    (
+        (KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns)
+    );
+    b_forward =
+    (
+        KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns
+    );
+    if(right_sum > left_sum && (KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns))
+    {
+        b_leftfront = 1;
+    }
+    //right_sum = 1, left_sum = 2;
+    if(right_sum < left_sum && (KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns))
+    {
+        b_rightfront = 1;
+    }
+
+    if(b_leftfront || b_rightfront) b_forward = 0;
+    
+    if(b_forward     )  *dz += fx,  *dn += fy;
+    if(b_rightfront  )  *dz += rfx, *dn += rfy;
+    if(b_leftfront   )  *dz += lfx, *dn += lfy;
 }
 
 void ForceTension(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
@@ -1105,3 +1187,49 @@ void Border(Kvad_t* ptr)
         KvadSetMat(ptr, j, ptr->height - 1, 8);
     }
 }
+
+
+/*
+*dz = 0, *dn = 0;
+    int dx, dy, dir = -1;
+    dx = fx, dy = fy;
+
+    for(int i = 0; i < 6; i++)
+    {
+        if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
+        {
+            dir = i;
+            i = 6;
+        }
+    }
+    int front = 0, left = 0, right = 0;
+    front = KvadGetHexel(ptr, z + dx, n + dy)->mat;
+    dx = Yrot[mod(dir + 1    , 6)];
+    dy = Yrot[mod(dir + 1 - 2, 6)];
+    right = KvadGetHexel(ptr, z + dx, n + dy)->mat;
+    dx = Yrot[mod(dir - 1    , 6)];
+    dy = Yrot[mod(dir - 1 - 2, 6)];
+    left = KvadGetHexel(ptr, z + dx, n + dy)->mat;
+    
+    dx = fx, dy = fy;
+    if(front == 0)
+    {
+        *dz = dx;
+        *dn = dy;
+    }
+    else if( right != left )
+    {
+        if(right == 0)
+        {
+            *dz = Yrot[mod(dir + 1    , 6)];
+            *dn = Yrot[mod(dir + 1 - 2, 6)];
+        }
+        
+        if(left == 0)
+        {
+            *dz = Yrot[mod(dir - 1    , 6)];
+            *dn = Yrot[mod(dir - 1 - 2, 6)];
+        }
+    
+    }
+*/
