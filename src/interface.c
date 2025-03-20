@@ -4,8 +4,8 @@ const int buttonlistsize = 7;
 
 const int sliderlistsize = 2;
 
-const int inform_color = 2;
-const int interact_color = 7;
+const int inform_color = 7;
+const int interact_color = 4;
 const int frame_color = 3;
 
 extern InputState_t inpst;
