@@ -65,6 +65,8 @@ void RulesInitialize()
     
     p_rules[6][7][0] = 0;
     p_rules[6][7][1] = 7;
+    p_rules[6][7][2] = 7;
+    p_rules[6][7][3] = 7;
     
     p_rules[7][3][0] = 0;
     p_rules[7][3][1] = 2;

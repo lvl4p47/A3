@@ -1,6 +1,6 @@
 #include "interface.h"
 
-const int buttonlistsize = 7;
+const int buttonlistsize = 8;
 
 const int sliderlistsize = 2;
 
@@ -16,7 +16,7 @@ Slider_t** sliderlist;
 
 Cursor_t cursor;
 
-int b_panning, b_pause, b_step, b_drawing, b_button, b_slider;
+int b_panning, b_pause, b_step, b_drawing, b_button, b_slider, b_grab;
 int max_curs;
 int b_ui;
 
@@ -43,10 +43,9 @@ void InterfaceInitialize()
     b_drawing = 0;
     b_button = -1;
     b_slider = -1;
+    b_grab = 0;
     
     max_curs = 8;
-    // t_s = (sliderlist[1]->a + sliderlist[1]->d * (sliderlist[1]->c - 1))
-    //      * SDL_GetPerformanceFrequency() / 1000;
 }
 
 void InterfaceTerminate()
@@ -78,10 +77,11 @@ void ButtonListInitialize()
     buttonlist[0] = ButtonInitialize(1, 1, 3, 3, 0, L"/=\\‖ ‖\\=/", L".../=\\‖ ‖"); //L"/=\\‖o‖\\=/", L".../=\\‖o‖"
     buttonlist[1] = ButtonInitialize(5, 1, 3, 3, 1, L"r-`___\\_№", L"...r-`___");
     buttonlist[2] = ButtonInitialize(61, 20, 3, 3, 2, L"n n‖ ‖u u", L"|\\ | >|/ ");
-    buttonlist[3] = ButtonInitialize(66, 20, 3, 3, 3, L"ъеъеъеъеъ", L"еъеъеъеъе");
-    buttonlist[4] = ButtonInitialize(71, 20, 3, 3, 4, L"\\ | >|/ |", L" \\   > / ");
-    buttonlist[5] = ButtonInitialize(76, 20, 3, 3, 5, L" _ <o> - ", L"\\_/<X>/-\\");
+    buttonlist[3] = ButtonInitialize(1, 5, 3, 3, 3, L" mmnФФ\\l№", L"   /mm\\l№");
+    buttonlist[4] = ButtonInitialize(66, 20, 3, 3, 4, L"\\ | >|/ |", L" \\   > / ");
+    buttonlist[5] = ButtonInitialize(71, 20, 3, 3, 5, L" _ <o> - ", L"\\_/<X>/-\\");
     buttonlist[6] = ButtonInitialize(79, 0, 1, 1, 6, L"X", L"+");
+    buttonlist[7] = ButtonInitialize(9, 1, 3, 3, 7, L" T lв№\\_/", L".(.rT`lв№");
 }
 
 void ButtonListTerminate()
@@ -196,6 +196,7 @@ void ButtonDown(Button_t* b)
             b->text = 3 - b->text;
             break;
         case 3:
+            b_grab = 1 - b_grab;
             b->act_b = 1;
             b->text = 3 - b->text;
             break;
@@ -214,7 +215,14 @@ void ButtonDown(Button_t* b)
             b->act_b = 1;
             b->text = 3 - b->text;
             break;
+        case 7:
+            swap(&cursor.rm, &cursor.lm);
+            b->act_b = 1;
+            b->text = 3 - b->text;
+            break;
         default:
+            b->act_b = 1;
+            b->text = 2;
             break;
         }
     }
@@ -240,6 +248,9 @@ void ButtonUp(Button_t* b)
             break;
         case 5:
             break;
+        default:
+            b->text = 1;
+            break;
         }
     ButtonText(b, b->text);
 }
@@ -250,9 +261,12 @@ void DisplayPanning(Kvad_t* ptr, Display_t* d)
     int x, y, dz, dn, gridx, gridy;
     MouseToGrid(&gridx, &gridy);
     
-    if(isinrec(17, 1, 43, 43, gridx, gridy) && inpst.mouse.down && inpst.mouse.mmc)
-        b_panning = 1;
-    if(inpst.mouse.mmc && b_panning)
+    if(isinrec(17, 1, 43, 43, gridx, gridy) && inpst.mouse.down 
+    && ((inpst.mouse.mmc == 1 && b_grab == 0) ||
+        (inpst.mouse.lmc == 1 && b_grab == 1)))
+        b_panning = 1, MouseResetPrev();;
+    if(((inpst.mouse.mmc == 1 && b_grab == 0) ||
+        (inpst.mouse.lmc == 1 && b_grab == 1)) && b_panning)
     {
         MouseToPixels(&wx, &wy);
         PMouseToPixels(&pwx, &pwy);
@@ -270,7 +284,8 @@ void DisplayPanning(Kvad_t* ptr, Display_t* d)
         (d->hshift.x) * hsin(d->angle) - (d->hshift.y) * hsin(d->angle + 8);
         
     }
-    if(inpst.mouse.mmc == 0)
+    if((inpst.mouse.mmc == 0 && b_grab == 0) ||
+        (inpst.mouse.lmc == 0 && b_grab == 1))
     {
         d->screen_shift.w = d->screen_shift.x;
         d->screen_shift.h = d->screen_shift.y;
@@ -288,7 +303,8 @@ void DisplayPanning(Kvad_t* ptr, Display_t* d)
         b_panning = 0;
     }
     
-    if(inpst.mouse.wheel && (b_panning || isinrec(17, 1, 43, 43, gridx, gridy)))
+    if(inpst.mouse.wheel
+         && (b_panning || isinrec(17, 1, 43, 43, gridx, gridy)))
     {
         d->angle = (d->angle + 48 + inpst.mouse.scroll) % 48;
         inpst.mouse.wheel = 0;
@@ -321,7 +337,7 @@ void ScreenInput(Kvad_t* ptr, Display_t* d)
     int hexx, hexy, gridx, gridy;
     MouseToGrid(&gridx, &gridy);
     
-    if(isinrec(17, 1, 43, 43, gridx, gridy) && inpst.mouse.down)
+    if(isinrec(17, 1, 43, 43, gridx, gridy) && inpst.mouse.down && b_grab == 0)
         b_drawing = 1;
 
     if(inpst.mouse.pressed && isinrec(17, 1, 43, 43, gridx, gridy) && b_drawing)
@@ -378,7 +394,7 @@ void SliderListInitialize()
     int c0, c1;
     c0 = 1 + (cursor.lrad - 0) / 1;
     c1 = 1 + (t_s - 0) * 1000 / (20 * SDL_GetPerformanceFrequency());
-    sliderlist[0] = SliderInitialize(1, 5, 11, 3, 0, 1, c0, 0);
+    sliderlist[0] = SliderInitialize(1, 9, 11, 3, 0, 1, c0, 0);
     sliderlist[1] = SliderInitialize(61, 24, 18, 3, 0, 20, c1, 1);
 }
 
