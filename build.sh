@@ -6,6 +6,5 @@ if [ ! -d "build" ]; then
 fi
 
 cd build
-rm -rf *
 cmake ..
 make
