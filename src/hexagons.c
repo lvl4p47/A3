@@ -986,7 +986,7 @@ void ForceDirt(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     int b_forward = 0, 
     b_rightfront = 0, b_leftfront = 0;
 
-    int right_sum = 0, left_sum = 0, back_sum = 0, front_sum = 0;
+    int right_sum = 0, left_sum = 0;
 
     for(int i = 0; i < 6; i++)
     {
@@ -1078,7 +1078,7 @@ void ForceSand(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     int b_forward = 0, 
     b_rightfront = 0, b_leftfront = 0;
 
-    int right_sum = 0, left_sum = 0, back_sum = 0, front_sum = 0;
+    int right_sum = 0, left_sum = 0;
 
     for(int i = 0; i < 6; i++)
     {
@@ -1371,11 +1371,8 @@ void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
-    int b_forward = 0, b_back = 0, 
-    b_rightfront = 0, b_leftfront = 0,
+    int b_forward = 0, b_back = 0,
     b_rightback = 0, b_leftback = 0;
-
-    int right_sum = 0, left_sum = 0, back_sum = 0, front_sum = 0;
 
     for(int i = 0; i < 6; i++)
     {
@@ -1392,88 +1389,41 @@ void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     RelToAbs(ptr, fx, fy, 1, &rfx, &rfy);
     RelToAbs(ptr, fx, fy, -1, &lfx, &lfy);
 
-        // (
-        //     KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-        //     KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-        //     KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-        //     KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-        //     KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
-        //     KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
-        // )
-
-    right_sum =
-    (
-        (KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
-        (KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns)
-    );
-    left_sum =
-    (
-        (KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
-        (KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns)
-    );
     b_back =
     (
         (
             KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
             KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns
-        ) ||
-        (
-            KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
+            (
+                (
+                    (
+                        (KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns) ==
+                        (KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns)
+                    ) &&
+                    (
+                        KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
+                        KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
+                    )
+                ) ||
+                (
+                    KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+                    KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+                    KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+                    KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns
+                )
+            )
         )
-        
     );
     b_forward =
     (
         (
-            //KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            //KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
-        ) ||
-        (
-            //KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
             KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
             KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns// &&
-            //KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            //KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
+            KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns
         )
         
     );
-    b_rightfront = 0 &&
-    (
-        (
-            KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns
-        )
-    );
-    b_leftfront = 0 &&
-    (
-        (
-            KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns
-        )
-    );
-    b_rightback =// 0 &&
+    b_rightback =
     (
         (
             KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
@@ -1484,7 +1434,7 @@ void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
             KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns
         )
     );
-    b_leftback =// 0 &&
+    b_leftback =
     (
         (
             KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
@@ -1495,25 +1445,8 @@ void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
             KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
         )
     );
-    // if(b_forward == 0)
-    // {
-    //     if(right_sum > left_sum && (right_sum + left_sum < 3)
-    //      && (KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns)
-    //      && (KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns))
-    //     {
-    //         b_leftfront = 1;
-    //     }
-    //     if(right_sum < left_sum && (right_sum + left_sum < 3)
-    //      && (KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns)
-    //      && (KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns))
-    //     {
-    //         b_rightfront = 1;
-    //     }
-    // }
     if(b_back       )  *dz -= fx,  *dn -= fy;
     if(b_forward    )  *dz += fx,  *dn += fy;
-    if(b_rightfront )  *dz += rfx, *dn += rfy;
-    if(b_leftfront  )  *dz += lfx, *dn += lfy;
     if(b_rightback  )  *dz += rbx, *dn += rby;
     if(b_leftback   )  *dz += lbx, *dn += lby;
 }
@@ -1589,8 +1522,6 @@ void ForceGas(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
         else b_rightback = 1;
     }
     if(b_back == 1) b_leftback = 0, b_rightback = 0;
-    //if(b_forward == 1) b_leftfront = 0, b_rightfront = 0;
-    //if(b_leftback || b_rightback) b_back = 0;
     if(b_leftfront || b_rightfront) b_forward = 0;
     
     if(b_forward     )  *dz += fx,  *dn += fy;
