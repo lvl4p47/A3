@@ -39,23 +39,31 @@ There are 9 types of cells:
 * Can be suspended by Rope (1) cells on both sides.
 * Can be set on Fire (2).
 ### 2 -- Fire.
-* Ignites Rope (1), boils Water (3), dries Dirt (5), melts Ice (7).
+* Ignites Rope (1), boils Water (3), melts Ice (7).
 ### 3 -- Water.
 * Falls.
-* Water cells repel each other.
+* Turns Dirt (5) and Rock (8) to Sand (4).
 * Turns into Ice (7) when in contact with it.
 ### 4 -- Sand. 
 * Falls down, but if this direction is blocked can go to the adjacent empty cell.
-* Turns into Dirt (5) when in contact with Water (3).
+* Turns into Dirt (5) when in contact with Dirt (5).
 ### 5 -- Dirt. 
 * Falls.
-* Can be supported by Dirt (5) cells on both sides.
-* Turns into Sand (4) when in contact with Fire (2).
-### 6 -- Steam. 
+* Can be supported by other cells on both sides.
+* Does not collapse on 1 - tile tunnels.
+* Turns Sand (4) to Dirt (5).
+* Turns into Sand (4) when in contact with Water (3).
+### 6 -- Steam.
+* Rises. 
 * Steam cells repel each other.
-* Turns into Water (3) when in contact with Ice (7).
+* Turns into Water (3) when in contact with other Steam (6).
+* Turns into Ice (7) when in contact with Ice (7).
 ### 7 -- Ice.
-* Turns water (3) to Ice (7). 
+* Falls.
+* Can be supported by other cells on both sides.
+* Does not collapse on 1 - tile tunnels.
+* Turns Water (3) and Steam (6) to Ice (7). 
 * Turns into Water (3) when in contact with Fire (2).
 ### 8 -- Rock.
+* Turns into Sand (4) when in contact with Water (3).
 
