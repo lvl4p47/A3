@@ -36,7 +36,7 @@ void RulesInitialize()
     p_rules[3][7][3] = 7;
     p_rules[3][7][4] = 7;
     p_rules[3][7][5] = 7;
-    p_rules[3][7][6] = 7;
+    // p_rules[3][7][6] = 7;
 
     p_rules[3][6][0] = 0;
     p_rules[3][6][1] = 2;
@@ -159,17 +159,17 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
         break;
     case 1:
         cptr->st8 = 5;
-        cptr->dns = 3;
+        cptr->dns = 1;
         cptr->clr = 2;
         break;
     case 2:
         cptr->st8 = 2;
-        cptr->dns = 1;
+        cptr->dns = 2;
         cptr->clr = 1;
         break;
     case 3:
         cptr->st8 = 6;
-        cptr->dns = 2;
+        cptr->dns = 3;
         cptr->clr = 3;
         break;
     case 4:
@@ -188,8 +188,8 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
         cptr->clr = 7;
         break;
     case 7:
-        cptr->st8 = 4;
-        cptr->dns = 1;
+        cptr->st8 = 7;
+        cptr->dns = 2;
         cptr->clr = 4;
         break;
     case 8:
@@ -367,6 +367,7 @@ void GasUpdate(Kvad_t* ptr)
 {
     int gx = 0, gy = 1;
     int dz = 0, dn = 0;
+    int density = 1;
     
     for(int i = 0; i < ptr->height; i++)
     {
@@ -394,7 +395,8 @@ void GasUpdate(Kvad_t* ptr)
                     }
                 }
             }
-            else if(KvadGetHexel(ptr, j, i)->st8 != 0)
+            else if(KvadGetHexel(ptr, j, i)->st8 != 0 
+                    && KvadGetHexel(ptr, j, i)->dns >= density)
             {
                 KvadGetHexel(ptr, j, i)->fld2 += 2;
             }
@@ -721,6 +723,7 @@ void LiquidUpdate(Kvad_t* ptr)
 {
     int gx = 0, gy = 1;
     int dz = 0, dn = 0;
+    int density = 3;
     
     for(int i = 0; i < ptr->height; i++)
     {
@@ -749,7 +752,7 @@ void LiquidUpdate(Kvad_t* ptr)
                 }
             }
             else if(KvadGetHexel(ptr, j, i)->st8 != 0 
-                    && KvadGetHexel(ptr, j, i)->dns >= 2)
+                    && KvadGetHexel(ptr, j, i)->dns >= density)
             {
                 KvadGetHexel(ptr, j, i)->fld2 += 2;
             }
@@ -802,12 +805,113 @@ void LiquidUpdate(Kvad_t* ptr)
     }
 }
 
+void IceUpdate(Kvad_t* ptr)
+{
+    int gx = 0, gy = 1;
+    int dz = 0, dn = 0;
+    int f_direct = 0;
+    int b_dir_fall = 0;
+    int b_side_fall = 0;
+    int b_up_fall = 0;
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            
+            KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
+            if(KvadGetHexel(ptr, j, i)->st8 == 7)
+            {
+                ForceIce(ptr, j, i, gx, gy, &dz, &dn);
+                b_up_fall = dz == -gx && dn == -gy;
+                b_dir_fall = dz == gx && dn == gy;
+                b_side_fall = (!b_up_fall) && (!b_dir_fall);
+                if(b_up_fall)
+                {
+                    if( KvadGetHexel(ptr, j + dz, i + dn)->fld != -3
+                      && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = 3;
+                    }
+                    else
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -3;
+                    }
+                }
+                else if(b_dir_fall)
+                {
+                    if( (KvadGetHexel(ptr, j + dz, i + dn)->fld != -2 && 
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld != -3)
+                      && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = 2;
+                    }
+                    else
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -2;
+                    }
+                }
+                else if(b_side_fall)
+                {
+                    if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 0
+                      && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = 1;
+                    }
+                    else if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 1)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -1;
+                    }
+                }
+            }
+        }
+    }
+
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            if(KvadGetHexel(ptr, j, i)->st8 == 7)
+            {
+                ForceIce(ptr, j, i, gx, gy, &dz, &dn);
+                f_direct = 0;
+                if(dz == gx && dn == gy)
+                {    
+                    f_direct = 1;
+                    
+                }
+                if(dz == -gx && dn == -gy)
+                {    
+                    f_direct = 2;
+                    
+                }
+                if(KvadGetHexel(ptr, j + dz, i + dn)->fld == 1 + f_direct)
+                {
+                    swap(&KvadGetHexel(ptr, j     , i     )->tmp,
+                        &KvadGetHexel(ptr, j + dz, i + dn)->tmp);
+                }
+            }
+        }
+    }
+    
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+               
+            KvadGetHexel(ptr, j, i)->fld = 0;
+            KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp);
+
+        }
+    }
+}
+
 void KvadUpdate(Kvad_t* ptr)
 {
     Border(ptr);
     SolidUpdate(ptr);
     DirtUpdate(ptr);
     SandUpdate(ptr);
+    IceUpdate(ptr);
     RopeUpdate(ptr);
     GasUpdate(ptr);
     LiquidUpdate(ptr);
@@ -828,33 +932,6 @@ int NeighbourCount(Kvad_t* ptr, int z, int n, int val)
         }
     }
     return N;
-}
-
-int HalfNeighCount(Kvad_t* ptr, int z, int n, int val, int dz, int dn)
-{
-    int dx, dy, dir = 0;
-
-    for(int i = 0; i < 6; i++)
-    {
-        if(dz == Yrot[i] && dn == Yrot[mod(i - 2, 6)])
-        {
-            dir = i;
-            i = 6;
-        }
-    }
-    dx = dz, dy = dn;
-    int front = 0, left = 0, right = 0;
-    front = (KvadGetHexel(ptr, z + dx, n + dy)->mat == val) ? 1 : 0;
-    
-    dx = Yrot[mod(dir + 1    , 6)];
-    dy = Yrot[mod(dir + 1 - 2, 6)];
-    
-    right = (KvadGetHexel(ptr, z + dx, n + dy)->mat == val) ? 1 : 0;
-    dx = Yrot[mod(dir - 1    , 6)];
-    dy = Yrot[mod(dir - 1 - 2, 6)];
-    left = (KvadGetHexel(ptr, z + dx, n + dy)->mat == val) ? 1 : 0;
-
-    return (front + right + left);
 }
 
 void Repulsion(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn, int empty_st8)
@@ -1285,6 +1362,160 @@ void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     if(b_leftfront   )  *dz += lfx, *dn += lfy;
     if(b_rightback   )  *dz += rbx, *dn += rby;
     if(b_leftback    )  *dz += lbx, *dn += lby;
+}
+
+void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
+{
+    *dz = 0, *dn = 0;
+    int dir = -1;
+
+    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    
+    int b_forward = 0, b_back = 0, 
+    b_rightfront = 0, b_leftfront = 0,
+    b_rightback = 0, b_leftback = 0;
+
+    int right_sum = 0, left_sum = 0, back_sum = 0, front_sum = 0;
+
+    for(int i = 0; i < 6; i++)
+    {
+        if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
+        {
+            dir = i;
+            i = 6;
+        }
+    }
+
+    RelToAbs(ptr, fx, fy, 2, &rbx, &rby);
+    RelToAbs(ptr, fx, fy, -2, &lbx, &lby);
+
+    RelToAbs(ptr, fx, fy, 1, &rfx, &rfy);
+    RelToAbs(ptr, fx, fy, -1, &lfx, &lfy);
+
+        // (
+        //     KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+        //     KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+        //     KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+        //     KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+        //     KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
+        //     KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
+        // )
+
+    right_sum =
+    (
+        (KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns)
+    );
+    left_sum =
+    (
+        (KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns)
+    );
+    b_back =
+    (
+        (
+            KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns
+        ) ||
+        (
+            KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
+        )
+        
+    );
+    b_forward =
+    (
+        (
+            //KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            //KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
+        ) ||
+        (
+            //KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns// &&
+            //KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            //KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
+        )
+        
+    );
+    b_rightfront = 0 &&
+    (
+        (
+            KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns
+        )
+    );
+    b_leftfront = 0 &&
+    (
+        (
+            KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns
+        )
+    );
+    b_rightback =// 0 &&
+    (
+        (
+            KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns
+        )
+    );
+    b_leftback =// 0 &&
+    (
+        (
+            KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
+        )
+    );
+    // if(b_forward == 0)
+    // {
+    //     if(right_sum > left_sum && (right_sum + left_sum < 3)
+    //      && (KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns)
+    //      && (KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns))
+    //     {
+    //         b_leftfront = 1;
+    //     }
+    //     if(right_sum < left_sum && (right_sum + left_sum < 3)
+    //      && (KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns)
+    //      && (KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns))
+    //     {
+    //         b_rightfront = 1;
+    //     }
+    // }
+    if(b_back       )  *dz -= fx,  *dn -= fy;
+    if(b_forward    )  *dz += fx,  *dn += fy;
+    if(b_rightfront )  *dz += rfx, *dn += rfy;
+    if(b_leftfront  )  *dz += lfx, *dn += lfy;
+    if(b_rightback  )  *dz += rbx, *dn += rby;
+    if(b_leftback   )  *dz += lbx, *dn += lby;
 }
 
 void ForceGas(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)

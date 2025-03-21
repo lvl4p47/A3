@@ -25,7 +25,7 @@ uint64_t t_s;
 
 void InterfaceInitialize()
 {
-    cursor.lm = 5;
+    cursor.lm = 7;
     cursor.rm = 0;
     cursor.lrad = 1;
     cursor.rrad = 1;

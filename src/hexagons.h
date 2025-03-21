@@ -31,11 +31,13 @@ void DirtUpdate(Kvad_t* ptr);
 
 void RopeUpdate(Kvad_t* ptr);
 
+void LiquidUpdate(Kvad_t* ptr);
+
+void IceUpdate(Kvad_t* ptr);
+
 void KvadUpdate(Kvad_t* ptr);
 
 int NeighbourCount(Kvad_t* ptr, int z, int n, int val);
-
-int HalfNeighCount(Kvad_t* ptr, int z, int n, int val, int dz, int dn);
 
 void Repulsion(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn, int empty_st8);
 
@@ -48,6 +50,8 @@ void ForceSand(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 void ForceTension(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
+
+void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void ForceGas(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
