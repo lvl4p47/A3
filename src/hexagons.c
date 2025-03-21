@@ -41,21 +41,19 @@ void RulesInitialize()
     p_rules[3][6][0] = 0;
     p_rules[3][6][1] = 2;
     
-    // p_rules[4][5][0] = 0;
-    // p_rules[4][5][1] = 5;
-    // p_rules[4][5][2] = 5;
-    // p_rules[4][5][3] = 5;
-    // p_rules[4][5][4] = 4;
-    // p_rules[4][5][5] = 4;
-    // p_rules[4][5][6] = 4;
+    p_rules[4][5][0] = 0;
+    p_rules[4][5][1] = 5;
+    p_rules[4][5][2] = 5;
+    p_rules[4][5][3] = 5;
+    p_rules[4][5][4] = 5;
 
-    // p_rules[5][4][0] = 0;
-    // p_rules[5][4][1] = 5;
-    // p_rules[5][4][2] = 5;
-    // p_rules[5][4][3] = 0;
-    // p_rules[5][4][4] = 0;
-    // p_rules[5][4][5] = 0;
-    // p_rules[5][4][6] = 0;
+    p_rules[5][4][0] = 0;
+    p_rules[5][4][1] = 5;
+    p_rules[5][4][2] = 5;
+    p_rules[5][4][3] = 5;
+    p_rules[5][4][4] = 3;
+    p_rules[5][4][5] = 3;
+    p_rules[5][4][6] = 0;
     
     p_rules[6][3][0] = 0;
     p_rules[6][3][1] = 6;
