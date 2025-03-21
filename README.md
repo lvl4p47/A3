@@ -60,8 +60,8 @@ There are 9 types of cells:
 * Turns into Ice (7) when in contact with Ice (7).
 ### 7 -- Ice.
 * Falls.
-* Can be supported by other cells on both sides.
-* Does not collapse on 1 - tile tunnels.
+* Can be supported by other cells.
+* Forms a lattice.
 * Turns Water (3) and Steam (6) to Ice (7). 
 * Turns into Water (3) when in contact with Fire (2).
 ### 8 -- Rock.
