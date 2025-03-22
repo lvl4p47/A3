@@ -856,7 +856,6 @@ void IceUpdate(Kvad_t* ptr)
                 }
                 else if(b_side_fall)
                 {
-                    if(dz != 0 && dn != 0) volume++;
                     if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 0
                       && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
                     {
@@ -891,6 +890,7 @@ void IceUpdate(Kvad_t* ptr)
                 }
                 if(KvadGetHexel(ptr, j + dz, i + dn)->fld == 1 + f_direct)
                 {
+                    if(f_direct == 0) volume++;
                     swap(&KvadGetHexel(ptr, j     , i     )->tmp,
                         &KvadGetHexel(ptr, j + dz, i + dn)->tmp);
                 }
@@ -911,7 +911,7 @@ void IceUpdate(Kvad_t* ptr)
     // printf("\nIce volume: %i\t", volume);
     // while(volume > 0)
     // {
-    //     printf("|");
+    //     printf("cэ");
     //     volume--;
     // }
 }

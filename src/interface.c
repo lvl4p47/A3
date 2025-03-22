@@ -427,7 +427,7 @@ void SliderListTerminate()
 void SliderDraw(Slider_t* s, Font_t* f)
 {
     FontCharFill(f, L'-', s->x + 1, s->y + 1, s->w - 2, 1, interact_color);
-    FontStringDraw(f, s->x + s->c, s->y, 1, 2, L"V+", interact_color);
+    FontStringDraw(f, s->x + s->c - 1, s->y, 3, 2, L" V с=э", interact_color);
     int value = s->a + s->d * (s->c - 1);
     int raz = 0;
     int dva = 100;

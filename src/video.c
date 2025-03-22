@@ -77,11 +77,10 @@ void HexelDraw(Display_t* d, int z, int n, Cell_t* c, int b_ui)
     int srcx = d->angle * 9;
     int srcy = c->mat * 9;
 
-    //SDL_SetTextureColorMod(s1->texture, rgb[c->clr][0], rgb[c->clr][1], rgb[c->clr][2]);
     if(b_ui == 1)
     {
         srcx = d->angle * 9;
-        srcy = (mod(c->dns, 10)) * 9;
+        srcy = (mod(c->dns, 11)) * 9;
         SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y, c->clr);
     }
     else
