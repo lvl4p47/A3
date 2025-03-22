@@ -27,4 +27,8 @@ void SpriteTerminate(Sprite_t* s);
 
 void SpriteDraw(Sprite_t* s, int x1, int y1, int x2, int y2, int color);
 
+void ResizeWindow(int ps);
+
+void ToggleWindow(int b_min);
+
 #endif

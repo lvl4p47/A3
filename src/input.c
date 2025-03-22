@@ -2,7 +2,7 @@
 
 int b_quit;
 SDL_Event event;
-int pixelsize = 3;
+int pixelsize = 2;
 InputState_t inpst;
 
 void InputInitialize()

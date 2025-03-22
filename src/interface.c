@@ -1,6 +1,6 @@
 #include "interface.h"
 
-const int buttonlistsize = 8;
+const int buttonlistsize = 10;
 
 const int sliderlistsize = 2;
 
@@ -82,6 +82,8 @@ void ButtonListInitialize()
     buttonlist[5] = ButtonInitialize(71, 20, 3, 3, 5, L" _ <o> - ", L"\\_/<X>/-\\");
     buttonlist[6] = ButtonInitialize(79, 0, 1, 1, 6, L"X", L"+");
     buttonlist[7] = ButtonInitialize(9, 1, 3, 3, 7, L" T lв№\\_/", L".(.rT`lв№");
+    buttonlist[8] = ButtonInitialize(78, 0, 1, 1, 8, L"o", L"0");
+    buttonlist[9] = ButtonInitialize(77, 0, 1, 1, 9, L"-", L"_");
 }
 
 void ButtonListTerminate()
@@ -220,6 +222,16 @@ void ButtonDown(Button_t* b)
             b->act_b = 1;
             b->text = 3 - b->text;
             break;
+        case 8:
+            ResizeWindow(3 - pixelsize);
+            b->act_b = 1;
+            b->text = 3 - b->text;
+            break;
+        case 9:
+            ToggleWindow(1);
+            b->act_b = 1;
+            b->text = 2;
+            break;
         default:
             b->act_b = 1;
             b->text = 2;
@@ -247,6 +259,11 @@ void ButtonUp(Button_t* b)
             b->text = 1;
             break;
         case 5:
+            break;
+        case 8:
+            break;
+        case 9:
+            b->text = 1;
             break;
         default:
             b->text = 1;

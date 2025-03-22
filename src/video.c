@@ -162,3 +162,17 @@ void SpriteDraw(Sprite_t* s, int x1, int y1, int x2, int y2, int color)
     SDL_SetTextureColorMod(s->texture, rgb[color][0], rgb[color][1], rgb[color][2]);
     SDL_RenderCopy(m_renderer, s->texture, &s->source, &s->destination);
 }
+
+void ResizeWindow(int ps)
+{
+    SDL_SetWindowSize(m_window, 640 * ps, 360 * ps);
+    SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    SDL_SetWindowInputFocus(m_window);
+    pixelsize = ps;
+}
+
+void ToggleWindow(int b_min)
+{
+    if(b_min) SDL_MinimizeWindow(m_window);
+    else SDL_MaximizeWindow(m_window);
+}
