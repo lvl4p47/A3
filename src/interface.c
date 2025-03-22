@@ -77,7 +77,7 @@ void ButtonListInitialize()
     buttonlist[0] = ButtonInitialize(1, 1, 3, 3, 0, L"/=\\‖ ‖\\=/", L".../=\\‖ ‖"); //L"/=\\‖o‖\\=/", L".../=\\‖o‖"
     buttonlist[1] = ButtonInitialize(5, 1, 3, 3, 1, L"r-`___\\_№", L"...r-`___");
     buttonlist[2] = ButtonInitialize(61, 20, 3, 3, 2, L"n n‖ ‖u u", L"|\\ | >|/ ");
-    buttonlist[3] = ButtonInitialize(1, 5, 3, 3, 3, L" mmnФФ\\l№", L"   /mm\\l№");
+    buttonlist[3] = ButtonInitialize(1, 5, 3, 3, 3, L" ‖‖nVV\\l№", L"   /mm\\l№");
     buttonlist[4] = ButtonInitialize(66, 20, 3, 3, 4, L"\\ | >|/ |", L" \\   > / ");
     buttonlist[5] = ButtonInitialize(71, 20, 3, 3, 5, L" _ <o> - ", L"\\_/<X>/-\\");
     buttonlist[6] = ButtonInitialize(79, 0, 1, 1, 6, L"X", L"+");
@@ -223,7 +223,7 @@ void ButtonDown(Button_t* b)
             b->text = 3 - b->text;
             break;
         case 8:
-            ResizeWindow(3 - pixelsize);
+            ResizeWindow(5 - pixelsize);
             b->act_b = 1;
             b->text = 3 - b->text;
             break;
@@ -533,8 +533,6 @@ void FontUIDraw(Font_t* f, Display_t* d)
     FontStringDraw(f, 1, 28, 15, 16,
     str, inform_color);
     /*
-    FontStringDraw(f, 1, 1, 3, 3, L"/=\\‖o‖\\=/");
-    FontStringDraw(f, 5, 1, 3, 3, L"r `   l №");
     FontStringDraw(f, 9, 1, 3, 3, L"o\\ \\ \\ \\o");
     FontStringDraw(f, 1, 5, 3, 3, L" n <ш>iV ");
 
@@ -547,34 +545,36 @@ void FontUIDraw(Font_t* f, Display_t* d)
     FontStringDraw(f, 9, 23, 3, 4, L" ‖ \\‖/ V c=э"); | |
     FontStringDraw(f, 13, 23, 3, 4, L" n qhpdчb u "); l-№
     */
-    int r = 16;
-    int ang = d->angle;
+    if(b_ui)
+    {
+        int r = 16;
+        int ang = d->angle;
 
-    int zang, nang;
+        int zang, nang;
 
-    zang = r, nang = 0;   
+        zang = r, nang = 0;   
 
-    HexToGrid(d, &zang, &nang);
-    FontNumberDraw(f, zang, nang, 3, 1, 0, inform_color);
+        HexToGrid(d, &zang, &nang);
+        FontNumberDraw(f, zang, nang, 3, 1, 0, inform_color);
 
-    zang = r, nang = -r;
-    HexToGrid(d, &zang, &nang);
-    FontNumberDraw(f, zang, nang, 3, 1, 90, inform_color);
+        zang = r, nang = -r;
+        HexToGrid(d, &zang, &nang);
+        FontNumberDraw(f, zang, nang, 3, 1, 90, inform_color);
 
-    zang = 0, nang = -r;
-    HexToGrid(d, &zang, &nang);
-    FontNumberDraw(f, zang, nang, 3, 1, 120, inform_color);
+        zang = 0, nang = -r;
+        HexToGrid(d, &zang, &nang);
+        FontNumberDraw(f, zang, nang, 3, 1, 120, inform_color);
 
-    zang = -r, nang = 0;
-    HexToGrid(d, &zang, &nang);
-    FontNumberDraw(f, zang, nang, 3, 1, 180, inform_color);
+        zang = -r, nang = 0;
+        HexToGrid(d, &zang, &nang);
+        FontNumberDraw(f, zang, nang, 3, 1, 180, inform_color);
 
-    zang = -r, nang = r;
-    HexToGrid(d, &zang, &nang);
-    FontNumberDraw(f, zang, nang, 3, 1, 240, inform_color);
+        zang = -r, nang = r;
+        HexToGrid(d, &zang, &nang);
+        FontNumberDraw(f, zang, nang, 3, 1, 240, inform_color);
 
-    zang = 0, nang = r;
-    HexToGrid(d, &zang, &nang);
-    FontNumberDraw(f, zang, nang, 3, 1, 300, inform_color);
-    
+        zang = 0, nang = r;
+        HexToGrid(d, &zang, &nang);
+        FontNumberDraw(f, zang, nang, 3, 1, 300, inform_color);
+    }
 }
