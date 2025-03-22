@@ -320,11 +320,11 @@ void DisplayPanning(Kvad_t* ptr, Display_t* d)
         b_panning = 0;
     }
     
-    if(inpst.mouse.wheel
+    if((inpst.mouse.scroll)
          && (b_panning || isinrec(17, 1, 43, 43, gridx, gridy)))
     {
         d->angle = (d->angle + 48 + inpst.mouse.scroll) % 48;
-        inpst.mouse.wheel = 0;
+        inpst.mouse.scroll = 0;
 
         d->screen_shift.x = 1 * d->hshift.w +
         (d->hshift.x) * hcos(d->angle) + (d->hshift.y) * hcos(d->angle + 8);
@@ -338,15 +338,10 @@ void DisplayPanning(Kvad_t* ptr, Display_t* d)
         d->screen_shift.h = d->screen_shift.y;
 
     }
-    
-    /*
-    if(isinrec(17, 1, 43, 43, gridx, gridy) == 0 )
+    else
     {
-        d->screen_shift.w = d->screen_shift.x;
-        d->screen_shift.h = d->screen_shift.y;
-        MouseResetPrev();
+        inpst.mouse.scroll = 0;
     }
-    */
 }
 
 void ScreenInput(Kvad_t* ptr, Display_t* d)

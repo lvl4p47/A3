@@ -107,7 +107,7 @@ void InputRegister()
             break;
         case SDL_MOUSEWHEEL:
             inpst.mouse.wheel = 1;
-            inpst.mouse.scroll = event.wheel.y;
+            inpst.mouse.scroll += event.wheel.y;
             SDL_GetMouseState(&inpst.mouse.x, &inpst.mouse.y);
             break;
 

@@ -166,7 +166,7 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
         break;
     case 2:
         cptr->st8 = 2;
-        cptr->dns = 1;
+        cptr->dns = 4;
         cptr->clr = 1;
         break;
     case 3:
@@ -1183,17 +1183,17 @@ void ForceRope(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
             KvadGetHexel(ptr, z + fx, n + fy)->dns     < state &&
             (
                 (
-                    KvadGetHexel(ptr, z + rfx, n + rfy)->dns   >= state &&
-                    KvadGetHexel(ptr, z + lfx, n + lfy)->dns   >= state
+                    KvadGetHexel(ptr, z + rfx, n + rfy)->dns   == state &&
+                    KvadGetHexel(ptr, z + lfx, n + lfy)->dns   == state
                 ) ||
                 (
-                    KvadGetHexel(ptr, z + rfx, n + rfy)->dns   >= state &&
+                    KvadGetHexel(ptr, z + rfx, n + rfy)->dns   == state &&
                     KvadGetHexel(ptr, z + lfx, n + lfy)->dns   < state &&
                     KvadGetHexel(ptr, z + lbx, n + lby)->dns   < state
                 ) ||
                 (
                     KvadGetHexel(ptr, z + rfx, n + rfy)->dns   < state &&
-                    KvadGetHexel(ptr, z + lfx, n + lfy)->dns   >= state &&
+                    KvadGetHexel(ptr, z + lfx, n + lfy)->dns   == state &&
                     KvadGetHexel(ptr, z + rbx, n + rby)->dns   < state
                 ) ||
                 (
@@ -1225,11 +1225,11 @@ void ForceRope(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
         (
             KvadGetHexel(ptr, z - fx, n - fy)->dns     >= state &&
             KvadGetHexel(ptr, z + fx, n + fy)->dns     < state &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->dns   >= state &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->dns   >= state &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->dns   == state &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->dns   == state &&
             (
-                KvadGetHexel(ptr, z + rbx, n + rby)->dns   >= state &&
-                KvadGetHexel(ptr, z + lbx, n + lby)->dns   >= state
+                KvadGetHexel(ptr, z + rbx, n + rby)->dns   == state &&
+                KvadGetHexel(ptr, z + lbx, n + lby)->dns   == state
             )
         )
         
@@ -1239,13 +1239,13 @@ void ForceRope(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
         (
             KvadGetHexel(ptr, z + rfx, n + rfy)->dns   < state &&
             KvadGetHexel(ptr, z + lfx, n + lfy)->dns   < state &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->dns   >= state &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->dns   == state &&
             KvadGetHexel(ptr, z + lbx, n + lby)->dns   < state
         ) ||
         (
-            KvadGetHexel(ptr, z + fx, n + fy)->dns     >= state &&
+            KvadGetHexel(ptr, z + fx, n + fy)->dns     == state &&
             KvadGetHexel(ptr, z + rfx, n + rfy)->dns   < state &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->dns   >= state &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->dns   == state &&
             (
                 (
                     KvadGetHexel(ptr, z - fx, n - fy)->dns     < state &&
@@ -1254,27 +1254,27 @@ void ForceRope(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
                     
                 ) ||
                 (
-                    KvadGetHexel(ptr, z - fx, n - fy)->dns     >= state &&
-                    KvadGetHexel(ptr, z + rbx, n + rby)->dns   >= state &&
+                    KvadGetHexel(ptr, z - fx, n - fy)->dns     == state &&
+                    KvadGetHexel(ptr, z + rbx, n + rby)->dns   == state &&
                     KvadGetHexel(ptr, z + lbx, n + lby)->dns   < state && 0
                 )
             )
         ) ||
         (
-            KvadGetHexel(ptr, z - fx, n - fy)->dns     >= state &&
-            KvadGetHexel(ptr, z + fx, n + fy)->dns     >= state &&
+            KvadGetHexel(ptr, z - fx, n - fy)->dns     == state &&
+            KvadGetHexel(ptr, z + fx, n + fy)->dns     == state &&
             KvadGetHexel(ptr, z + rfx, n + rfy)->dns   < state &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->dns   >= state &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->dns   >= state &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->dns   >= state
+            KvadGetHexel(ptr, z + lfx, n + lfy)->dns   == state &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->dns   == state &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->dns   == state
         ) ||
         (
             KvadGetHexel(ptr, z - fx, n - fy)->dns     < state &&
-            KvadGetHexel(ptr, z + fx, n + fy)->dns     >= state &&
+            KvadGetHexel(ptr, z + fx, n + fy)->dns     == state &&
             KvadGetHexel(ptr, z + rfx, n + rfy)->dns   < state &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->dns   >= state &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->dns   == state &&
             KvadGetHexel(ptr, z + rbx, n + rby)->dns   < state &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->dns   >= state
+            KvadGetHexel(ptr, z + lbx, n + lby)->dns   == state
         )
     );
     b_leftfront =
@@ -1283,11 +1283,11 @@ void ForceRope(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
             KvadGetHexel(ptr, z + rfx, n + rfy)->dns   < state &&
             KvadGetHexel(ptr, z + lfx, n + lfy)->dns   < state &&
             KvadGetHexel(ptr, z + rbx, n + rby)->dns   < state &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->dns   >= state
+            KvadGetHexel(ptr, z + lbx, n + lby)->dns   == state
         ) ||
         (
-            KvadGetHexel(ptr, z + fx, n + fy)->dns     >= state &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->dns   >= state &&
+            KvadGetHexel(ptr, z + fx, n + fy)->dns     == state &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->dns   == state &&
             KvadGetHexel(ptr, z + lfx, n + lfy)->dns   < state &&
             (
                 (
@@ -1296,26 +1296,26 @@ void ForceRope(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
                     KvadGetHexel(ptr, z + lbx, n + lby)->dns   < state
                 ) ||
                 (
-                    KvadGetHexel(ptr, z - fx, n - fy)->dns     >= state &&
+                    KvadGetHexel(ptr, z - fx, n - fy)->dns     == state &&
                     KvadGetHexel(ptr, z + rbx, n + rby)->dns   < state &&
-                    KvadGetHexel(ptr, z + lbx, n + lby)->dns   >= state && 0
+                    KvadGetHexel(ptr, z + lbx, n + lby)->dns   == state && 0
                 )
             )
         ) ||
         (
-            KvadGetHexel(ptr, z - fx, n - fy)->dns     >= state &&
-            KvadGetHexel(ptr, z + fx, n + fy)->dns     >= state &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->dns   >= state &&
+            KvadGetHexel(ptr, z - fx, n - fy)->dns     == state &&
+            KvadGetHexel(ptr, z + fx, n + fy)->dns     == state &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->dns   == state &&
             KvadGetHexel(ptr, z + lfx, n + lfy)->dns   < state &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->dns   >= state &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->dns   >= state
+            KvadGetHexel(ptr, z + rbx, n + rby)->dns   == state &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->dns   == state
         ) ||
         (
             KvadGetHexel(ptr, z - fx, n - fy)->dns     < state &&
-            KvadGetHexel(ptr, z + fx, n + fy)->dns     >= state &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->dns   >= state &&
+            KvadGetHexel(ptr, z + fx, n + fy)->dns     == state &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->dns   == state &&
             KvadGetHexel(ptr, z + lfx, n + lfy)->dns   < state &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->dns   >= state &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->dns   == state &&
             KvadGetHexel(ptr, z + lbx, n + lby)->dns   < state
         )
     );
