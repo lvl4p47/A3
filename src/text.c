@@ -1,12 +1,13 @@
 #include "text.h"
 
+
 Font_t* FontInitialise()
 {
     Font_t* f = (Font_t*)malloc(sizeof(Font_t));
     f->character_width = 8;
     f->character_height = 8;
     f->sprite = SpriteInitialize(
-        f->character_width, f->character_height, "./src/font.png");
+        f->character_width, f->character_height, "../media/font.png");
     return f;
 }
 

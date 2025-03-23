@@ -6,7 +6,7 @@ project(A3 VERSION 0.1)
 set(CMAKE_C_STANDARD 11)
 
 # задаем переменную SOURCES как набор твоих исходников
-set(SOURCES src/main.c src/func.c src/hexagons.c src/input.c src/main.c src/text.c src/video.c src/tiles.png src/font.png src/ui.txt src/interface.c)
+set(SOURCES src/main.c src/func.c src/hexagons.c src/input.c src/main.c src/text.c src/video.c media/tiles.png media/ui_tiles.png media/font.png media/ui.txt src/interface.c)
 
 # задаем цель сборки под именем main и указываем исходники
 add_executable(main ${SOURCES})

@@ -1,3 +1,3 @@
 #!/bin/bash
-
-./build/main
+cd build
+./main

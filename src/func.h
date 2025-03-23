@@ -31,11 +31,7 @@ typedef struct
     int mat, tmp, prs_grav, prs_dist, fld, fld2, dx, dy, st8, dns, clr;
 } Cell_t;
 
-typedef struct
-{
-    int width, height;
-    Cell_t** arr;
-} Kvad_t;
+
 
 //VIDEO
 

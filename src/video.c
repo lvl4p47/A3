@@ -15,8 +15,9 @@ int rgb[8][3] = {
                 {255, 255, 255}  // White
                 };
 SDL_Rect hexel;
-Sprite_t* s1 = NULL;
-Sprite_t* s2 = NULL;
+Sprite_t* s1;
+Sprite_t* s2;
+Sprite_t* f21;
 
 void point(int x, int y, int r, int g, int b)
 {
@@ -26,6 +27,7 @@ void point(int x, int y, int r, int g, int b)
 
 void VideoInitialize()
 {
+    s1 = NULL, s2 = NULL;
     SDL_Init(SDL_INIT_EVERYTHING);
     SDL_CreateWindowAndRenderer(
                     640 * pixelsize, 
@@ -42,8 +44,11 @@ void VideoInitialize()
 
     IMG_Init(IMG_INIT_PNG);
     
-    s1 = SpriteInitialize(9, 9, "./src/tiles.png");
-    s2 = SpriteInitialize(9, 9, "./src/ui_tiles.png");
+    s1 = SpriteInitialize(9, 9, "../media/tiles.png");
+    s2 = SpriteInitialize(9, 9, "../media/ui_tiles.png");
+    f21 = SpriteInitialize(8, 8, "../media/font.png");
+    
+    if(s1 == NULL) printf("\n tiles.png not found");
 }
 
 void VideoTerminate()
@@ -99,6 +104,7 @@ void KvadRender(Kvad_t* ptr, Display_t* d, int x, int y, int b_ui)
         for (int j = 0; j < ptr->width; j++)
         {
             HexelDraw(d, j, i, &ptr->arr[i][j], b_ui);
+            if(&ptr->arr[i][j] == NULL) printf("\n kvad render error");
         }
     }
 }
@@ -132,7 +138,8 @@ void DisplayTerminate(Display_t* d)
 
 Sprite_t* SpriteInitialize(int width, int height, const char* file)
 {
-    Sprite_t* s = (Sprite_t*)malloc(sizeof(Sprite_t));
+    Sprite_t* s = NULL;
+    s = (Sprite_t*)malloc(sizeof(Sprite_t));
     s->source.x = 0;            s->source.y = 0;
     s->source.w = width;        s->source.h = height;
     s->destination.x = 0;       s->destination.y = 0;

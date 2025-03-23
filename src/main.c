@@ -28,32 +28,12 @@ void update_frame(uint64_t* ft, int64_t* dr)
 
     ScreenClear();
 
-    /*
-    int tx, ty;
-    int sx = 61 * 8 + 72, tw = 144;
-    int sy = 1 * 8 + 72, th = 144;
-    
-    for(int i = sy - th / 2; i < sy + th / 2; i++)
-    {
-        for(int j = sx - tw / 2; j < sx + tw / 2; j++)
-        {
-            tx = j, ty = i;
-            PixelToHex(d1, &tx, &ty);
-            point(61 * 0 + j, 1 * 0 + i, 85 * mod(tx, 3) * mod(tx, 2), mod(ty,2) * mod(ty, 3) * 85, mod(tx + ty, 2) * mod(tx + ty, 3) * 85);
-            //point(61 * 0 + j, 1 * 0 + i, tx * 255, ty * 255, ty * 255 - tx * 255);
-            //mod(ty, 3) * 85 * 0, mod(tx - 1, 2) * 255 - mod(ty, 2) * 255
-        }
-    }
-    */
-
     KvadRender(k1, d1, 1, 1, b_ui);
     
+    
+    
     InterfaceUpdate();
-
-    //
     InterfaceDraw(f1, d1);
-    //ButtonListDraw(f1);
-    //ButtonDraw(b1, f1);
 
     ScreenRefresh();
 	*ft = (int64_t)SDL_GetPerformanceCounter();
@@ -90,9 +70,6 @@ int main( int argc, char * argv[] )
     uint64_t fps = 60;
     uint64_t sps = 60;
 
-    //uint64_t t_f = SDL_GetPerformanceFrequency() / fps;
-    //uint64_t t_s = SDL_GetPerformanceFrequency() / sps;
-
     int64_t dr, ds;
 	uint64_t frame_time, step_time, cur_time;
 
@@ -103,10 +80,9 @@ int main( int argc, char * argv[] )
     InputInitialize();
 
     k1 = KvadInitialize(side, side);
-    d1 = DisplayInitialize(17, 1, 43, 43);
-    f1 = FontInitialise();
-    InterfaceInitialize();
-    //b1 = ButtonInitialize(1, 1, 3, 3, L"000000000");
+     d1 = DisplayInitialize(17, 1, 43, 43);
+     f1 = FontInitialise();
+     InterfaceInitialize();
 
 
     while(!b_quit)

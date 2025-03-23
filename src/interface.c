@@ -42,8 +42,8 @@ void InterfaceInitialize()
     rules_editor.h = 19;
     rules_editor.list_begin = 0;
     rules_editor.list_end = hmin(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->num, 3);
-    rules_editor.mat_from    = 3;
-    rules_editor.mat_to      = 6;
+    rules_editor.mat_from    = 2;
+    rules_editor.mat_to      = 0;
     rules_editor.cond_num    = 0;
     
     t_f = SDL_GetPerformanceFrequency() / 60;
@@ -695,7 +695,7 @@ void FontUIDraw(Font_t* f, Display_t* d)
     wchar_t reading[82];
 
     FILE* fl1 = NULL;
-    fl1 = fopen("./src/ui.txt", "r");
+    fl1 = fopen("../media/ui.txt", "r");
     for(int i = 0; i < 45; i++)
     {
         fgetws(reading, 82, fl1);

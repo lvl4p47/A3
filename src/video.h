@@ -3,6 +3,8 @@
 
 #include "hexagons.h"
 
+extern Sprite_t* f21;
+
 void point(int x, int y, int r, int g, int b);
 
 void VideoInitialize();

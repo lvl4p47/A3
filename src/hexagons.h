@@ -28,6 +28,12 @@ typedef struct
     RulesFromMat_t **frommat;// * mat_amount
 } Rules_t;
 
+typedef struct
+{
+    int width, height;
+    Cell_t **arr;
+} Kvad_t;
+
 extern Rules_t *RULES;
 
 void RulesInitialize();
