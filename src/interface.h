@@ -92,4 +92,6 @@ void FontUIDraw(Font_t* f, Display_t* d);
 
 void FontRulesEditorDraw(Font_t* f);
 
+void FontRulesEditorNeighborsDraw(Font_t* f, int x, int y, int w, int h, int n, int color);
+
 #endif

@@ -75,6 +75,8 @@ int64_t hmin(int64_t a, int64_t b);
 
 int mod(int a, int t);
 
+int cycle(int a, int min, int max, int d);
+
 int hdiv(int a, int t);
 
 void swap(int* a, int* b);

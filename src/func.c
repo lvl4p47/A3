@@ -47,6 +47,11 @@ int mod(int a, int t)
     return ans;
 }
 
+int cycle(int a, int min, int max, int d)
+{
+    return mod(a - min + d, max - min + 1) + min;
+}
+
 int hdiv(int a, int t)
 {
     int ans;

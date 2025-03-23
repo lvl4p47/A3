@@ -25,6 +25,8 @@ int b_ui;
 uint64_t t_f;
 uint64_t t_s;
 
+int min_neigh = -11, max_neigh = 9;
+
 //int mat_from, mat_to, cond_num;
 
 void InterfaceInitialize()
@@ -171,8 +173,8 @@ void ButtonListDraw(Font_t* f)
     {
         ButtonDraw(buttonlist[i], f);
     }
-    FontNumberDraw(f, 9, 1, 1, 1, cursor.lm, interact_color);
-    FontNumberDraw(f, 11, 1, 1, 1, cursor.rm, interact_color);
+    FontNumberDraw(f, 9, 1, 1, 1, cursor.lm, interact_color, 0, 1);
+    FontNumberDraw(f, 11, 1, 1, 1, cursor.rm, interact_color, 0, 1);
 }
 
 void ButtonListCheck()
@@ -316,78 +318,79 @@ void ButtonDown(Button_t* b)
             
         case 16:
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[0] = 
-            mod(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[0] + 2, mat_amount + 1) - 1;
+            cycle(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[0], min_neigh, max_neigh, 1);
+            
             b->act_b = 1;
             b->text = 2;
             break;
         case 17:
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[0] = 
-            mod(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[0] + 0, mat_amount + 1) - 1;
+            cycle(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[0], min_neigh, max_neigh, -1);
             b->act_b = 1;
             b->text = 2;
             break;
             
         case 18:
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[1] = 
-            mod(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[1] + 2, mat_amount + 1) - 1;
+            cycle(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[1], min_neigh, max_neigh, 1);
             b->act_b = 1;
             b->text = 2;
             break;
         case 19:
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[1] = 
-            mod(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[1] + 0, mat_amount + 1) - 1;
+            cycle(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[1], min_neigh, max_neigh, -1);
             b->act_b = 1;
             b->text = 2;
             break;
             
         case 20:
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[2] = 
-            mod(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[2] + 2, mat_amount + 1) - 1;
+            cycle(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[2], min_neigh, max_neigh, 1);
             b->act_b = 1;
             b->text = 2;
             break;
         case 21:
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[2] = 
-            mod(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[2] + 0, mat_amount + 1) - 1;
+            cycle(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[2], min_neigh, max_neigh, -1);
             b->act_b = 1;
             b->text = 2;
             break;
         
         case 22:
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[3] = 
-            mod(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[3] + 2, mat_amount + 1) - 1;
+            cycle(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[3], min_neigh, max_neigh, 1);
             b->act_b = 1;
             b->text = 2;
             break;
         case 23:
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[3] = 
-            mod(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[3] + 0, mat_amount + 1) - 1;
+            cycle(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[3], min_neigh, max_neigh, -1);
             b->act_b = 1;
             b->text = 2;
             break;
         
         case 24:
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[4] = 
-            mod(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[4] + 2, mat_amount + 1) - 1;
+            cycle(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[4], min_neigh, max_neigh, 1);
             b->act_b = 1;
             b->text = 2;
             break;
         case 25:
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[4] = 
-            mod(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[4] + 0, mat_amount + 1) - 1;
+            cycle(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[4], min_neigh, max_neigh, -1);
             b->act_b = 1;
             b->text = 2;
             break;
             
         case 26:
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[5] = 
-            mod(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[5] + 2, mat_amount + 1) - 1;
+            cycle(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[5], min_neigh, max_neigh, 1);
             b->act_b = 1;
             b->text = 2;
             break;
         case 27:
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[5] = 
-            mod(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[5] + 0, mat_amount + 1) - 1;
+            cycle(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[5], min_neigh, max_neigh, -1);
             b->act_b = 1;
             b->text = 2;
             break;
@@ -613,7 +616,7 @@ void SliderDraw(Slider_t* s, Font_t* f)
     FontCharFill(f, L'-', s->x + 1, s->y + 1, s->w - 2, 1, interact_color);
     FontStringDraw(f, s->x + s->c - 1, s->y, 3, 2, L" V с=э", interact_color);
     int value = s->a + s->d * (s->c - 1);
-    FontNumberDraw(f, s->x + s->c - 1, s->y + 2, 3, 1, value, interact_color);
+    FontNumberDraw(f, s->x + s->c - 1, s->y + 2, 3, 1, value, interact_color, 0, 1);
 }
 
 void SliderListDraw(Font_t* f)
@@ -731,27 +734,27 @@ void FontUIDraw(Font_t* f, Display_t* d)
         zang = r, nang = 0;   
 
         HexToGrid(d, &zang, &nang);
-        FontNumberDraw(f, zang, nang, 3, 1, 0, inform_color);
+        FontNumberDraw(f, zang, nang, 3, 1, 0, inform_color, 0, 1);
 
         zang = r, nang = -r;
         HexToGrid(d, &zang, &nang);
-        FontNumberDraw(f, zang, nang, 3, 1, 90, inform_color);
+        FontNumberDraw(f, zang, nang, 3, 1, 90, inform_color, 0, 1);
 
         zang = 0, nang = -r;
         HexToGrid(d, &zang, &nang);
-        FontNumberDraw(f, zang, nang, 3, 1, 120, inform_color);
+        FontNumberDraw(f, zang, nang, 3, 1, 120, inform_color, 0, 1);
 
         zang = -r, nang = 0;
         HexToGrid(d, &zang, &nang);
-        FontNumberDraw(f, zang, nang, 3, 1, 180, inform_color);
+        FontNumberDraw(f, zang, nang, 3, 1, 180, inform_color, 0, 1);
 
         zang = -r, nang = r;
         HexToGrid(d, &zang, &nang);
-        FontNumberDraw(f, zang, nang, 3, 1, 240, inform_color);
+        FontNumberDraw(f, zang, nang, 3, 1, 240, inform_color, 0, 1);
 
         zang = 0, nang = r;
         HexToGrid(d, &zang, &nang);
-        FontNumberDraw(f, zang, nang, 3, 1, 300, inform_color);
+        FontNumberDraw(f, zang, nang, 3, 1, 300, inform_color, 0, 1);
     }
     
     FontRulesEditorDraw(f);
@@ -763,24 +766,24 @@ void FontRulesEditorDraw(Font_t* f)
 {
     int rules_x = rules_editor.x, rules_y = rules_editor.y;
     
-    FontNumberDraw(f, rules_x + 4, rules_y + 4,     2, 1, rules_editor.mat_from, inform_color);
+    FontNumberDraw(f, rules_x + 4, rules_y + 4,     2, 1, rules_editor.mat_from, inform_color, 0, 1);
     
     FontNumberDraw(f, rules_x + 13  , rules_y + 1   , 2, 1, 
-            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag, inform_color);
-    FontNumberDraw(f, rules_x + 13  , rules_y + 4   , 2, 1, rules_editor.mat_to, inform_color);
-    FontNumberDraw(f, rules_x + 13  , rules_y + 7   , 2, 1, rules_editor.cond_num, inform_color);
-            
-    FontNumberDraw(f, rules_x + 2   , rules_y + 1   , 2, 1, 
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag, inform_color, 1, 1);
+    FontNumberDraw(f, rules_x + 13  , rules_y + 4   , 2, 1, rules_editor.mat_to, inform_color, 0, 1);
+    FontNumberDraw(f, rules_x + 13  , rules_y + 7   , 2, 1, rules_editor.cond_num, inform_color, 0, 1);
+          
+    FontRulesEditorNeighborsDraw(f, rules_x + 2   , rules_y + 1   , 2, 1, 
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[0], inform_color);
-    FontNumberDraw(f, rules_x + 6   , rules_y + 1   , 2, 1, 
+    FontRulesEditorNeighborsDraw(f, rules_x + 6   , rules_y + 1   , 2, 1, 
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[1], inform_color);
-    FontNumberDraw(f, rules_x + 8   , rules_y + 4   , 2, 1, 
+    FontRulesEditorNeighborsDraw(f, rules_x + 8   , rules_y + 4   , 2, 1, 
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[2], inform_color);
-    FontNumberDraw(f, rules_x + 6   , rules_y + 7   , 2, 1, 
+    FontRulesEditorNeighborsDraw(f, rules_x + 6   , rules_y + 7   , 2, 1, 
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[3], inform_color);
-    FontNumberDraw(f, rules_x + 2   , rules_y + 7   , 2, 1, 
+    FontRulesEditorNeighborsDraw(f, rules_x + 2   , rules_y + 7   , 2, 1, 
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[4], inform_color);
-    FontNumberDraw(f, rules_x + 0   , rules_y + 4   , 2, 1, 
+    FontRulesEditorNeighborsDraw(f, rules_x + 0   , rules_y + 4   , 2, 1, 
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[5], inform_color);
     
     FontCharDraw(f, L'P', rules_x + 11, rules_y + 1, inform_color);
@@ -792,12 +795,12 @@ void FontRulesEditorDraw(Font_t* f)
     list_y = hmax(rules_editor.cond_num - list_h, 0);
     
     FontNumberDraw(f, rules_x + tree_x , rules_y + tree_y - 2 , 2, 1, 
-            rules_editor.mat_from, inform_color);
+            rules_editor.mat_from, inform_color, 0, 1);
             
     FontStringDraw(f, rules_x + tree_x + 3 , rules_y + tree_y - 2, 2, 1, L"->", inform_color);
     
     FontNumberDraw(f, rules_x + tree_x + 6 , rules_y + tree_y - 2 , 2, 1, 
-            rules_editor.mat_to, inform_color);
+            rules_editor.mat_to, inform_color, 0, 1);
             
     if(rules_editor.cond_num >= rules_editor.list_begin + list_h) rules_editor.list_begin++;
     if(rules_editor.cond_num < rules_editor.list_begin) rules_editor.list_begin--;
@@ -822,10 +825,10 @@ void FontRulesEditorDraw(Font_t* f)
             rules_y + tree_y + number  - rules_editor.list_begin, 2, 1, 
             RULES->frommat[rules_editor.mat_from]->
             tomat[rules_editor.mat_to]->
-            req[number]->flag, inform_color);
+            req[number]->flag, inform_color, 1, 1);
         for(int k = 0; k < 6; k++)
         {
-            FontNumberDraw(f, 
+            FontRulesEditorNeighborsDraw(f, 
                 rules_x + tree_x + 2 + k * 2 , 
                 rules_y + tree_y + number - rules_editor.list_begin, 2, 1, 
                 RULES->frommat[rules_editor.mat_from]->
@@ -837,4 +840,13 @@ void FontRulesEditorDraw(Font_t* f)
     
     //hmin( rules_editor.x + rules_editor.w, 
     //hmin( rules_editor.y + rules_editor.h, 
+}
+
+void FontRulesEditorNeighborsDraw(Font_t* f, int x, int y, int w, int h, int n, int color)
+{
+    if(n >= 0)  FontNumberDraw(f, x, y, w, h, n, color, 1, 1);
+    else if(n == -1) FontStringDraw(f, x, y, w, h, L"--", color);
+    else if(n == -2) FontStringDraw(f, x, y, w, h, L"-0", color);
+    else FontNumberDraw(f, x, y, w, h, n + 2, color, 1, 1);
+    
 }

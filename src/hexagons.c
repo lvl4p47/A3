@@ -67,67 +67,17 @@ void RulesInitialize()
     // }
     // neighbours_required = malloc(mat_amount * sizeof(int));    
 
-    RulesCHange(1, 2, 0, 0, 2, 0, -1, -1, -1, -1);
-    // p_rules[1][2][0] = 0;
-    // p_rules[1][2][1] = 2;
-    // p_rules[1][2][2] = 0;
-
-    RulesCHange(2, 0, 0, 0, -1, -1, -1, -1, -1, -1);
-    // p_rules[2][0][0] = 0;
-    
-    RulesCHange(3, 7, 0, 0, 7, 7, 7, 7, 7, -1);
-    // p_rules[3][7][0] = 0;
-    // p_rules[3][7][1] = 7;
-    // p_rules[3][7][2] = 7;
-    // p_rules[3][7][3] = 7;
-    // p_rules[3][7][4] = 7;
-    // p_rules[3][7][5] = 7;
-
-    RulesCHange(3, 6, 0, 0, 2, -1, -1, -1, -1, -1);
-    // p_rules[3][6][0] = 0;
-    // p_rules[3][6][1] = 2;
-    
-    RulesCHange(4, 5, 0, 0, 5, 5, 5, 5, -1, -1);
-    // p_rules[4][5][0] = 0;
-    // p_rules[4][5][1] = 5;
-    // p_rules[4][5][2] = 5;
-    // p_rules[4][5][3] = 5;
-    // p_rules[4][5][4] = 5;
-
-    RulesCHange(5, 4, 0, 0, 5, 5, 5, 3, 3, 0);
-    // p_rules[5][4][0] = 0;
-    // p_rules[5][4][1] = 5;
-    // p_rules[5][4][2] = 5;
-    // p_rules[5][4][3] = 5;
-    // p_rules[5][4][4] = 3;
-    // p_rules[5][4][5] = 3;
-    // p_rules[5][4][6] = 0;
-    
-    RulesCHange(6, 3, 0, 0, 6, 6, 6, 0, 0, 0);
-    // p_rules[6][3][0] = 0;
-    // p_rules[6][3][1] = 6;
-    // p_rules[6][3][2] = 6;
-    // p_rules[6][3][3] = 6;
-    // p_rules[6][3][4] = 0;
-    // p_rules[6][3][5] = 0;
-    // p_rules[6][3][6] = 0;
-    
-    RulesAdd(6, 3, 0, 7, 7, 7, -1, -1, -1);
-    // p_rules[6][7][0] = 0;
-    // p_rules[6][7][1] = 7;
-    // p_rules[6][7][2] = 7;
-    // p_rules[6][7][3] = 7;
-    
-    RulesCHange(7, 3, 0, 0, 2, -1, -1, -1, -1, -1);
-    // p_rules[7][3][0] = 0;
-    // p_rules[7][3][1] = 2;
-    
-    RulesCHange(8, 4, 0, 0, 3, 3, 3, -1, -1, -1);
-    // p_rules[8][4][0] = 0;
-    // p_rules[8][4][1] = 3;
-    // p_rules[8][4][2] = 3;
-    // p_rules[8][4][3] = 3;
-    
+    RulesCHange (1, 2, 0, 0, 2, 0, -1, -1, -1, -1);
+    RulesCHange (2, 0, 0, 0, -4, -1, -1, -1, -1, -1);
+    RulesAdd    (2, 0, 0, 2, 2, 2, 2, 2, 2);
+    RulesCHange (3, 7, 0, 0, 7, 7, 7, 7, 7, -1);
+    RulesCHange (3, 6, 0, 0, 2, -1, -1, -1, -1, -1);
+    RulesCHange (4, 5, 0, 0, 5, 5, 5, 5, -1, -1);
+    RulesCHange (5, 4, 0, 0, 5, 5, 5, 3, 3, 0);
+    RulesCHange (6, 3, 0, 0, -2, -2, -2, -2, -5, -4);
+    RulesAdd    (6, 3, 0, 7, 7, 7, -1, -1, -1);
+    RulesCHange (7, 3, 0, 0, 2, -1, -1, -1, -1, -1);
+    RulesCHange (8, 4, 0, 0, 3, 3, 3, -1, -1, -1);
 }
 
 void RulesTerminate()
@@ -272,8 +222,8 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
         cptr->clr = 2;
         break;
     case 2:
-        cptr->st8 = 2;
-        cptr->dns = 4;
+        cptr->st8 = 1;
+        cptr->dns = 1;
         cptr->clr = 1;
         break;
     case 3:
@@ -439,14 +389,19 @@ void SolidUpdate(Kvad_t* ptr)
                             if(RULES->frommat[cen]->tomat[new]->req[cond_num]->neighbors[n] != -1)
                             {
                                 cur_neighbour_mat = RULES->frommat[cen]->tomat[new]->req[cond_num]->neighbors[n];
-                                neighbours_required[cur_neighbour_mat]++; 
+                                if(cur_neighbour_mat >= 0) neighbours_required[cur_neighbour_mat]++; 
+                                if(cur_neighbour_mat <= -2) neighbours_required[-(cur_neighbour_mat + 2)]--; 
                             }
                         }
+                        
                         int neighbour_amount;
                         for(int neighbour_mat = 0; neighbour_mat < mat_amount; neighbour_mat++)
                         {
                             neighbour_amount = NeighbourCount(ptr, j, i, neighbour_mat);
-                            if(neighbour_amount >= neighbours_required[neighbour_mat])
+                            if(
+                                (neighbour_amount >= neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] >=  0 )||
+                                (neighbour_amount < -neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] <= -1 )
+                                )
                             {
                                 b_change = 1;
                             }
@@ -1720,7 +1675,7 @@ void ForceGas(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     );
     b_forward =
     (
-        back_sum >= front_sum
+        back_sum >= front_sum && right_sum == left_sum
     );
     if(right_sum > left_sum)
     {
@@ -1732,8 +1687,10 @@ void ForceGas(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
         if(back_sum > front_sum) b_rightfront = 1;
         else b_rightback = 1;
     }
-    if(b_back == 1) b_leftback = 0, b_rightback = 0;
-    if(b_leftfront || b_rightfront) b_forward = 0;
+    // if(b_back == 1) b_leftback = 0, b_rightback = 0;
+    // if(b_leftfront || b_rightfront) b_forward = 0;
+    if(b_forward == 1) b_leftfront = 0, b_rightfront = 0;
+    if(b_leftback || b_rightback) b_back = 0;
     
     if(b_forward     )  *dz += fx,  *dn += fy;
     if(b_back        )  *dz -= fx,  *dn -= fy;

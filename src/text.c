@@ -84,11 +84,13 @@ void FontStringDraw(Font_t* f, int ax, int ay, int w, int h, wchar_t* s, int col
     }
 }
 
-void FontNumberDraw(Font_t* f, int ax, int ay, int w, int h, int num, int color)
+void FontNumberDraw(Font_t* f, int ax, int ay, int w, int h, int num, int color, int sign, int set_width)
 {
     wchar_t str[240];
-    swprintf(str, 240, L"%0*i", w, 
-    num);
+    if(sign && set_width)swprintf(str, 240, L"%+0*i", w, num);
+    else if(sign && !set_width)swprintf(str, 240, L"%+i", w, num);
+    else if(!sign && set_width)swprintf(str, 240, L"%0*i", w, num);
+    else swprintf(str, 240, L"%i", w, num);
     FontStringDraw(f, ax, ay, w, h, str, color);
 }
 
