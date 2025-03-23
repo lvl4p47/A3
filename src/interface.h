@@ -31,6 +31,13 @@ typedef struct
     int lm, rm, lrad, rrad;
 } Cursor_t;
 
+typedef struct
+{
+    int x, y, w, h;
+    int list_begin, list_end;
+    int mat_from, mat_to, cond_num;
+} RulesEditor_t;
+
 void InterfaceInitialize();
 
 void InterfaceTerminate();
@@ -82,5 +89,7 @@ void SliderDown(Slider_t* s, int c);
 void SliderUp(Slider_t* s);
 
 void FontUIDraw(Font_t* f, Display_t* d);
+
+void FontRulesEditorDraw(Font_t* f);
 
 #endif
