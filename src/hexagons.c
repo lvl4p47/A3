@@ -1,6 +1,6 @@
 #include "hexagons.h"
 
-int mat_amount = 9;
+const int mat_amount = 9;
 int*** p_rules;
 int* neighbours_required;
 
@@ -8,88 +8,195 @@ int Yrot[6] = {1, 0, -1, -1, 0, 1};
 
 int t;
 
+
+
+Rules_t *RULES;
+
 void RulesInitialize()
 {
-    p_rules = malloc(7 * mat_amount * mat_amount * sizeof(int**));
+    /*
+    p_rules:
+        p_rules[i]                      for mat i
+        p_rules[i][j]                   from mat i to mat j (array of pointers to...)
+        p_rules[i][j][0]                flag, = -1 disabled, = 0 - enabled
+        p_rules[i][j][1...6]            required neighbor mat
+        
+        examples:
+        {1, 1, 2, 3, 4, 5, 6}           enabled, requires neighbors: 1, 2, 3, 4, 5, 6 (not in order)
+        
+        
+    */
+    RULES = (Rules_t*)
+        malloc(sizeof(Rules_t));
+    RULES->frommat = (RulesFromMat_t**)
+        malloc(mat_amount * sizeof(RulesFromMat_t*));
+    
     for(int i = 0; i < mat_amount; i++)
     {
-        p_rules[i] = malloc(7 * mat_amount * sizeof(int*));
+        RULES->frommat[i] = (RulesFromMat_t*)
+            malloc(sizeof(RulesFromMat_t));
+        RULES->frommat[i]->mat_from = i;
+        RULES->frommat[i]->tomat = (RulesToMat_t**)
+            malloc(mat_amount * sizeof(RulesToMat_t*));
         for(int j = 0; j < mat_amount; j++)
         {
-            p_rules[i][j] = malloc(7 * sizeof(int));
-            for(int k = 0; k < 7; k++)
-            {
-                p_rules[i][j][k] = -1;
-            }
+            RULES->frommat[i]->tomat[j] = (RulesToMat_t*)
+                malloc(sizeof(RulesToMat_t));
+            RULES->frommat[i]->tomat[j]->num = 0;
+            RULES->frommat[i]->tomat[j]->req = (RulesConditions_t**)
+                malloc(1 * sizeof(RulesConditions_t*));
+            RulesAdd(i, j, -1, -1, -1, -1, -1, -1, -1);
         }
     }
-    neighbours_required = malloc(mat_amount * sizeof(int));    
+    
+    neighbours_required = malloc(mat_amount * sizeof(int)); 
+    
+    
+    //p_rules = malloc(7 * mat_amount * mat_amount * sizeof(int**));
+    // for(int i = 0; i < mat_amount; i++)
+    // {
+    //     p_rules[i] = malloc(7 * mat_amount * sizeof(int*));
+    //     for(int j = 0; j < mat_amount; j++)
+    //     {
+    //         p_rules[i][j] = malloc(7 * sizeof(int));
+    //         for(int k = 0; k < 7; k++)
+    //         {
+    //             p_rules[i][j][k] = -1;
+    //         }
+    //     }
+    // }
+    // neighbours_required = malloc(mat_amount * sizeof(int));    
 
-    p_rules[1][2][0] = 0;
-    p_rules[1][2][1] = 2;
-    p_rules[1][2][2] = 0;
+    RulesCHange(1, 2, 0, 0, 2, 0, -1, -1, -1, -1);
+    // p_rules[1][2][0] = 0;
+    // p_rules[1][2][1] = 2;
+    // p_rules[1][2][2] = 0;
 
-    p_rules[2][0][0] = 0;
+    RulesCHange(2, 0, 0, 0, -1, -1, -1, -1, -1, -1);
+    // p_rules[2][0][0] = 0;
     
-    p_rules[3][7][0] = 0;
-    p_rules[3][7][1] = 7;
-    p_rules[3][7][2] = 7;
-    p_rules[3][7][3] = 7;
-    p_rules[3][7][4] = 7;
-    p_rules[3][7][5] = 7;
+    RulesCHange(3, 7, 0, 0, 7, 7, 7, 7, 7, -1);
+    // p_rules[3][7][0] = 0;
+    // p_rules[3][7][1] = 7;
+    // p_rules[3][7][2] = 7;
+    // p_rules[3][7][3] = 7;
+    // p_rules[3][7][4] = 7;
+    // p_rules[3][7][5] = 7;
 
-    p_rules[3][6][0] = 0;
-    p_rules[3][6][1] = 2;
+    RulesCHange(3, 6, 0, 0, 2, -1, -1, -1, -1, -1);
+    // p_rules[3][6][0] = 0;
+    // p_rules[3][6][1] = 2;
     
-    p_rules[4][5][0] = 0;
-    p_rules[4][5][1] = 5;
-    p_rules[4][5][2] = 5;
-    p_rules[4][5][3] = 5;
-    p_rules[4][5][4] = 5;
+    RulesCHange(4, 5, 0, 0, 5, 5, 5, 5, -1, -1);
+    // p_rules[4][5][0] = 0;
+    // p_rules[4][5][1] = 5;
+    // p_rules[4][5][2] = 5;
+    // p_rules[4][5][3] = 5;
+    // p_rules[4][5][4] = 5;
 
-    p_rules[5][4][0] = 0;
-    p_rules[5][4][1] = 5;
-    p_rules[5][4][2] = 5;
-    p_rules[5][4][3] = 5;
-    p_rules[5][4][4] = 3;
-    p_rules[5][4][5] = 3;
-    p_rules[5][4][6] = 0;
+    RulesCHange(5, 4, 0, 0, 5, 5, 5, 3, 3, 0);
+    // p_rules[5][4][0] = 0;
+    // p_rules[5][4][1] = 5;
+    // p_rules[5][4][2] = 5;
+    // p_rules[5][4][3] = 5;
+    // p_rules[5][4][4] = 3;
+    // p_rules[5][4][5] = 3;
+    // p_rules[5][4][6] = 0;
     
-    p_rules[6][3][0] = 0;
-    p_rules[6][3][1] = 6;
-    p_rules[6][3][2] = 6;
-    p_rules[6][3][3] = 6;
-    p_rules[6][3][4] = 0;
-    p_rules[6][3][5] = 0;
-    p_rules[6][3][6] = 0;
+    RulesCHange(6, 3, 0, 0, 6, 6, 6, 0, 0, 0);
+    // p_rules[6][3][0] = 0;
+    // p_rules[6][3][1] = 6;
+    // p_rules[6][3][2] = 6;
+    // p_rules[6][3][3] = 6;
+    // p_rules[6][3][4] = 0;
+    // p_rules[6][3][5] = 0;
+    // p_rules[6][3][6] = 0;
     
-    p_rules[6][7][0] = 0;
-    p_rules[6][7][1] = 7;
-    p_rules[6][7][2] = 7;
-    p_rules[6][7][3] = 7;
+    RulesAdd(6, 3, 0, 7, 7, 7, -1, -1, -1);
+    // p_rules[6][7][0] = 0;
+    // p_rules[6][7][1] = 7;
+    // p_rules[6][7][2] = 7;
+    // p_rules[6][7][3] = 7;
     
-    p_rules[7][3][0] = 0;
-    p_rules[7][3][1] = 2;
+    RulesCHange(7, 3, 0, 0, 2, -1, -1, -1, -1, -1);
+    // p_rules[7][3][0] = 0;
+    // p_rules[7][3][1] = 2;
     
-    p_rules[8][4][0] = 0;
-    p_rules[8][4][1] = 3;
-    p_rules[8][4][2] = 3;
-    p_rules[8][4][3] = 3;
+    RulesCHange(8, 4, 0, 0, 3, 3, 3, -1, -1, -1);
+    // p_rules[8][4][0] = 0;
+    // p_rules[8][4][1] = 3;
+    // p_rules[8][4][2] = 3;
+    // p_rules[8][4][3] = 3;
     
 }
 
 void RulesTerminate()
 {
+
+    RulesConditions_t *p_conds;
+    RulesToMat_t **p_tomat;
+    RulesFromMat_t **p_frommat;
     for(int i = 0; i < mat_amount; i++)
     {
         for(int j = 0; j < mat_amount; j++)
         {
-            free(p_rules[i][j]);
+            while(RULES->frommat[i]->tomat[j]->num > 0)
+            {
+                free(RULES->frommat[i]->tomat[j]->req[ RULES->frommat[i]->tomat[j]->num - 1 ]);
+                RULES->frommat[i]->tomat[j]->num--;
+            }
+            free(RULES->frommat[i]->tomat[j]->req);
+            free(RULES->frommat[i]->tomat[j]);
+            
+            
         }
-        free(p_rules[i]);
+        free(RULES->frommat[i]->tomat);
+        free(RULES->frommat[i]);
     }
-    free(p_rules);
-    free(neighbours_required);
+    free(RULES->frommat);
+    free(RULES);
+}
+
+void RulesAdd(int from, int to, int flag, int n1, int n2, int n3, int n4, int n5, int n6)
+{
+    int num = RULES->frommat[from]->tomat[to]->num;
+    
+    RULES->frommat[from]->tomat[to]->req = (RulesConditions_t**)
+                realloc(RULES->frommat[from]->tomat[to]->req, (num + 1) * sizeof(RulesConditions_t*));
+    
+    RULES->frommat[from]->tomat[to]->req[num] = (RulesConditions_t*)
+                    malloc(sizeof(RulesConditions_t));
+    RULES->frommat[from]->tomat[to]->req[num]->flag = flag;
+    RULES->frommat[from]->tomat[to]->req[num]->neighbors[0] = n1;
+    RULES->frommat[from]->tomat[to]->req[num]->neighbors[1] = n2;
+    RULES->frommat[from]->tomat[to]->req[num]->neighbors[2] = n3;
+    RULES->frommat[from]->tomat[to]->req[num]->neighbors[3] = n4;
+    RULES->frommat[from]->tomat[to]->req[num]->neighbors[4] = n5;
+    RULES->frommat[from]->tomat[to]->req[num]->neighbors[5] = n6;
+    RULES->frommat[from]->tomat[to]->num++;
+}
+
+void RulesCHange(int from, int to, int num, int flag, int n1, int n2, int n3, int n4, int n5, int n6)
+{
+    if(num < RULES->frommat[from]->tomat[to]->num && num >= 0)
+    {
+        RULES->frommat[from]->tomat[to]->req[num]->flag = flag;
+        RULES->frommat[from]->tomat[to]->req[num]->neighbors[0] = n1;
+        RULES->frommat[from]->tomat[to]->req[num]->neighbors[1] = n2;
+        RULES->frommat[from]->tomat[to]->req[num]->neighbors[2] = n3;
+        RULES->frommat[from]->tomat[to]->req[num]->neighbors[3] = n4;
+        RULES->frommat[from]->tomat[to]->req[num]->neighbors[4] = n5;
+        RULES->frommat[from]->tomat[to]->req[num]->neighbors[5] = n6;
+    }
+}
+
+void RulesRemove(int from, int to, int num)
+{
+    if(RULES->frommat[from]->tomat[to]->num > 1)
+    {
+        free(RULES->frommat[from]->tomat[to]->req[ RULES->frommat[from]->tomat[to]->num - 1 ]);
+        RULES->frommat[from]->tomat[to]->num--;
+    }
 }
 
 Kvad_t* KvadInitialize(int width, int height)
@@ -318,39 +425,42 @@ void SolidUpdate(Kvad_t* ptr)
             cen = KvadGetHexel(ptr, j, i)->mat;
             for(int new = 0; new < mat_amount; new++)
             {
-                if(p_rules[cen][new][0] != -1)
+                for(int cond_num = 0; cond_num < RULES->frommat[cen]->tomat[new]->num; cond_num++)
                 {
-                    for(int i = 0; i < mat_amount; i++)
+                    if(RULES->frommat[cen]->tomat[new]->req[cond_num]->flag != -1)
                     {
-                        neighbours_required[i] = 0;
-                    }
-                    int cur_neighbour_mat;
-                    for(int n = 1; n < 7; n++)
-                    {
-                        if(p_rules[cen][new][n] != -1)
+                        for(int i = 0; i < mat_amount; i++)
                         {
-                            cur_neighbour_mat = p_rules[cen][new][n];
-                            neighbours_required[cur_neighbour_mat]++; 
+                            neighbours_required[i] = 0;
                         }
-                    }
-                    int neighbour_amount;
-                    for(int neighbour_mat = 0; neighbour_mat < mat_amount; neighbour_mat++)
-                    {
-                        neighbour_amount = NeighbourCount(ptr, j, i, neighbour_mat);
-                        if(neighbour_amount >= neighbours_required[neighbour_mat])
+                        int cur_neighbour_mat;
+                        for(int n = 0; n < 6; n++)
                         {
-                            b_change = 1;
+                            if(RULES->frommat[cen]->tomat[new]->req[cond_num]->neighbors[n] != -1)
+                            {
+                                cur_neighbour_mat = RULES->frommat[cen]->tomat[new]->req[cond_num]->neighbors[n];
+                                neighbours_required[cur_neighbour_mat]++; 
+                            }
                         }
-                        else
+                        int neighbour_amount;
+                        for(int neighbour_mat = 0; neighbour_mat < mat_amount; neighbour_mat++)
                         {
+                            neighbour_amount = NeighbourCount(ptr, j, i, neighbour_mat);
+                            if(neighbour_amount >= neighbours_required[neighbour_mat])
+                            {
+                                b_change = 1;
+                            }
+                            else
+                            {
+                                b_change = 0;
+                                neighbour_mat = mat_amount;
+                            }
+                        }
+                        if(b_change)
+                        {
+                            KvadGetHexel(ptr, j, i)->tmp = new;
                             b_change = 0;
-                            neighbour_mat = mat_amount;
                         }
-                    }
-                    if(b_change)
-                    {
-                        KvadGetHexel(ptr, j, i)->tmp = new;
-                        b_change = 0;
                     }
                 }
             }

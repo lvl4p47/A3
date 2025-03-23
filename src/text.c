@@ -87,7 +87,7 @@ void FontStringDraw(Font_t* f, int ax, int ay, int w, int h, wchar_t* s, int col
 void FontNumberDraw(Font_t* f, int ax, int ay, int w, int h, int num, int color)
 {
     wchar_t str[240];
-    swprintf(str, 240, L"%i", 
+    swprintf(str, 240, L"%0*i", w, 
     num);
     FontStringDraw(f, ax, ay, w, h, str, color);
 }

@@ -15,6 +15,4 @@ void FontStringDraw(Font_t* f, int ax, int ay, int w, int h, wchar_t* s, int col
 
 void FontNumberDraw(Font_t* f, int ax, int ay, int w, int h, int num, int color);
 
-
-
 #endif

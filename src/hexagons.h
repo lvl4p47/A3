@@ -3,9 +3,42 @@
 
 #include "input.h"
 
+extern const int mat_amount;
+
+typedef struct
+{
+    int flag;
+    int neighbors[6];
+} RulesConditions_t;
+
+typedef struct
+{
+    int mat_to, num;
+    RulesConditions_t **req;// * num
+} RulesToMat_t;
+
+typedef struct
+{
+    int mat_from;
+    RulesToMat_t **tomat;// * mat_amount
+} RulesFromMat_t;
+
+typedef struct
+{
+    RulesFromMat_t **frommat;// * mat_amount
+} Rules_t;
+
+extern Rules_t *RULES;
+
 void RulesInitialize();
 
 void RulesTerminate();
+
+void RulesAdd(int from, int to, int flag, int n1, int n2, int n3, int n4, int n5, int n6);
+
+void RulesCHange(int from, int to, int num, int flag, int n1, int n2, int n3, int n4, int n5, int n6);
+
+void RulesRemove(int from, int to, int num);
 
 Kvad_t* KvadInitialize(int width, int height);
 

@@ -1,6 +1,6 @@
 #include "interface.h"
 
-const int buttonlistsize = 10;
+const int buttonlistsize = 32;
 
 const int sliderlistsize = 2;
 
@@ -23,6 +23,8 @@ int b_ui;
 uint64_t t_f;
 uint64_t t_s;
 
+int mat_from, mat_to, cond_num;
+
 void InterfaceInitialize()
 {
     cursor.lm = 7;
@@ -36,16 +38,20 @@ void InterfaceInitialize()
     ButtonListInitialize();
     SliderListInitialize();
 
-    b_panning = 0;
-    b_pause = 0;
-    b_step = 0;
-    b_ui = 0;
-    b_drawing = 0;
-    b_button = -1;
-    b_slider = -1;
-    b_grab = 0;
+    b_panning   = 0;
+    b_pause     = 0;
+    b_step      = 0;
+    b_ui        = 0;
+    b_drawing   = 0;
+    b_button    = -1;
+    b_slider    = -1;
+    b_grab      = 0;
     
-    max_curs = 8;
+    max_curs    = 8;
+    
+    mat_from    = 3;
+    mat_to      = 5;
+    cond_num    = 0;
 }
 
 void InterfaceTerminate()
@@ -74,16 +80,44 @@ void ButtonListInitialize()
 	{
 		buttonlist[i] = NULL;
     }
-    buttonlist[0] = ButtonInitialize(1, 1, 3, 3, 0, L"/=\\‖ ‖\\=/", L".../=\\‖ ‖"); //L"/=\\‖o‖\\=/", L".../=\\‖o‖"
-    buttonlist[1] = ButtonInitialize(5, 1, 3, 3, 1, L"r-`___\\_№", L"...r-`___");
-    buttonlist[2] = ButtonInitialize(61, 20, 3, 3, 2, L"n n‖ ‖u u", L"|\\ | >|/ ");
-    buttonlist[3] = ButtonInitialize(1, 5, 3, 3, 3, L" ‖‖nVV\\l№", L"   /mm\\l№");
-    buttonlist[4] = ButtonInitialize(66, 20, 3, 3, 4, L"\\ | >|/ |", L" \\   > / ");
-    buttonlist[5] = ButtonInitialize(71, 20, 3, 3, 5, L" _ <o> - ", L"\\_/<X>/-\\");
-    buttonlist[6] = ButtonInitialize(79, 0, 1, 1, 6, L"X", L"+");
-    buttonlist[7] = ButtonInitialize(9, 1, 3, 3, 7, L" T lв№\\_/", L".(.rT`lв№");
-    buttonlist[8] = ButtonInitialize(78, 0, 1, 1, 8, L"o", L"0");
-    buttonlist[9] = ButtonInitialize(77, 0, 1, 1, 9, L"-", L"_");
+    buttonlist[0] = ButtonInitialize(1  , 1 , 3, 3, 0, L"/=\\‖ ‖\\=/", L".../=\\‖ ‖"); //L"/=\\‖o‖\\=/", L".../=\\‖o‖"
+    buttonlist[1] = ButtonInitialize(5  , 1 , 3, 3, 1, L"r-`___\\_№", L"...r-`___");
+    buttonlist[2] = ButtonInitialize(61 , 20, 3, 3, 2, L"n n‖ ‖u u", L"|\\ | >|/ ");
+    buttonlist[3] = ButtonInitialize(1  , 5 , 3, 3, 3, L" ‖‖nVV\\l№", L"   /mm\\l№");
+    buttonlist[4] = ButtonInitialize(66 , 20, 3, 3, 4, L"\\ | >|/ |", L" \\   > / ");
+    buttonlist[5] = ButtonInitialize(71 , 20, 3, 3, 5, L" _ <o> - ", L"\\_/<X>/-\\");
+    buttonlist[6] = ButtonInitialize(79 , 0 , 1, 1, 6, L"X", L"+");
+    buttonlist[7] = ButtonInitialize(9  , 1 , 3, 3, 7, L" T lв№\\_/", L".(.rT`lв№");
+    buttonlist[8] = ButtonInitialize(78 , 0 , 1, 1, 8, L"o", L"0");
+    buttonlist[9] = ButtonInitialize(77 , 0 , 1, 1, 9, L"-", L"_");
+    
+    buttonlist[10] = ButtonInitialize(14, 18, 2, 1, 10, L"/\\", L"№l");
+    buttonlist[11] = ButtonInitialize(14, 21, 2, 1, 11, L"/\\", L"№l");
+    buttonlist[12] = ButtonInitialize(14, 24, 2, 1, 12, L"/\\", L"№l");
+    buttonlist[13] = ButtonInitialize(14, 20, 2, 1, 13, L"\\/", L"`r");
+    buttonlist[14] = ButtonInitialize(14, 23, 2, 1, 14, L"\\/", L"`r");
+    buttonlist[15] = ButtonInitialize(14, 26, 2, 1, 15, L"\\/", L"`r");
+    
+    buttonlist[16] = ButtonInitialize(3, 18, 2, 1, 16, L"/\\", L"№l");
+    buttonlist[17] = ButtonInitialize(3, 20, 2, 1, 17, L"\\/", L"`r");
+    buttonlist[18] = ButtonInitialize(7, 18, 2, 1, 18, L"/\\", L"№l");
+    buttonlist[19] = ButtonInitialize(7, 20, 2, 1, 19, L"\\/", L"`r");
+    buttonlist[20] = ButtonInitialize(9, 21, 2, 1, 20, L"/\\", L"№l");
+    buttonlist[21] = ButtonInitialize(9, 23, 2, 1, 21, L"\\/", L"`r");
+    buttonlist[22] = ButtonInitialize(7, 24, 2, 1, 22, L"/\\", L"№l");
+    buttonlist[23] = ButtonInitialize(7, 26, 2, 1, 23, L"\\/", L"`r");
+    buttonlist[24] = ButtonInitialize(3, 24, 2, 1, 24, L"/\\", L"№l");
+    buttonlist[25] = ButtonInitialize(3, 26, 2, 1, 25, L"\\/", L"`r");
+    buttonlist[26] = ButtonInitialize(1, 21, 2, 1, 26, L"/\\", L"№l");
+    buttonlist[27] = ButtonInitialize(1, 23, 2, 1, 27, L"\\/", L"`r");
+    
+    buttonlist[28] = ButtonInitialize(5, 21, 2, 1, 28, L"/\\", L"№l");
+    buttonlist[29] = ButtonInitialize(5, 23, 2, 1, 29, L"\\/", L"`r");
+    
+    buttonlist[30] = ButtonInitialize(12, 24, 1, 1, 30, L"+", L"*");
+    buttonlist[31] = ButtonInitialize(12, 26, 1, 1, 31, L"-", L".");
+    
+    //buttonlist[] = ButtonInitialize(, , , , , L"", L"");
 }
 
 void ButtonListTerminate()
@@ -232,6 +266,152 @@ void ButtonDown(Button_t* b)
             b->act_b = 1;
             b->text = 2;
             break;
+            
+        case 10:
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->flag = 
+            mod(RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->flag + 2, 2) - 1 ;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        case 11:
+            mat_to = 
+            mod(mat_to + 1, mat_amount);
+            cond_num = 0;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        case 12:
+            cond_num =
+            mod(cond_num - 1, RULES->frommat[mat_from]->tomat[mat_to]->num) ;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        case 13:
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->flag = 
+            mod(RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->flag + 2, 2) - 1 ;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        case 14:
+            mat_to = 
+            mod(mat_to - 1, mat_amount);
+            cond_num = 0;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        case 15:
+            cond_num =
+            mod(cond_num - 1, RULES->frommat[mat_from]->tomat[mat_to]->num) ;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+            
+        case 16:
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[0] = 
+            mod(RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[0] + 2, mat_amount + 1) - 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        case 17:
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[0] = 
+            mod(RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[0] + 0, mat_amount + 1) - 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+            
+        case 18:
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[1] = 
+            mod(RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[1] + 2, mat_amount + 1) - 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        case 19:
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[1] = 
+            mod(RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[1] + 0, mat_amount + 1) - 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+            
+        case 20:
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[2] = 
+            mod(RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[2] + 2, mat_amount + 1) - 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        case 21:
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[2] = 
+            mod(RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[2] + 0, mat_amount + 1) - 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        
+        case 22:
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[3] = 
+            mod(RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[3] + 2, mat_amount + 1) - 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        case 23:
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[3] = 
+            mod(RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[3] + 0, mat_amount + 1) - 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        
+        case 24:
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[4] = 
+            mod(RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[4] + 2, mat_amount + 1) - 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        case 25:
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[4] = 
+            mod(RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[4] + 0, mat_amount + 1) - 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+            
+        case 26:
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[5] = 
+            mod(RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[5] + 2, mat_amount + 1) - 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        case 27:
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[5] = 
+            mod(RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[5] + 0, mat_amount + 1) - 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+            
+        case 28:
+            mat_from = 
+            mod(mat_from + 1, mat_amount);
+            cond_num = 0;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        case 29:
+            mat_from = 
+            mod(mat_from - 1, mat_amount);
+            cond_num = 0;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+            
+        case 30:
+            RulesAdd(mat_from, mat_to, -1, -1, -1, -1, -1, -1, -1);
+            cond_num = RULES->frommat[mat_from]->tomat[mat_to]->num - 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        case 31:
+            RulesRemove(mat_from, mat_to, cond_num);
+            cond_num = RULES->frommat[mat_from]->tomat[mat_to]->num - 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+            
         default:
             b->act_b = 1;
             b->text = 2;
@@ -424,15 +604,7 @@ void SliderDraw(Slider_t* s, Font_t* f)
     FontCharFill(f, L'-', s->x + 1, s->y + 1, s->w - 2, 1, interact_color);
     FontStringDraw(f, s->x + s->c - 1, s->y, 3, 2, L" V с=э", interact_color);
     int value = s->a + s->d * (s->c - 1);
-    int raz = 0;
-    int dva = 100;
-    while(value >= dva)
-    {
-        raz++;
-        dva = dva * 100;
-    }
-    
-    FontNumberDraw(f, s->x + s->c - raz, s->y + 2, 3, 1, value, interact_color);
+    FontNumberDraw(f, s->x + s->c - 1, s->y + 2, 3, 1, value, interact_color);
 }
 
 void SliderListDraw(Font_t* f)
@@ -572,4 +744,32 @@ void FontUIDraw(Font_t* f, Display_t* d)
         HexToGrid(d, &zang, &nang);
         FontNumberDraw(f, zang, nang, 3, 1, 300, inform_color);
     }
+    
+    int rules_x = 1, rules_y = 18;
+    
+    FontNumberDraw(f, rules_x + 4, rules_y + 4,     2, 1, mat_from, inform_color);
+    
+    FontNumberDraw(f, rules_x + 13  , rules_y + 1   , 2, 1, 
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->flag, inform_color);
+    FontNumberDraw(f, rules_x + 13  , rules_y + 4   , 2, 1, mat_to, inform_color);
+    FontNumberDraw(f, rules_x + 13  , rules_y + 7   , 2, 1, cond_num, inform_color);
+            
+    FontNumberDraw(f, rules_x + 2   , rules_y + 1   , 2, 1, 
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[0], inform_color);
+    FontNumberDraw(f, rules_x + 6   , rules_y + 1   , 2, 1, 
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[1], inform_color);
+    FontNumberDraw(f, rules_x + 8   , rules_y + 4   , 2, 1, 
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[2], inform_color);
+    FontNumberDraw(f, rules_x + 6   , rules_y + 7   , 2, 1, 
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[3], inform_color);
+    FontNumberDraw(f, rules_x + 2   , rules_y + 7   , 2, 1, 
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[4], inform_color);
+    FontNumberDraw(f, rules_x + 0   , rules_y + 4   , 2, 1, 
+            RULES->frommat[mat_from]->tomat[mat_to]->req[cond_num]->neighbors[5], inform_color);
+    
+    FontCharDraw(f, L'P', 12, 19, inform_color);
+    FontCharDraw(f, L'>', 12, 22, inform_color);
+    FontCharDraw(f, L'‖', 12, 25, inform_color);
+    
+    
 }
