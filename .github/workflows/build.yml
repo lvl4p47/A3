@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: install SDL2
-      run: sudo apt-get install libsdl2-dev libsdl2-image-dev
+      run: sudo apt-get install libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev
     - name: build project
       run: ./build.sh
   
@@ -22,7 +22,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: install SDL2
-      run: sudo apt-get install libsdl2-dev libsdl2-image-dev
+      run: sudo apt-get install libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev
     - name: install cunit
       run: sudo apt-get install libcunit1-dev
     - name: run unit tests
