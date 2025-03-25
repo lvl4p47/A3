@@ -69,6 +69,8 @@ int main( int argc, char * argv[] )
 {
     uint64_t fps = 60;
     uint64_t sps = 60;
+    
+    int audio_timer = 0;
 
     int64_t dr, ds;
 	uint64_t frame_time, step_time, cur_time;
@@ -76,6 +78,7 @@ int main( int argc, char * argv[] )
 	frame_time = SDL_GetPerformanceCounter();
 	step_time = SDL_GetPerformanceCounter();
 
+    AudioInitialize();
     VideoInitialize();
     InputInitialize();
 
@@ -96,6 +99,13 @@ int main( int argc, char * argv[] )
 
 		if (dr <= 0) {
 			update_frame(&frame_time, &dr);
+            audio_timer++;
+            if(audio_timer > 1000)
+            {
+                AudioUpdate(k1);
+                audio_timer = 0;
+            }
+            
 		}
 
 		calculate_delta(&dr, &ds, cur_time, frame_time, step_time, t_f, t_s);
@@ -107,6 +117,7 @@ int main( int argc, char * argv[] )
     FontTerminate(f1);
     InterfaceTerminate();
     VideoTerminate();
+    AudioTerminate();
 
     return 1;
 }

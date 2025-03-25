@@ -31,10 +31,10 @@ int min_neigh = -11, max_neigh = 9;
 
 void InterfaceInitialize()
 {
-    cursor.lm = 7;
-    cursor.rm = 0;
-    cursor.lrad = 1;
-    cursor.rrad = 1;
+    cursor.lm = 2;
+    cursor.rm = 1;
+    cursor.lrad = 8;
+    cursor.rrad = 8;
     
     rules_editor.x = 1;
     rules_editor.y = 24;
@@ -225,6 +225,7 @@ void ButtonDown(Button_t* b)
                 cursor.lm = 1 + (cursor.lm) % max_curs;
             if(inpst.mouse.rmc)
                 cursor.rm = 1 + (cursor.rm) % max_curs;
+            
             b->act_b = 1;
             b->text = 2;
             break;
@@ -711,19 +712,7 @@ void FontUIDraw(Font_t* f, Display_t* d)
     
     FontStringDraw(f, 1, 18, 15, 16,
     str, inform_color);
-    /*
-    FontStringDraw(f, 9, 1, 3, 3, L"o\\ \\ \\ \\o");
-    FontStringDraw(f, 1, 5, 3, 3, L" n <ш>iV ");
-
-    FontStringDraw(f, 1, 10, 3, 3, L":::r`/`№ъ");
-    FontStringDraw(f, 5, 10, 3, 3, L"n n>>>u u");
-
-    FontStringDraw(f, 1, 18, 3, 4, L"c=\\ // u  o ");
-    FontStringDraw(f, 1, 23, 3, 4, L"r\\ |l\\| |l-№");r\ 
-    FontStringDraw(f, 5, 23, 3, 4, L" Л /‖\\ ‖ c=э"); |l\
-    FontStringDraw(f, 9, 23, 3, 4, L" ‖ \\‖/ V c=э"); | |
-    FontStringDraw(f, 13, 23, 3, 4, L" n qhpdчb u "); l-№
-    */
+    
     if(b_ui)
     {
         int r = 16;
@@ -755,6 +744,11 @@ void FontUIDraw(Font_t* f, Display_t* d)
         zang = 0, nang = r;
         HexToGrid(d, &zang, &nang);
         FontNumberDraw(f, zang, nang, 3, 1, 300, inform_color, 0, 1);
+    }
+    
+    if(buttonlist[9]->act_b == 1)
+    {
+        FontStringDraw(f, 30, 22, 17, 1, L"окно не в фокусе!", inform_color);
     }
     
     FontRulesEditorDraw(f);

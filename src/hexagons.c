@@ -8,24 +8,13 @@ int Yrot[6] = {1, 0, -1, -1, 0, 1};
 
 int t;
 
+int firevolume, b_fireplaying;
 
 
 Rules_t *RULES;
 
 void RulesInitialize()
 {
-    /*
-    p_rules:
-        p_rules[i]                      for mat i
-        p_rules[i][j]                   from mat i to mat j (array of pointers to...)
-        p_rules[i][j][0]                flag, = -1 disabled, = 0 - enabled
-        p_rules[i][j][1...6]            required neighbor mat
-        
-        examples:
-        {1, 1, 2, 3, 4, 5, 6}           enabled, requires neighbors: 1, 2, 3, 4, 5, 6 (not in order)
-        
-        
-    */
     RULES = (Rules_t*)
         malloc(sizeof(Rules_t));
     RULES->frommat = (RulesFromMat_t**)
@@ -51,25 +40,9 @@ void RulesInitialize()
     
     neighbours_required = malloc(mat_amount * sizeof(int)); 
     
-    
-    //p_rules = malloc(7 * mat_amount * mat_amount * sizeof(int**));
-    // for(int i = 0; i < mat_amount; i++)
-    // {
-    //     p_rules[i] = malloc(7 * mat_amount * sizeof(int*));
-    //     for(int j = 0; j < mat_amount; j++)
-    //     {
-    //         p_rules[i][j] = malloc(7 * sizeof(int));
-    //         for(int k = 0; k < 7; k++)
-    //         {
-    //             p_rules[i][j][k] = -1;
-    //         }
-    //     }
-    // }
-    // neighbours_required = malloc(mat_amount * sizeof(int));    
-
     RulesCHange (1, 2, 0, 0, 2, 0, -1, -1, -1, -1);
     RulesCHange (2, 0, 0, 0, -4, -1, -1, -1, -1, -1);
-    RulesAdd    (2, 0, 0, 2, 2, 2, 2, 2, 2);
+    RulesAdd    (2, 0, 0, -2, -1, -1, -1, -1, -1);
     RulesCHange (3, 7, 0, 0, 7, 7, 7, 7, 7, -1);
     RulesCHange (3, 6, 0, 0, 2, -1, -1, -1, -1, -1);
     RulesCHange (4, 5, 0, 0, 5, 5, 5, 5, -1, -1);
@@ -166,6 +139,9 @@ Kvad_t* KvadInitialize(int width, int height)
     t = 0;
 
     RulesInitialize();
+    
+    firevolume = 0;
+    b_fireplaying = 0;
 
     return ptr;
 }
@@ -973,12 +949,58 @@ void IceUpdate(Kvad_t* ptr)
 
         }
     }
-    // printf("\nIce volume: %i\t", volume);
+    //firevolume = hmin(volume, 128);
+    // printf("\nIce volume: %i\t", firevolume);
     // while(volume > 0)
     // {
     //     printf("cэ");
     //     volume--;
     // }
+}
+
+void AudioCount(Kvad_t* ptr)
+{
+    int curmat;
+    int fire = 0;
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            curmat = KvadGetHexel(ptr, j, i)->mat;
+            switch (curmat)
+            {
+            case 2:
+                fire = hmin(fire + 1, 128);
+                break;
+            
+            default:
+                break;
+            }
+        }
+    }
+    firevolume = fire;
+}
+
+void AudioUpdate(Kvad_t* ptr)
+{
+    AudioCount(ptr);
+    
+    
+    if(firevolume > 0)
+    {
+        if(b_fireplaying == 0)
+        {
+            AudioFirePlay();
+            b_fireplaying = 1;
+        }
+        if(b_fireplaying == 1)
+            AudioFireSetVolume(firevolume);
+    }
+    else 
+    {
+        AudioFireSetVolume(0);
+        b_fireplaying = 0;
+    }
 }
 
 void KvadUpdate(Kvad_t* ptr)
@@ -991,6 +1013,8 @@ void KvadUpdate(Kvad_t* ptr)
     RopeUpdate(ptr);
     GasUpdate(ptr);
     LiquidUpdate(ptr);
+    
+    AudioUpdate(ptr);
     
     //WaveUpdate(ptr);
 }

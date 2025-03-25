@@ -74,6 +74,10 @@ void LiquidUpdate(Kvad_t* ptr);
 
 void IceUpdate(Kvad_t* ptr);
 
+void AudioCount(Kvad_t* ptr);
+
+void AudioUpdate(Kvad_t* ptr);
+
 void KvadUpdate(Kvad_t* ptr);
 
 int NeighbourCount(Kvad_t* ptr, int z, int n, int val);

@@ -1,7 +1,7 @@
 #ifndef INPUT_H_INCLUDED
 #define INPUT_H_INCLUDED
 
-#include "func.h"
+#include "audio.h"
 
 extern int b_quit;
 extern SDL_Event event;
