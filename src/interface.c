@@ -785,23 +785,23 @@ void FontRulesEditorDraw(Font_t* f)
     
     FontNumberDraw(f, rules_x + hex_x + 4, rules_y + hex_y + 4,     2, 1, rules_editor.mat_from, important_color, 0, 1);
     
-    FontNumberDraw(f, rules_x + hex_x + 13  , rules_y + hex_y + 1   , 2, 1, 
-            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag, inform_color, 1, 1);
+    FontRulesEditorNeighborsDraw(f, rules_x + hex_x + 13  , rules_y + hex_y + 1   , 2, 1, 
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag);
     FontNumberDraw(f, rules_x + hex_x + 13  , rules_y + hex_y + 4   , 2, 1, rules_editor.mat_to, important_color, 0, 1);
     FontNumberDraw(f, rules_x + hex_x + 13  , rules_y + hex_y + 7   , 2, 1, rules_editor.cond_num, inform_color, 0, 1);
           
     FontRulesEditorNeighborsDraw(f, rules_x + hex_x + 2   , rules_y + hex_y + 1   , 2, 1, 
-            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[0], inform_color);
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[0]);
     FontRulesEditorNeighborsDraw(f, rules_x + hex_x + 6   , rules_y + hex_y + 1   , 2, 1, 
-            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[1], inform_color);
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[1]);
     FontRulesEditorNeighborsDraw(f, rules_x + hex_x + 8   , rules_y + hex_y + 4   , 2, 1, 
-            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[2], inform_color);
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[2]);
     FontRulesEditorNeighborsDraw(f, rules_x + hex_x + 6   , rules_y + hex_y + 7   , 2, 1, 
-            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[3], inform_color);
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[3]);
     FontRulesEditorNeighborsDraw(f, rules_x + hex_x + 2   , rules_y + hex_y + 7   , 2, 1, 
-            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[4], inform_color);
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[4]);
     FontRulesEditorNeighborsDraw(f, rules_x + hex_x + 0   , rules_y + hex_y + 4   , 2, 1, 
-            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[5], inform_color);
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[5]);
     
     FontStringDraw(f, rules_x + hex_x + 9, rules_y + hex_y + 1, 3, 1, L"АКТ", inform_color);
     FontStringDraw(f, rules_x + hex_x + 11, rules_y + hex_y + 4, 1, 1, L">", inform_color);
@@ -840,12 +840,12 @@ void FontRulesEditorDraw(Font_t* f)
     
     for(int number = rules_editor.list_begin; number < rules_editor.list_end; number++)
     {
-        FontNumberDraw(f, 
+        FontRulesEditorNeighborsDraw(f, 
             rules_x + tree_x, 
             rules_y + tree_y + number  - rules_editor.list_begin, 2, 1, 
             RULES->frommat[rules_editor.mat_from]->
             tomat[rules_editor.mat_to]->
-            req[number]->flag, inform_color, 1, 1);
+            req[number]->flag);
         for(int k = 0; k < 6; k++)
         {
             FontRulesEditorNeighborsDraw(f, 
@@ -853,22 +853,24 @@ void FontRulesEditorDraw(Font_t* f)
                 rules_y + tree_y + number - rules_editor.list_begin, 2, 1, 
                 RULES->frommat[rules_editor.mat_from]->
                 tomat[rules_editor.mat_to]->
-                req[number]->neighbors[k], inform_color);
+                req[number]->neighbors[k]);
         }
         
     }
-    
-    
-    
-    //hmin( rules_editor.x + rules_editor.w, 
-    //hmin( rules_editor.y + rules_editor.h, 
 }
 
-void FontRulesEditorNeighborsDraw(Font_t* f, int x, int y, int w, int h, int n, int color)
+void FontRulesEditorNeighborsDraw(Font_t* f, int x, int y, int w, int h, int n)
 {
     if(n >= 0)  FontNumberDraw(f, x, y, w, h, n, yes_color, 1, 1);
-    else if(n == -1) FontStringDraw(f, x, y, w, h, L"--", color);
+    else if(n == -1) FontStringDraw(f, x, y, w, h, L"--", inform_color);
     else if(n == -2) FontStringDraw(f, x, y, w, h, L"-0", no_color);
     else FontNumberDraw(f, x, y, w, h, n + 2, no_color, 1, 1);
+    
+}
+
+void FontRulesEditorFlagDraw(Font_t* f, int x, int y, int w, int h, int n)
+{
+    if(n >= 0)  FontNumberDraw(f, x, y, w, h, n, yes_color, 1, 1);
+    else FontNumberDraw(f, x, y, w, h, n, no_color, 1, 1);
     
 }
