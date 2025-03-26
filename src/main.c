@@ -67,11 +67,6 @@ void delay(int64_t dr, int64_t ds)
 
 int main( int argc, char * argv[] )
 {
-    uint64_t fps = 60;
-    uint64_t sps = 60;
-    
-    int audio_timer = 0;
-
     int64_t dr, ds;
 	uint64_t frame_time, step_time, cur_time;
 

@@ -85,6 +85,93 @@ void FontStringDraw(Font_t* f, int ax, int ay, int w, int h, wchar_t* s, int col
     }
 }
 
+void FontStringSHiftDraw(Font_t* f, int ax, int ay, int w, int h, wchar_t* s, int color, int shift_y)
+{
+
+    int cx = ax, cy = ay;
+    wchar_t c = *s;
+    int i = 0;
+    while(c != '\0' && i < w * shift_y)
+    {
+        c = *s++;
+        switch (c)
+        {
+        case '\n':
+            i += w - (cx - ax) - 1;
+            cx = ax;
+            cy += 1;
+            
+            break;
+
+        default:
+            if(cx >= ax + w)
+            {
+                cx = ax;
+                cy += 1;
+            }
+            cx += 1;
+            break;
+        }
+        
+        i++;
+    }
+    while(c != '\0' && i < w * (h + shift_y))
+    {
+        c = *s++;
+        switch (c)
+        {
+        case '\n':
+            i += w - (cx - ax) - 1;
+            cx = ax;
+            cy += 1;
+            break;
+
+        default:
+            if(cx >= ax + w)
+            {
+                cx = ax;
+                cy += 1;
+            }
+            if(c != ' ')
+                FontCharDraw(f, c, cx, cy - shift_y, color);
+            cx += 1;
+            break;
+        }
+        
+        i++;
+    }
+}
+
+int StringLinesCount(int w, wchar_t* s)
+{
+
+    int cx = 0, cy = 0, i = 0;
+    wchar_t c = *s;
+    while(c != '\0' && i < 10000)
+    {
+        c = *s++;
+        switch (c)
+        {
+        case '\n':
+            cx = 0;
+            cy += 1;
+            
+            break;
+
+        default:
+            if(cx >= w)
+            {
+                cx = 0;
+                cy += 1;
+            }
+            cx += 1;
+            break;
+        }
+        i++;
+    }
+    return cy + 1;
+}
+
 void FontNumberDraw(Font_t* f, int ax, int ay, int w, int h, int num, int color, int sign, int set_width)
 {
     wchar_t str[240];

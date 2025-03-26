@@ -22,7 +22,11 @@ Cursor_t cursor;
 
 RulesEditor_t rules_editor;
 
-HexScreen_t hex_screen;
+ui_rectangle_t hex_screen, toolpad, control_panel;
+
+InfoBox_t info_box;
+
+wchar_t *s_rules_editor, *s_toolpad, *s_control_panel;
 
 int b_panning, b_pause, b_step, b_drawing, b_button, b_slider, b_grab;
 int max_curs;
@@ -42,10 +46,10 @@ void InterfaceInitialize()
     cursor.lrad = 8;
     cursor.rrad = 8;
     
-    rules_editor.x = 2;
+    rules_editor.x = 1;
     rules_editor.y = 24;
-    rules_editor.w = 15;
-    rules_editor.h = 19;
+    rules_editor.w = 17;
+    rules_editor.h = 20;
     rules_editor.list_begin = 0;
     rules_editor.list_end = hmin(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->num, 3);
     rules_editor.mat_from    = 2;
@@ -56,6 +60,27 @@ void InterfaceInitialize()
     hex_screen.y = 1;
     hex_screen.w = 43;
     hex_screen.h = 43;
+    
+    toolpad.x = 1;
+    toolpad.y = 1;
+    toolpad.w = 17;
+    toolpad.h = 7;
+    
+    control_panel.x = 63;
+    control_panel.y = 20;
+    control_panel.w = 16;
+    control_panel.h = 7;
+    
+    s_rules_editor = L"  Порядок установления значений:\n1) \"ИЗ\";\n2) \"В\";\n3) остальное.\n  ФЛАГ:\n\"--\" игнорировать данный набор условий;\n\"+0\" необходимо >= зеленых соседей и < красных;\n\"+1\" необходимо точное (не)совпадение количества соседей.\n  Для перехода клетки из начального состояния в конечное необходимо выполнение хотя бы одного из условий в списке.";
+    s_toolpad = L"  Кнопки справа налево:\n* Задать курсору следующий материал;\n* Задать курсору материал \"воздух\";\n* Поменять правое и левое значения курсора местами;\n* Переход в режим передвижения по массиву клеток с помощью ЛКМ.\n  Слайдер изменяет размер закрашивания курсором.";
+    s_control_panel = L"  Кнопки справа налево:\n* Пауза;\n* Сделать 1 шаг клеточного автомата (во время паузы);\n* Переключиться в режим отображения плотности материалов.\n  Слайдер изменяет время шага клеточного автомата.";
+        
+    info_box.x = 1;
+    info_box.y = 9;
+    info_box.w = 17;
+    info_box.h = 8;
+    info_box.s = L"";
+    info_box.shift = 0;
     
     t_f = SDL_GetPerformanceFrequency() / 60;
     t_s = SDL_GetPerformanceFrequency() / 25;
@@ -85,12 +110,14 @@ void InterfaceDraw(Font_t* f, Display_t* d)
     FontUIDraw(f, d);
     ButtonListDraw(f);
     SliderListDraw(f);
+    FontPrintToInfoBox(f);
 }
 
 void InterfaceUpdate()
 {
     ButtonListCheck();
     SliderListCheck();
+    InfoBoxUpdate();
 }
 
 void ButtonListInitialize()
@@ -104,39 +131,39 @@ void ButtonListInitialize()
     buttonlist[0] = ButtonInitialize(1  , 1 , 3, 3, 0, L"/=\\‖ ‖\\=/", L".../=\\‖ ‖"); //L"/=\\‖o‖\\=/", L".../=\\‖o‖"
     buttonlist[1] = ButtonInitialize(5  , 1 , 3, 3, 1, L"r-`___\\_№", L"...r-`___");
     buttonlist[2] = ButtonInitialize(64 , 20, 3, 3, 2, L"n n‖ ‖u u", L"|\\ | >|/ ");
-    buttonlist[3] = ButtonInitialize(1  , 5 , 3, 3, 3, L" ‖‖nVV\\l№", L"   /mm\\l№");
+    buttonlist[3] = ButtonInitialize(14  , 1 , 3, 3, 3, L" ‖‖nVV\\l№", L"   /mm\\l№");
     buttonlist[4] = ButtonInitialize(69 , 20, 3, 3, 4, L"\\ | >|/ |", L" \\   > / ");
     buttonlist[5] = ButtonInitialize(74 , 20, 3, 3, 5, L" _ <o> - ", L"\\_/<X>/-\\");
     buttonlist[6] = ButtonInitialize(79 , 0 , 1, 1, 6, L"X", L"+");
-    buttonlist[7] = ButtonInitialize(9  , 1 , 3, 3, 7, L" T lв№\\_/", L".(.rT`lв№");
+    buttonlist[7] = ButtonInitialize(10  , 1 , 3, 3, 7, L" T lв№\\_/", L".(.rT`lв№");
     buttonlist[8] = ButtonInitialize(78 , 0 , 1, 1, 8, L"o", L"0");
     buttonlist[9] = ButtonInitialize(77 , 0 , 1, 1, 9, L"-", L"_");
     
-    buttonlist[10] = ButtonInitialize(rules_editor.x + 13, rules_editor.y + 2, 2, 1, 10, L"/\\", L"№l");
-    buttonlist[11] = ButtonInitialize(rules_editor.x + 13, rules_editor.y + 5, 2, 1, 11, L"/\\", L"№l");
-    buttonlist[12] = ButtonInitialize(rules_editor.x + 13, rules_editor.y + 8, 2, 1, 12, L"/\\", L"№l");
-    buttonlist[13] = ButtonInitialize(rules_editor.x + 13, rules_editor.y + 4, 2, 1, 13, L"\\/", L"`r");
-    buttonlist[14] = ButtonInitialize(rules_editor.x + 13, rules_editor.y + 7, 2, 1, 14, L"\\/", L"`r");
-    buttonlist[15] = ButtonInitialize(rules_editor.x + 13, rules_editor.y + 10, 2, 1, 15, L"\\/", L"`r");
+    buttonlist[10] = ButtonInitialize(rules_editor.x + 14, rules_editor.y + 2, 2, 1, 10, L"/\\", L"№l");
+    buttonlist[11] = ButtonInitialize(rules_editor.x + 14, rules_editor.y + 5, 2, 1, 11, L"/\\", L"№l");
+    buttonlist[12] = ButtonInitialize(rules_editor.x + 14, rules_editor.y + 8, 2, 1, 12, L"/\\", L"№l");
+    buttonlist[13] = ButtonInitialize(rules_editor.x + 14, rules_editor.y + 4, 2, 1, 13, L"\\/", L"`r");
+    buttonlist[14] = ButtonInitialize(rules_editor.x + 14, rules_editor.y + 7, 2, 1, 14, L"\\/", L"`r");
+    buttonlist[15] = ButtonInitialize(rules_editor.x + 14, rules_editor.y + 10, 2, 1, 15, L"\\/", L"`r");
     
-    buttonlist[16] = ButtonInitialize(rules_editor.x + 2, rules_editor.y + 2, 2, 1, 16, L"/\\", L"№l");
-    buttonlist[17] = ButtonInitialize(rules_editor.x + 2, rules_editor.y + 4, 2, 1, 17, L"\\/", L"`r");
-    buttonlist[18] = ButtonInitialize(rules_editor.x + 6, rules_editor.y + 2, 2, 1, 18, L"/\\", L"№l");
-    buttonlist[19] = ButtonInitialize(rules_editor.x + 6, rules_editor.y + 4, 2, 1, 19, L"\\/", L"`r");
-    buttonlist[20] = ButtonInitialize(rules_editor.x + 8, rules_editor.y + 5, 2, 1, 20, L"/\\", L"№l");
-    buttonlist[21] = ButtonInitialize(rules_editor.x + 8, rules_editor.y + 7, 2, 1, 21, L"\\/", L"`r");
-    buttonlist[22] = ButtonInitialize(rules_editor.x + 6, rules_editor.y + 8, 2, 1, 22, L"/\\", L"№l");
-    buttonlist[23] = ButtonInitialize(rules_editor.x + 6, rules_editor.y + 10, 2, 1, 23, L"\\/", L"`r");
-    buttonlist[24] = ButtonInitialize(rules_editor.x + 2, rules_editor.y + 8, 2, 1, 24, L"/\\", L"№l");
-    buttonlist[25] = ButtonInitialize(rules_editor.x + 2, rules_editor.y + 10, 2, 1, 25, L"\\/", L"`r");
-    buttonlist[26] = ButtonInitialize(rules_editor.x + 0, rules_editor.y + 5, 2, 1, 26, L"/\\", L"№l");
-    buttonlist[27] = ButtonInitialize(rules_editor.x + 0, rules_editor.y + 7, 2, 1, 27, L"\\/", L"`r");
+    buttonlist[16] = ButtonInitialize(rules_editor.x + 3, rules_editor.y + 2, 2, 1, 16, L"/\\", L"№l");
+    buttonlist[17] = ButtonInitialize(rules_editor.x + 3, rules_editor.y + 4, 2, 1, 17, L"\\/", L"`r");
+    buttonlist[18] = ButtonInitialize(rules_editor.x + 7, rules_editor.y + 2, 2, 1, 18, L"/\\", L"№l");
+    buttonlist[19] = ButtonInitialize(rules_editor.x + 7, rules_editor.y + 4, 2, 1, 19, L"\\/", L"`r");
+    buttonlist[20] = ButtonInitialize(rules_editor.x + 9, rules_editor.y + 5, 2, 1, 20, L"/\\", L"№l");
+    buttonlist[21] = ButtonInitialize(rules_editor.x + 9, rules_editor.y + 7, 2, 1, 21, L"\\/", L"`r");
+    buttonlist[22] = ButtonInitialize(rules_editor.x + 7, rules_editor.y + 8, 2, 1, 22, L"/\\", L"№l");
+    buttonlist[23] = ButtonInitialize(rules_editor.x + 7, rules_editor.y + 10, 2, 1, 23, L"\\/", L"`r");
+    buttonlist[24] = ButtonInitialize(rules_editor.x + 3, rules_editor.y + 8, 2, 1, 24, L"/\\", L"№l");
+    buttonlist[25] = ButtonInitialize(rules_editor.x + 3, rules_editor.y + 10, 2, 1, 25, L"\\/", L"`r");
+    buttonlist[26] = ButtonInitialize(rules_editor.x + 1, rules_editor.y + 5, 2, 1, 26, L"/\\", L"№l");
+    buttonlist[27] = ButtonInitialize(rules_editor.x + 1, rules_editor.y + 7, 2, 1, 27, L"\\/", L"`r");
     
-    buttonlist[28] = ButtonInitialize(rules_editor.x + 4, rules_editor.y + 5, 2, 1, 28, L"/\\", L"№l");
-    buttonlist[29] = ButtonInitialize(rules_editor.x + 4, rules_editor.y + 7, 2, 1, 29, L"\\/", L"`r");
+    buttonlist[28] = ButtonInitialize(rules_editor.x + 5, rules_editor.y + 5, 2, 1, 28, L"/\\", L"№l");
+    buttonlist[29] = ButtonInitialize(rules_editor.x + 5, rules_editor.y + 7, 2, 1, 29, L"\\/", L"`r");
     
-    buttonlist[30] = ButtonInitialize(rules_editor.x + 10, rules_editor.y + 8, 1, 1, 30, L"+", L"*");
-    buttonlist[31] = ButtonInitialize(rules_editor.x + 10, rules_editor.y + 10, 1, 1, 31, L"-", L".");
+    buttonlist[30] = ButtonInitialize(rules_editor.x + 11, rules_editor.y + 8, 1, 1, 30, L"+", L"*");
+    buttonlist[31] = ButtonInitialize(rules_editor.x + 11, rules_editor.y + 10, 1, 1, 31, L"-", L".");
     
     //buttonlist[] = ButtonInitialize(, , , , , L"", L"");
 }
@@ -184,8 +211,8 @@ void ButtonListDraw(Font_t* f)
     {
         ButtonDraw(buttonlist[i], f);
     }
-    FontNumberDraw(f, 9, 1, 1, 1, cursor.lm, important_color, 0, 1);
-    FontNumberDraw(f, 11, 1, 1, 1, cursor.rm, important_color, 0, 1);
+    FontNumberDraw(f, 10, 1, 1, 1, cursor.lm, important_color, 0, 1);
+    FontNumberDraw(f, 12, 1, 1, 1, cursor.rm, important_color, 0, 1);
 }
 
 void ButtonListCheck()
@@ -528,6 +555,7 @@ void DisplayPanning(Kvad_t* ptr, Display_t* d)
     if((inpst.mouse.scroll)
          && (b_panning || b_inrec))
     {
+        printf("\n scroll %i", inpst.mouse.scroll);
         d->angle = (d->angle + 48 + inpst.mouse.scroll) % 48;
         inpst.mouse.scroll = 0;
 
@@ -542,10 +570,6 @@ void DisplayPanning(Kvad_t* ptr, Display_t* d)
         d->screen_shift.w = d->screen_shift.x;
         d->screen_shift.h = d->screen_shift.y;
 
-    }
-    else
-    {
-        inpst.mouse.scroll = 0;
     }
 }
 
@@ -611,7 +635,7 @@ void SliderListInitialize()
     int c0, c1;
     c0 = 1 + (cursor.lrad - 0) / 1;
     c1 = 1 + (t_s - 0) * 1000 / (20 * SDL_GetPerformanceFrequency());
-    sliderlist[0] = SliderInitialize(1, 9, 11, 3, 0, 1, c0, 0);
+    sliderlist[0] = SliderInitialize(1, 5, 17, 3, 0, 1, c0, 0);
     sliderlist[1] = SliderInitialize(63, 24, 16, 3, 0, 20, c1, 1);
 }
 
@@ -782,7 +806,7 @@ void FontUIDraw(Font_t* f, Display_t* d)
 void FontRulesEditorDraw(Font_t* f)
 {
     int rules_x = rules_editor.x, rules_y = rules_editor.y;
-    int hex_x = 0, hex_y = 2;
+    int hex_x = 1, hex_y = 2;
     
     FontNumberDraw(f, rules_x + hex_x + 4, rules_y + hex_y + 4,     2, 1, rules_editor.mat_from, important_color, 0, 1);
     
@@ -813,12 +837,12 @@ void FontRulesEditorDraw(Font_t* f)
     list_y = hmax(rules_editor.cond_num - list_h, 0);
     
     
-    FontStringDraw(f, rules_x + tree_x + 2 , rules_y , 7, 1, L"ИЗ    В", inform_color);
+    FontStringDraw(f, rules_x + hex_x + tree_x + 2 , rules_y, 7, 1, L"ИЗ    В", inform_color);
     
-    FontNumberDraw(f, rules_x + tree_x + 5, rules_y , 2, 1, 
+    FontNumberDraw(f, rules_x + hex_x + tree_x + 5, rules_y, 2, 1, 
             rules_editor.mat_from, important_color, 0, 1);
     
-    FontNumberDraw(f, rules_x + tree_x + 10 , rules_y , 2, 1, 
+    FontNumberDraw(f, rules_x + hex_x + tree_x + 10 , rules_y, 2, 1, 
             rules_editor.mat_to, important_color, 0, 1);
             
             
@@ -831,27 +855,27 @@ void FontRulesEditorDraw(Font_t* f)
             
     int arrow_y = 
         hmax(
-            hmin( rules_editor.y + rules_editor.h, rules_y + tree_y + 
+            hmin( rules_editor.y + rules_editor.h, rules_y + hex_x + tree_y + 
                 rules_editor.cond_num - rules_editor.list_begin),
-            rules_y + tree_y
+            rules_y + hex_y + tree_y
         );
     FontCharDraw(f, L'>', 
-            hmin( rules_editor.x + rules_editor.w, rules_x + tree_x - 1 ), 
+            hmin( rules_editor.x + rules_editor.w, rules_x + hex_x + tree_x - 1 ), 
             arrow_y, inform_color);
     
     for(int number = rules_editor.list_begin; number < rules_editor.list_end; number++)
     {
         FontRulesEditorNeighborsDraw(f, 
-            rules_x + tree_x, 
-            rules_y + tree_y + number  - rules_editor.list_begin, 2, 1, 
+            rules_x + hex_x + tree_x, 
+            rules_y + hex_y + tree_y + number  - rules_editor.list_begin, 2, 1, 
             RULES->frommat[rules_editor.mat_from]->
             tomat[rules_editor.mat_to]->
             req[number]->flag);
         for(int k = 0; k < 6; k++)
         {
             FontRulesEditorNeighborsDraw(f, 
-                rules_x + tree_x + 2 + k * 2 , 
-                rules_y + tree_y + number - rules_editor.list_begin, 2, 1, 
+                rules_x + hex_x + tree_x + 2 + k * 2 , 
+                rules_y + hex_y + tree_y + number - rules_editor.list_begin, 2, 1, 
                 RULES->frommat[rules_editor.mat_from]->
                 tomat[rules_editor.mat_to]->
                 req[number]->neighbors[k]);
@@ -871,4 +895,51 @@ void FontRulesEditorNeighborsDraw(Font_t* f, int x, int y, int w, int h, int n)
     else if(n == -2) FontStringDraw(f, x, y, w, h, L"-0", no_color);
     else FontNumberDraw(f, x, y, w, h, n + 2, no_color, 1, 1);
     
+}
+
+void FontPrintToInfoBox(Font_t* f)
+{
+    int lines = 0;
+    if((inpst.mouse.scroll)) 
+    {
+        info_box.shift -= inpst.mouse.scroll;
+    }
+    
+    lines = StringLinesCount(info_box.w, info_box.s);
+    inpst.mouse.scroll = 0;
+    info_box.shift = hmin
+    (
+        hmax
+        (
+            info_box.shift,
+            0
+        ), lines - info_box.h
+    );
+    
+    FontStringSHiftDraw(f, info_box.x, info_box.y, 
+        info_box.w, info_box.h, info_box.s, inform_color, info_box.shift);
+    
+}
+
+void InfoBoxUpdate()
+{
+    int x, y;
+    MouseToGrid(&x, &y);
+    
+    if(isinrec(rules_editor.x, rules_editor.y, rules_editor.w, rules_editor.h, x, y ))
+    {
+        info_box.s = s_rules_editor;
+    }
+    else if(isinrec(toolpad.x, toolpad.y, toolpad.w, toolpad.h, x, y ))
+    {
+        info_box.s = s_toolpad;
+    }
+    else if(isinrec(control_panel.x, control_panel.y, control_panel.w, control_panel.h, x, y ))
+    {
+        info_box.s = s_control_panel;
+    }
+    else if(!isinrec(info_box.x, info_box.y, info_box.w, info_box.h, x, y ))
+    {
+        info_box.s = L"";
+    }
 }
