@@ -8,7 +8,7 @@ int Yrot[6] = {1, 0, -1, -1, 0, 1};
 
 int t;
 
-int firevolume, b_fireplaying;
+int firevolume;
 
 
 Rules_t *RULES;
@@ -141,7 +141,6 @@ Kvad_t* KvadInitialize(int width, int height)
     RulesInitialize();
     
     firevolume = 0;
-    b_fireplaying = 0;
 
     return ptr;
 }
@@ -970,7 +969,7 @@ void AudioCount(Kvad_t* ptr)
             switch (curmat)
             {
             case 2:
-                fire = hmin(fire + 1, 128);
+                fire++;
                 break;
             
             default:
@@ -978,28 +977,22 @@ void AudioCount(Kvad_t* ptr)
             }
         }
     }
-    firevolume = fire;
+    firevolume = (firevolume * 4 + fire) / 5;
 }
 
 void AudioUpdate(Kvad_t* ptr)
 {
     AudioCount(ptr);
     
+    int log_volume = hlog(firevolume, 1.07);
+    
+    
+    
     
     if(firevolume > 0)
     {
-        if(b_fireplaying == 0)
-        {
-            AudioFirePlay();
-            b_fireplaying = 1;
-        }
-        if(b_fireplaying == 1)
-            AudioFireSetVolume(firevolume);
-    }
-    else 
-    {
-        AudioFireSetVolume(0);
-        b_fireplaying = 0;
+        AudioFirePlay();
+        AudioFireSetVolume(log_volume);
     }
 }
 

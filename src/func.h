@@ -80,6 +80,8 @@ void swap(int* a, int* b);
 
 int isinrec(int x, int y, int w, int h, int cx, int cy);
 
+int hlog(int a, double p);
+
 void PixelToHex(Display_t* d, int *z, int *n);
 
 void HexToGrid(Display_t* d, int *z, int *n);

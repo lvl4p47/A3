@@ -76,6 +76,19 @@ int isinrec(int x, int y, int w, int h, int cx, int cy)
     return ret;
 }
 
+int hlog(int a, double p)
+{
+    if(p <= 0) return -1;
+    double a_d = a;
+    int log = 0;
+    while(a_d > p)
+    {
+        a_d /= p;
+        log++;
+    }
+    return log;
+}
+
 void PixelToHex(Display_t* d, int *z, int *n)
 {
     int a = d->angle;

@@ -99,13 +99,7 @@ int main( int argc, char * argv[] )
 
 		if (dr <= 0) {
 			update_frame(&frame_time, &dr);
-            audio_timer++;
-            if(audio_timer > 1000)
-            {
-                AudioUpdate(k1);
-                audio_timer = 0;
-            }
-            
+            AudioUpdate(k1);
 		}
 
 		calculate_delta(&dr, &ds, cur_time, frame_time, step_time, t_f, t_s);
