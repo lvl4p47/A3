@@ -33,7 +33,7 @@ void AudioFirePlay()
     if(Mix_Playing(-1) == 0)
     {
         printf("\nresetting audio");
-        Mix_PlayChannel( -1, fire, 0 );
+        Mix_PlayChannel( -1, fire, 10 );
     }
     else printf("\naudio is playing");
 }
