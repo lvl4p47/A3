@@ -38,6 +38,11 @@ typedef struct
     int mat_from, mat_to, cond_num;
 } RulesEditor_t;
 
+typedef struct
+{
+    int x, y, w, h;
+} HexScreen_t;
+
 void InterfaceInitialize();
 
 void InterfaceTerminate();

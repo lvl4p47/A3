@@ -1,10 +1,12 @@
 #include "hexagons.h"
 
 const int mat_amount = 9;
-int*** p_rules;
-int* neighbours_required;
+int ***p_rules;
+int *neighbours_required;
 
 int Yrot[6] = {1, 0, -1, -1, 0, 1};
+
+int **st8_dns_clr;
 
 int t;
 
@@ -134,7 +136,52 @@ Kvad_t* KvadInitialize(int width, int height)
 	{
 		ptr->arr[i] = (Cell_t*)malloc(width * sizeof(Cell_t));
     }
-
+    
+    st8_dns_clr = (int**)malloc(mat_amount * sizeof(int*));
+    for (int i = 0; i < mat_amount; i++)
+	{
+		st8_dns_clr[i] = (int*)malloc(3 * sizeof(int));
+        st8_dns_clr[i][0] = 2;
+        st8_dns_clr[i][1] = 6;
+        st8_dns_clr[i][2] = 7;
+    }
+    {
+        st8_dns_clr[0][0] = 0;
+        st8_dns_clr[0][1] = 0;
+        st8_dns_clr[0][2] = 7;
+        
+        st8_dns_clr[1][0] = 5;
+        st8_dns_clr[1][1] = 4;
+        st8_dns_clr[1][2] = 2;
+        
+        st8_dns_clr[2][0] = 1;
+        st8_dns_clr[2][1] = 1;
+        st8_dns_clr[2][2] = 1;
+        
+        st8_dns_clr[3][0] = 6;
+        st8_dns_clr[3][1] = 3;
+        st8_dns_clr[3][2] = 3;
+        
+        st8_dns_clr[4][0] = 3;
+        st8_dns_clr[4][1] = 5;
+        st8_dns_clr[4][2] = 6;
+        
+        st8_dns_clr[5][0] = 4;
+        st8_dns_clr[5][1] = 5;
+        st8_dns_clr[5][2] = 1;
+        
+        st8_dns_clr[6][0] = 1;
+        st8_dns_clr[6][1] = 1;
+        st8_dns_clr[6][2] = 7;
+        
+        st8_dns_clr[7][0] = 7;
+        st8_dns_clr[7][1] = 2;
+        st8_dns_clr[7][2] = 4;
+        
+        st8_dns_clr[8][0] = 2;
+        st8_dns_clr[8][1] = 6;
+        st8_dns_clr[8][2] = 7;
+    }
     KvadZero(ptr);
     t = 0;
 
@@ -153,6 +200,12 @@ void KvadTerminate(Kvad_t* ptr)
     }
 	free(ptr->arr);
 	free(ptr);
+    
+    for (int i = 0; i < mat_amount; i++)
+    {
+		free(st8_dns_clr[i]);
+    }
+    free(st8_dns_clr);
 
     RulesTerminate();
 }
@@ -187,49 +240,49 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
     switch (value)
     {
     case 0:
-        cptr->st8 = 0;
-        cptr->dns = 0;
-        cptr->clr = 7;
+        cptr->st8 = st8_dns_clr[0][0];
+        cptr->dns = st8_dns_clr[0][1];
+        cptr->clr = st8_dns_clr[0][2];
         break;
     case 1:
-        cptr->st8 = 5;
-        cptr->dns = 4;
-        cptr->clr = 2;
+        cptr->st8 = st8_dns_clr[1][0];
+        cptr->dns = st8_dns_clr[1][1];
+        cptr->clr = st8_dns_clr[1][2];
         break;
     case 2:
-        cptr->st8 = 1;
-        cptr->dns = 1;
-        cptr->clr = 1;
+        cptr->st8 = st8_dns_clr[2][0];
+        cptr->dns = st8_dns_clr[2][1];
+        cptr->clr = st8_dns_clr[2][2];
         break;
     case 3:
-        cptr->st8 = 6;
-        cptr->dns = 3;
-        cptr->clr = 3;
+        cptr->st8 = st8_dns_clr[3][0];
+        cptr->dns = st8_dns_clr[3][1];;
+        cptr->clr = st8_dns_clr[3][2];
         break;
     case 4:
-        cptr->st8 = 3;
-        cptr->dns = 5;
-        cptr->clr = 6;
+        cptr->st8 = st8_dns_clr[4][0];
+        cptr->dns = st8_dns_clr[4][1];
+        cptr->clr = st8_dns_clr[4][2];
         break;
     case 5:
-        cptr->st8 = 4;
-        cptr->dns = 5;
-        cptr->clr = 1;
+        cptr->st8 = st8_dns_clr[5][0];
+        cptr->dns = st8_dns_clr[5][1];
+        cptr->clr = st8_dns_clr[5][2];
         break;
     case 6:
-        cptr->st8 = 1;
-        cptr->dns = 1;
-        cptr->clr = 7;
+        cptr->st8 = st8_dns_clr[6][0];
+        cptr->dns = st8_dns_clr[6][1];
+        cptr->clr = st8_dns_clr[6][2];
         break;
     case 7:
-        cptr->st8 = 7;
-        cptr->dns = 2;
-        cptr->clr = 4;
+        cptr->st8 = st8_dns_clr[7][0];
+        cptr->dns = st8_dns_clr[7][1];
+        cptr->clr = st8_dns_clr[7][2];
         break;
     case 8:
-        cptr->st8 = 2;
-        cptr->dns = 6;
-        cptr->clr = 7;
+        cptr->st8 = st8_dns_clr[8][0];
+        cptr->dns = st8_dns_clr[8][1];
+        cptr->clr = st8_dns_clr[8][2];
     default:
         cptr->st8 = 2;
         cptr->dns = 6;
@@ -957,37 +1010,37 @@ void IceUpdate(Kvad_t* ptr)
     // }
 }
 
-void AudioCount(Kvad_t* ptr)
+void AudioCount(Kvad_t* ptr, int b_pause)
 {
     int curmat;
     int fire = 0;
-    for(int i = 0; i < ptr->height; i++)
+    if(b_pause == 0)
     {
-        for(int j = 0; j < ptr->width; j++)
+        for(int i = 0; i < ptr->height; i++)
         {
-            curmat = KvadGetHexel(ptr, j, i)->mat;
-            switch (curmat)
+            for(int j = 0; j < ptr->width; j++)
             {
-            case 2:
-                fire++;
-                break;
-            
-            default:
-                break;
+                curmat = KvadGetHexel(ptr, j, i)->mat;
+                switch (curmat)
+                {
+                case 2:
+                    fire++;
+                    break;
+                
+                default:
+                    break;
+                }
             }
         }
     }
+    
     firevolume = (firevolume * 4 + fire) / 5;
 }
 
-void AudioUpdate(Kvad_t* ptr)
+void AudioUpdate(Kvad_t* ptr, int b_pause)
 {
-    AudioCount(ptr);
-    
+    AudioCount(ptr, b_pause);
     int log_volume = hlog(firevolume, 1.07);
-    
-    
-    
     
     if(firevolume > 0)
     {
@@ -1006,10 +1059,6 @@ void KvadUpdate(Kvad_t* ptr)
     RopeUpdate(ptr);
     GasUpdate(ptr);
     LiquidUpdate(ptr);
-    
-    AudioUpdate(ptr);
-    
-    //WaveUpdate(ptr);
 }
 
 int NeighbourCount(Kvad_t* ptr, int z, int n, int val)

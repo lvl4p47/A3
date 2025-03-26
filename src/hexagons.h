@@ -5,6 +5,8 @@
 
 extern const int mat_amount;
 
+extern int **st8_dns_clr;
+
 typedef struct
 {
     int flag;
@@ -74,9 +76,9 @@ void LiquidUpdate(Kvad_t* ptr);
 
 void IceUpdate(Kvad_t* ptr);
 
-void AudioCount(Kvad_t* ptr);
+void AudioCount(Kvad_t* ptr, int b_pause);
 
-void AudioUpdate(Kvad_t* ptr);
+void AudioUpdate(Kvad_t* ptr, int b_pause);
 
 void KvadUpdate(Kvad_t* ptr);
 

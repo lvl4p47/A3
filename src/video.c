@@ -96,6 +96,23 @@ void HexelDraw(Display_t* d, int z, int n, Cell_t* c, int b_ui)
     }
 }
 
+void HexelDrawOnUI(int x, int y, int mat, int ang, int b_ui)
+{
+    int srcx = ang * 9;
+    int srcy = mat * 9;
+    
+    if(b_ui == 1)
+    {
+        srcy = mod(st8_dns_clr[mat][1], 11) * 9;
+        SpriteDraw(s2, srcx, srcy, x * 8, y * 8, st8_dns_clr[mat][2]);
+    }
+    else
+    {
+        srcy = mat * 9;
+        SpriteDraw(s1, srcx, srcy, x * 8, y * 8, st8_dns_clr[mat][2]);
+    }
+}
+
 void KvadRender(Kvad_t* ptr, Display_t* d, int x, int y, int b_ui)
 {
     SDL_SetRenderDrawColor( m_renderer, rgb[3][0], rgb[3][1], rgb[3][2], 255 );

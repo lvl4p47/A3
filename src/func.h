@@ -84,6 +84,6 @@ int hlog(int a, double p);
 
 void PixelToHex(Display_t* d, int *z, int *n);
 
-void HexToGrid(Display_t* d, int *z, int *n);
+void HexToGrid(Display_t* d, int *z, int *n, int centz, int centn);
 
 #endif

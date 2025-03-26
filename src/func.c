@@ -320,12 +320,12 @@ void PixelToHex(Display_t* d, int *z, int *n)
     
 }
 
-void HexToGrid(Display_t* d, int *z, int *n)
+void HexToGrid(Display_t* d, int *z, int *n, int centz, int centn)
 {
     int xnew, ynew;
-    xnew = d->screen.x / 8 + d->screen.w / 16 +
+    xnew = centz +
     *z * hcos(d->angle) / 8 + *n * hcos(d->angle + 8) / 8;
-    ynew = d->screen.y / 8 + d->screen.h / 16 +
+    ynew = centn +
     *z * hsin(d->angle) / 8 + *n * hsin(d->angle + 8) / 8;
     *z = xnew;
     *n = ynew;
