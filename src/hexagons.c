@@ -394,7 +394,7 @@ void SolidUpdate(Kvad_t* ptr)
         neighbours_required[i] = 0;
     }
     
-    int cen;
+    int cen, flag;
     for(int i = 0; i < ptr->height; i++)
     {
         for(int j = 0; j < ptr->width; j++)
@@ -407,6 +407,7 @@ void SolidUpdate(Kvad_t* ptr)
                 {
                     if(RULES->frommat[cen]->tomat[new]->req[cond_num]->flag != -1)
                     {
+                        flag = RULES->frommat[cen]->tomat[new]->req[cond_num]->flag;
                         for(int i = 0; i < mat_amount; i++)
                         {
                             neighbours_required[i] = 0;
@@ -426,9 +427,17 @@ void SolidUpdate(Kvad_t* ptr)
                         for(int neighbour_mat = 0; neighbour_mat < mat_amount; neighbour_mat++)
                         {
                             neighbour_amount = NeighbourCount(ptr, j, i, neighbour_mat);
-                            if(
-                                (neighbour_amount >= neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] >=  0 )||
-                                (neighbour_amount < -neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] <= -1 )
+                            if( (flag == 0 && 
+                                (
+                                    (neighbour_amount >= neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] >=  0 )||
+                                    (neighbour_amount < -neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] <= -1 )
+                                )) ||
+                                (flag == 1 &&
+                                (
+                                    (neighbour_amount == neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] >=  1 )||
+                                    (neighbours_required[neighbour_mat] == 0) ||
+                                    (neighbour_amount != -neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] <= -1 )
+                                ))
                                 )
                             {
                                 b_change = 1;

@@ -8,6 +8,7 @@ const int inform_color = 7;
 const int important_color = 5;
 const int yes_color = 2;
 const int no_color = 1;
+const int maybe_color = 6;
 const int interact_color = 4;
 const int frame_color = 3;
 
@@ -290,39 +291,39 @@ void ButtonDown(Button_t* b)
             
         case 10:
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag = 
-            mod(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag + 2, 2) - 1 ;
+            cycle(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag, -1, +1, 1);
             b->act_b = 1;
             b->text = 2;
             break;
         case 11:
             rules_editor.mat_to = 
-            mod(rules_editor.mat_to + 1, mat_amount);
+            cycle(rules_editor.mat_to, 0, mat_amount - 1, +1);
             rules_editor.cond_num = 0;
             b->act_b = 1;
             b->text = 2;
             break;
         case 12:
             rules_editor.cond_num =
-            mod(rules_editor.cond_num + 1, RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->num) ;
+            cycle(rules_editor.cond_num, 0, RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->num - 1, +1);
             b->act_b = 1;
             b->text = 2;
             break;
         case 13:
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag = 
-            mod(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag + 2, 2) - 1 ;
+            cycle(RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag, -1, +1, -1);
             b->act_b = 1;
             b->text = 2;
             break;
         case 14:
             rules_editor.mat_to = 
-            mod(rules_editor.mat_to - 1, mat_amount);
+            cycle(rules_editor.mat_to, 0, mat_amount - 1, -1);
             rules_editor.cond_num = 0;
             b->act_b = 1;
             b->text = 2;
             break;
         case 15:
             rules_editor.cond_num =
-            mod(rules_editor.cond_num - 1, RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->num) ;
+            cycle(rules_editor.cond_num, 0, RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->num - 1, -1);
             b->act_b = 1;
             b->text = 2;
             break;
@@ -803,7 +804,7 @@ void FontRulesEditorDraw(Font_t* f)
     FontRulesEditorNeighborsDraw(f, rules_x + hex_x + 0   , rules_y + hex_y + 4   , 2, 1, 
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[5]);
     
-    FontStringDraw(f, rules_x + hex_x + 9, rules_y + hex_y + 1, 3, 1, L"АКТ", inform_color);
+    FontStringDraw(f, rules_x + hex_x + 9, rules_y + hex_y + 1, 3, 1, L"ФЛГ", inform_color);
     FontStringDraw(f, rules_x + hex_x + 11, rules_y + hex_y + 4, 1, 1, L">", inform_color);
     FontStringDraw(f, rules_x + hex_x + 9, rules_y + hex_y + 7, 3, 1, L"УСЛ", inform_color);
     
@@ -832,7 +833,7 @@ void FontRulesEditorDraw(Font_t* f)
         hmax(
             hmin( rules_editor.y + rules_editor.h, rules_y + tree_y + 
                 rules_editor.cond_num - rules_editor.list_begin),
-            rules_editor.y
+            rules_y + tree_y
         );
     FontCharDraw(f, L'>', 
             hmin( rules_editor.x + rules_editor.w, rules_x + tree_x - 1 ), 
@@ -861,16 +862,13 @@ void FontRulesEditorDraw(Font_t* f)
 
 void FontRulesEditorNeighborsDraw(Font_t* f, int x, int y, int w, int h, int n)
 {
+    int other_neigh_color = inform_color;
+    if(RULES->frommat[rules_editor.mat_from]->
+            tomat[rules_editor.mat_to]->
+            req[rules_editor.cond_num]->flag == 0) other_neigh_color = maybe_color;
     if(n >= 0)  FontNumberDraw(f, x, y, w, h, n, yes_color, 1, 1);
-    else if(n == -1) FontStringDraw(f, x, y, w, h, L"--", inform_color);
+    else if(n == -1) FontStringDraw(f, x, y, w, h, L"--", other_neigh_color);
     else if(n == -2) FontStringDraw(f, x, y, w, h, L"-0", no_color);
     else FontNumberDraw(f, x, y, w, h, n + 2, no_color, 1, 1);
-    
-}
-
-void FontRulesEditorFlagDraw(Font_t* f, int x, int y, int w, int h, int n)
-{
-    if(n >= 0)  FontNumberDraw(f, x, y, w, h, n, yes_color, 1, 1);
-    else FontNumberDraw(f, x, y, w, h, n, no_color, 1, 1);
     
 }
