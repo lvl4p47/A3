@@ -23,17 +23,16 @@ void update_frame(uint64_t* ft, int64_t* dr)
 	InputRegister();
     InputUpdate();
 
-    DisplayPanning(k1, d1);
-    ScreenInput(k1, d1);
+    DisplayListUpdate();
+    ScreenInput(k1, displaylist[0]);
 
     ScreenClear();
 
-    KvadRender(k1, d1, 1, 1, b_ui);
-    
+    DisplayListDraw(k1, b_ui);
     
     
     InterfaceUpdate();
-    InterfaceDraw(f1, d1);
+    InterfaceDraw(f1, displaylist[0]);
 
     ScreenRefresh();
 	*ft = (int64_t)SDL_GetPerformanceCounter();
@@ -78,7 +77,7 @@ int main( int argc, char * argv[] )
     InputInitialize();
 
     k1 = KvadInitialize(side, side);
-     d1 = DisplayInitialize(17, 1, 43, 43);
+     DisplayListInitialize();
      f1 = FontInitialise();
      InterfaceInitialize();
 
@@ -102,7 +101,7 @@ int main( int argc, char * argv[] )
     }
 
     KvadTerminate(k1);
-    DisplayTerminate(d1);
+    DisplayListTerminate();
     FontTerminate(f1);
     InterfaceTerminate();
     VideoTerminate();

@@ -76,7 +76,7 @@ void ButtonDown(Button_t* b);
 
 void ButtonUp(Button_t* b);
 
-void DisplayPanning(Kvad_t* ptr, Display_t* d);
+void DisplayPanning(Display_t* d);
 
 void ScreenInput(Kvad_t* ptr, Display_t* d);
 
@@ -109,5 +109,7 @@ void FontRulesEditorNeighborsDraw(Font_t* f, int x, int y, int w, int h, int n);
 void FontPrintToInfoBox(Font_t* f);
 
 void InfoBoxUpdate();
+
+void DisplayListUpdate();
 
 #endif

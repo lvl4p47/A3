@@ -1,6 +1,6 @@
 #include "interface.h"
 
-const int buttonlistsize = 32;
+const int buttonlistsize = 33;
 
 const int sliderlistsize = 2;
 
@@ -41,10 +41,10 @@ int min_neigh = -11, max_neigh = 9;
 
 void InterfaceInitialize()
 {
-    cursor.lm = 2;
-    cursor.rm = 1;
-    cursor.lrad = 8;
-    cursor.rrad = 8;
+    cursor.lm = 1;
+    cursor.rm = 8;
+    cursor.lrad = 2;
+    cursor.rrad = 2;
     
     rules_editor.x = 1;
     rules_editor.y = 24;
@@ -71,9 +71,9 @@ void InterfaceInitialize()
     control_panel.w = 16;
     control_panel.h = 7;
     
-    s_rules_editor = L"  Порядок установления значений:\n1) \"ИЗ\";\n2) \"В\";\n3) остальное.\n  ФЛАГ:\n\"--\" игнорировать данный набор условий;\n\"+0\" необходимо >= зеленых соседей и < красных;\n\"+1\" необходимо точное (не)совпадение количества соседей.\n  Для перехода клетки из начального состояния в конечное необходимо выполнение хотя бы одного из условий в списке.";
-    s_toolpad = L"  Кнопки справа налево:\n* Задать курсору следующий материал;\n* Задать курсору материал \"воздух\";\n* Поменять правое и левое значения курсора местами;\n* Переход в режим передвижения по массиву клеток с помощью ЛКМ.\n  Слайдер изменяет размер закрашивания курсором.";
-    s_control_panel = L"  Кнопки справа налево:\n* Пауза;\n* Сделать 1 шаг клеточного автомата (во время паузы);\n* Переключиться в режим отображения плотности материалов.\n  Слайдер изменяет время шага клеточного автомата.";
+    s_rules_editor = L"  Порядок установления значений:\n1) \"ИЗ\";\n2) \"В\";\n3) \"УСЛ\".\n4) остальное.\n\n  ФЛАГ:\n\"--\" игнорировать данный набор условий;\n\"+0\" необходимо >= зеленых соседей и < красных;\n\"+1\" необходимо точное (не)совпадение количества соседей.\n\n  Для перехода клетки из начального состояния в конечное необходимо выполнение хотя бы одного из условий в списке.";
+    s_toolpad = L"  Кнопки справа налево:\n* Задать курсору следующий по номеру материал;\n* Задать курсору материал \"воздух\";\n* Поменять правое и левое значения курсора местами;\n* Переход в режим передвижения по массиву клеток с помощью ЛКМ.\n\n  Слайдер изменяет размер закрашивания курсором.";
+    s_control_panel = L"  Кнопки справа налево:\n* Пауза;\n* Сделать 1 шаг клеточного автомата (во время паузы);\n* Переключить режим отображения плотности материалов;\n* Переключить режим более подробного отображения миникарты.\n\n  Слайдер изменяет время шага клеточного автомата.";
         
     info_box.x = 1;
     info_box.y = 9;
@@ -128,14 +128,14 @@ void ButtonListInitialize()
 	{
 		buttonlist[i] = NULL;
     }
-    buttonlist[0] = ButtonInitialize(1  , 1 , 3, 3, 0, L"/=\\‖ ‖\\=/", L".../=\\‖ ‖"); //L"/=\\‖o‖\\=/", L".../=\\‖o‖"
-    buttonlist[1] = ButtonInitialize(5  , 1 , 3, 3, 1, L"r-`___\\_№", L"...r-`___");
-    buttonlist[2] = ButtonInitialize(64 , 20, 3, 3, 2, L"n n‖ ‖u u", L"|\\ | >|/ ");
-    buttonlist[3] = ButtonInitialize(14  , 1 , 3, 3, 3, L" ‖‖nVV\\l№", L"   /mm\\l№");
-    buttonlist[4] = ButtonInitialize(69 , 20, 3, 3, 4, L"\\ | >|/ |", L" \\   > / ");
-    buttonlist[5] = ButtonInitialize(74 , 20, 3, 3, 5, L" _ <o> - ", L"\\_/<X>/-\\");
+    buttonlist[0] = ButtonInitialize(toolpad.x      , toolpad.y , 3, 3, 0, L"/=\\‖ ‖\\=/", L".../=\\‖ ‖"); //L"/=\\‖o‖\\=/", L".../=\\‖o‖"
+    buttonlist[1] = ButtonInitialize(toolpad.x + 4  , toolpad.y , 3, 3, 1, L"r-`___\\_№", L"...r-`___");
+    buttonlist[2] = ButtonInitialize(control_panel.x        , control_panel.y, 3, 3, 2, L"n n‖ ‖u u", L"|\\ | >|/ ");
+    buttonlist[3] = ButtonInitialize(toolpad.x + 14 , toolpad.y , 3, 3, 3, L" ‖‖nVV\\l№", L"   /mm\\l№");
+    buttonlist[4] = ButtonInitialize(control_panel.x + 4    , control_panel.y, 3, 3, 4, L"\\ | >|/ |", L" \\   > / ");
+    buttonlist[5] = ButtonInitialize(control_panel.x + 9    , control_panel.y, 3, 3, 5, L" _ <o> - ", L"\\_/<X>/-\\");
     buttonlist[6] = ButtonInitialize(79 , 0 , 1, 1, 6, L"X", L"+");
-    buttonlist[7] = ButtonInitialize(10  , 1 , 3, 3, 7, L" T lв№\\_/", L".(.rT`lв№");
+    buttonlist[7] = ButtonInitialize(toolpad.x + 10 , toolpad.y , 3, 3, 7, L" T lв№\\_/", L".(.rT`lв№");
     buttonlist[8] = ButtonInitialize(78 , 0 , 1, 1, 8, L"o", L"0");
     buttonlist[9] = ButtonInitialize(77 , 0 , 1, 1, 9, L"-", L"_");
     
@@ -164,6 +164,8 @@ void ButtonListInitialize()
     
     buttonlist[30] = ButtonInitialize(rules_editor.x + 11, rules_editor.y + 8, 1, 1, 30, L"+", L"*");
     buttonlist[31] = ButtonInitialize(rules_editor.x + 11, rules_editor.y + 10, 1, 1, 31, L"-", L".");
+    
+    buttonlist[32] = ButtonInitialize(control_panel.x + 13 , control_panel.y, 3, 3, 32, L"r ` > l №", L"r ` ‖ l №");
     
     //buttonlist[] = ButtonInitialize(, , , , , L"", L"");
 }
@@ -211,8 +213,8 @@ void ButtonListDraw(Font_t* f)
     {
         ButtonDraw(buttonlist[i], f);
     }
-    FontNumberDraw(f, 10, 1, 1, 1, cursor.lm, important_color, 0, 1);
-    FontNumberDraw(f, 12, 1, 1, 1, cursor.rm, important_color, 0, 1);
+    FontNumberDraw(f, toolpad.x + 10, 1, 1, 1, cursor.lm, important_color, 0, 1);
+    FontNumberDraw(f, toolpad.x + 12, 1, 1, 1, cursor.rm, important_color, 0, 1);
 }
 
 void ButtonListCheck()
@@ -462,6 +464,11 @@ void ButtonDown(Button_t* b)
             b->act_b = 1;
             b->text = 2;
             break;
+        case 32:
+            minimap_speed = 1 - minimap_speed;
+            b->act_b = 1;
+            b->text = 3 - b->text;
+            break;
             
         default:
             b->act_b = 1;
@@ -496,6 +503,8 @@ void ButtonUp(Button_t* b)
         case 9:
             b->text = 1;
             break;
+        case 32:
+            break;
         default:
             b->text = 1;
             break;
@@ -503,12 +512,12 @@ void ButtonUp(Button_t* b)
     ButtonText(b, b->text);
 }
 
-void DisplayPanning(Kvad_t* ptr, Display_t* d)
+void DisplayPanning(Display_t* d)
 {
     int wx, wy, pwx, pwy;
     int x, y, dz, dn, gridx, gridy;
     MouseToGrid(&gridx, &gridy);
-    int b_inrec = isinrec(17, 1, 43, 43, gridx, gridy);
+    int b_inrec = isinrec(d->grid_x, d->grid_y, d->grid_w, d->grid_h, gridx, gridy);
     
     if(b_inrec && inpst.mouse.down 
     && ((inpst.mouse.mmc == 1 && b_grab == 0) ||
@@ -942,4 +951,21 @@ void InfoBoxUpdate()
     {
         info_box.s = L"";
     }
+}
+
+void DisplayListUpdate()
+{
+    DisplayPanning(displaylist[0]);
+    
+    // displaylist[1]->angle = displaylist[0]->angle;
+    
+    // displaylist[1]->hshift.x = displaylist[0]->hshift.x
+    //  * displaylist[0]->scale / displaylist[1]->scale;
+    // displaylist[1]->screen_shift.x = displaylist[0]->screen_shift.x
+    //  * displaylist[0]->scale / displaylist[1]->scale;
+    
+    // displaylist[1]->hshift.y = displaylist[0]->hshift.y
+    //  * displaylist[0]->scale / displaylist[1]->scale;
+    // displaylist[1]->screen_shift.y = displaylist[0]->screen_shift.y
+    //  * displaylist[0]->scale / displaylist[1]->scale;
 }

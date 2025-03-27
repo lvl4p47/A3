@@ -3,7 +3,9 @@
 
 #include "hexagons.h"
 
+extern Display_t** displaylist;
 extern Sprite_t* f21;
+extern int minimap_speed;
 
 void point(int x, int y, int r, int g, int b);
 
@@ -21,7 +23,7 @@ void HexelDrawOnUI(int x, int y, int mat, int ang, int b_ui);
 
 void KvadRender(Kvad_t* ptr, Display_t* d, int x, int y, int b_ui);
 
-Display_t* DisplayInitialize(int x, int y, int w, int h);
+Display_t* DisplayInitialize(int x, int y, int w, int h, int angle, int scale);
 
 void DisplayTerminate(Display_t* d);
 
@@ -34,5 +36,13 @@ void SpriteDraw(Sprite_t* s, int x1, int y1, int x2, int y2, int color);
 void ResizeWindow(int ps);
 
 void ToggleWindow(int b_min);
+
+void DisplayScan(Kvad_t* ptr, Display_t* d, int b_ui, int scale_selection);
+
+void DisplayListDraw(Kvad_t* ptr, int b_ui);
+
+void DisplayListInitialize();
+
+void DisplayListTerminate();
 
 #endif

@@ -2,6 +2,14 @@
 
 extern int pixelsize;
 
+const int displaylistsize = 2;
+
+Display_t** displaylist;
+
+int scale_selection = 0;
+int selection_time = 0;
+int minimap_speed = 0;
+
 SDL_Window * m_window;
 SDL_Renderer * m_renderer;
 int rgb[8][3] = {
@@ -126,18 +134,19 @@ void KvadRender(Kvad_t* ptr, Display_t* d, int x, int y, int b_ui)
     }
 }
 
-
-
-Display_t* DisplayInitialize(int x, int y, int w, int h) // 17 1 43 43
+Display_t* DisplayInitialize(int x, int y, int w, int h, int angle, int scale)
 {
     Display_t* d = (Display_t*)malloc(sizeof(Display_t));
     d->screen.x = 8 * x;    d->screen.y = 8 * y;
     d->screen.w = 8 * w;    d->screen.h = 8 * h;
     d->screen_shift.x = 0;  d->screen_shift.y = 0;
     d->screen_shift.w = 0;  d->screen_shift.h = 0;
-    d->hshift.x = -32;        d->hshift.y = -32;
+    
+    d->hshift.x = side / 2 / scale;   d->hshift.y = side / 2 / scale;
     d->hshift.w = 0;        d->hshift.h = 0;
-    d->angle = 4;
+    d->angle = angle;       d->scale = scale;
+    d->grid_x = x;          d->grid_y = y;
+    d->grid_w = w;          d->grid_h = h;
     
     d->screen_shift.x = 1 * d->hshift.w +
         (d->hshift.x) * hcos(d->angle) + (d->hshift.y) * hcos(d->angle + 8);
@@ -198,4 +207,112 @@ void ToggleWindow(int b_min)
 {
     if(b_min) SDL_MinimizeWindow(m_window);
     else SDL_MaximizeWindow(m_window);
+}
+
+void DisplayScan(Kvad_t* ptr, Display_t* d, int b_ui, int scale_selection)
+{
+    int cz, cn;
+    int corner_z[4], corner_n[4];
+    
+    int border = 0;
+    
+    corner_z[0] = d->screen.x               + border , corner_n[0] = d->screen.y + border;
+    corner_z[1] = d->screen.x + d->screen.w - border , corner_n[1] = d->screen.y + border;
+    corner_z[2] = d->screen.x + d->screen.w - border , corner_n[2] = d->screen.y + d->screen.h - border;
+    corner_z[3] = d->screen.x               + border , corner_n[3] = d->screen.y + d->screen.h - border;
+    
+    for(int i = 0; i < 4; i++)
+        PixelToHex(d, &corner_z[i], &corner_n[i]);
+    
+    int zmin, zmax, nmin, nmax;
+	zmin = hmin(hmin(corner_z[0], corner_z[1]) , hmin(corner_z[2], corner_z[3])),
+	zmax = hmax(hmax(corner_z[0], corner_z[1]) , hmax(corner_z[2], corner_z[3]));
+
+	int nz[4], nn[4];
+	for(int i = 0; i < 4; i++) {
+        if(corner_z[i] == zmin && corner_z[mod(i + 1, 4)] > corner_z[i]) {
+            for(int j = 0; j < 4; j++) {
+                nz[mod(3 + j, 4)] = corner_z[mod(i + j, 4)];
+                nn[mod(3 + j, 4)] = corner_n[mod(i + j, 4)];
+            }
+            i = 3;
+        }
+    }
+    for(int i = 0; i < 4; i++) {
+                corner_z[i] = nz[i];
+                corner_n[i] = nn[i];
+    }
+
+	int y0, y1, y2, y3;
+	int sclz, scln;
+
+	for (int j = zmin; j <= zmax; j++) {
+        if(corner_z[0] == corner_z[3]) y0 = hmin(corner_n[0], corner_n[3]);
+        else y0 = corner_n[3]
+         + (j - corner_z[3])
+         * (corner_n[0] - corner_n[3]) / (corner_z[0] - corner_z[3]);
+        if(corner_z[1] == corner_z[0]) y1 = hmin(corner_n[1], corner_n[0]);
+        else y1 = corner_n[0]
+         + (j - corner_z[0])
+         * (corner_n[1] - corner_n[0]) / (corner_z[1] - corner_z[0]);
+        if(corner_z[2] == corner_z[1]) y2 = hmax(corner_n[2], corner_n[1]);
+        else y2 = corner_n[1]
+         + (j - corner_z[1])
+         * (corner_n[2] - corner_n[1]) / (corner_z[2] - corner_z[1]);
+        if(corner_z[3] == corner_z[2]) y3 = hmax(corner_n[3], corner_n[2]);
+        else y3 = corner_n[2]
+         + (j - corner_z[2])
+         * (corner_n[3] - corner_n[2]) / (corner_z[3] - corner_z[2]);
+
+        nmin = hmax(y0, y1);
+        nmax = hmin(y2, y3);
+
+        for (int i = nmin; i <= nmax; i++) {
+            sclz = (j) * d->scale;
+            scln = (i) * d->scale;
+            sclz += mod((scale_selection), d->scale);
+            scln += mod((scale_selection) / d->scale, d->scale);
+            HexelDraw(d, j, i, KvadGetHexel(ptr, sclz, scln), b_ui);
+		}
+	}
+}
+
+void DisplayListDraw(Kvad_t* ptr, int b_ui)
+{
+    for (int i = 0; i < displaylistsize; i++)
+	{
+        DisplayScan(ptr, displaylist[i], b_ui, scale_selection);
+    }
+    if(minimap_speed != 0)
+    {
+        int max_time = 5;
+        selection_time = cycle(selection_time, 0, max_time, minimap_speed);
+        if(selection_time == max_time)
+        {
+            scale_selection = cycle(scale_selection, 0, 15, 7);
+        }
+    }
+    else selection_time = 0;
+}
+
+void DisplayListInitialize()
+{
+    displaylist = (Display_t**)malloc(displaylistsize * sizeof(Display_t*));
+
+	for (int i = 0; i < displaylistsize; i++)
+	{
+		displaylist[i] = NULL;
+    }
+    
+    displaylist[0] = DisplayInitialize(19, 1, 43, 43, 4, 1);
+    displaylist[1] = DisplayInitialize(63, 1, 16, 18, 4, 4);
+}
+
+void DisplayListTerminate()
+{
+    for(int i = 0; i < displaylistsize; i++)
+    {
+        SliderTerminate(displaylist[i]);
+    }
+    free(displaylist);
 }

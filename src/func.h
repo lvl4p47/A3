@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+extern int side;
+
 //FUNC
 
 //INPUT
@@ -43,7 +45,8 @@ typedef struct
     int sf;
     SDL_Rect hshift;
     SDL_Rect screen_shift;
-    int angle;
+    int angle, scale;
+    int grid_x, grid_y, grid_w, grid_h;
 } Display_t;
 
 typedef struct
