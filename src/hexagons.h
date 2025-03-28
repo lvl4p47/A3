@@ -76,6 +76,8 @@ void LiquidUpdate(Kvad_t* ptr);
 
 void IceUpdate(Kvad_t* ptr);
 
+void RockUpdate(Kvad_t* ptr);
+
 void AudioCount(Kvad_t* ptr, int b_pause);
 
 void AudioUpdate(Kvad_t* ptr, int b_pause);
@@ -99,6 +101,8 @@ void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void ForceGas(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
+
+void ForceRock(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void Border(Kvad_t* ptr);
 

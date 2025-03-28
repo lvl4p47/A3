@@ -52,7 +52,7 @@ void RulesInitialize()
     RulesCHange (6, 3, 0, 0, -2, -2, -2, -2, -5, -4);
     RulesAdd    (6, 3, 0, 7, 7, 7, -1, -1, -1);
     RulesCHange (7, 3, 0, 0, 2, -1, -1, -1, -1, -1);
-    RulesCHange (8, 4, 0, 0, 3, 3, 3, -1, -1, -1);
+    RulesCHange (8, 4, 0, 1, 3, 3, 3, 3, 8, 8);
 }
 
 void RulesTerminate()
@@ -179,7 +179,7 @@ Kvad_t* KvadInitialize(int width, int height)
         st8_dns_clr[7][2] = 4;
         
         st8_dns_clr[8][0] = 2;
-        st8_dns_clr[8][1] = 6;
+        st8_dns_clr[8][1] = 5;
         st8_dns_clr[8][2] = 7;
     }
     KvadZero(ptr);
@@ -283,10 +283,11 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
         cptr->st8 = st8_dns_clr[8][0];
         cptr->dns = st8_dns_clr[8][1];
         cptr->clr = st8_dns_clr[8][2];
+        break;
     default:
         cptr->st8 = 2;
         cptr->dns = 6;
-        cptr->clr = 7;
+        cptr->clr = 5;
         break;
     }
 }
@@ -1019,6 +1020,89 @@ void IceUpdate(Kvad_t* ptr)
     // }
 }
 
+void RockUpdate(Kvad_t* ptr)
+{
+    int gx = 0, gy = 1;
+    int dz = 0, dn = 0;
+    int border = 1;
+    int f_direct = 0;
+
+    for(int i = border; i < ptr->height - border; i++)
+    {
+        for(int j = border; j < ptr->width - border; j++)
+        {
+            
+            KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
+            if(KvadGetHexel(ptr, j, i)->st8 == 2)
+            {
+                ForceRock(ptr, j, i, gx, gy, &dz, &dn);
+                f_direct = 0;
+                if(dz == gx && dn == gy && 0)
+                {
+                    f_direct = 1;
+                }
+                if(f_direct)
+                {
+                    if( KvadGetHexel(ptr, j + dz, i + dn)->fld != -2
+                      && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = 2;
+                    }
+                    else
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -2;
+                    }
+                }
+                else
+                {
+                    if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 0
+                      && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = 1;
+                    }
+                    else if( KvadGetHexel(ptr, j + dz, i + dn)->fld == 1)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -1;
+                    }
+                }
+            }
+        }
+    }
+
+    for(int i = border; i < ptr->height - border; i++)
+    {
+        for(int j = border; j < ptr->width - border; j++)
+        {
+            if(KvadGetHexel(ptr, j, i)->st8 == 2)
+            {
+                ForceRock(ptr, j, i, gx, gy, &dz, &dn);
+                f_direct = 0;
+                if(dz == gx && dn == gy && 0)
+                {    
+                    f_direct = 1;
+                    
+                }
+                if(KvadGetHexel(ptr, j + dz, i + dn)->fld == 1 + f_direct * 0)
+                {
+                    swap(&KvadGetHexel(ptr, j     , i     )->tmp,
+                        &KvadGetHexel(ptr, j + dz, i + dn)->tmp);
+                }
+            }
+        }
+    }
+    
+    for(int i = border; i < ptr->height - border; i++)
+    {
+        for(int j = border; j < ptr->width - border; j++)
+        {
+               
+            KvadGetHexel(ptr, j, i)->fld = 0;
+            KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp);
+
+        }
+    }
+}
+
 void AudioCount(Kvad_t* ptr, int b_pause)
 {
     int curmat;
@@ -1062,6 +1146,7 @@ void KvadUpdate(Kvad_t* ptr)
 {
     Border(ptr);
     SolidUpdate(ptr);
+    RockUpdate(ptr);
     DirtUpdate(ptr);
     SandUpdate(ptr);
     IceUpdate(ptr);
@@ -1734,6 +1819,80 @@ void ForceGas(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     if(b_leftfront   )  *dz += lfx, *dn += lfy;
     if(b_rightback   )  *dz += rbx, *dn += rby;
     if(b_leftback    )  *dz += lbx, *dn += lby;
+}
+
+void ForceRock(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
+{
+    *dz = 0, *dn = 0;
+    int dir = -1;
+
+    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    
+    int b_back = 0, b_forward = 0, 
+    b_rightfront = 0, b_leftfront = 0;
+
+    int right_sum = 0, left_sum = 0;
+    int state = KvadGetHexel(ptr, z, n)->st8;
+
+    for(int i = 0; i < 6; i++)
+    {
+        if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
+        {
+            dir = i;
+            i = 6;
+        }
+    }
+
+    RelToAbs(ptr, fx, fy, 2, &rbx, &rby);
+    RelToAbs(ptr, fx, fy, -2, &lbx, &lby);
+
+    RelToAbs(ptr, fx, fy, 1, &rfx, &rfy);
+    RelToAbs(ptr, fx, fy, -1, &lfx, &lfy);
+
+    right_sum =
+    (
+        (KvadGetHexel(ptr, z + rfx, n + rfy)->st8 == state) + 
+        (KvadGetHexel(ptr, z + rbx, n + rby)->st8 == state)
+    );
+    left_sum =
+    (
+        (KvadGetHexel(ptr, z + lfx, n + lfy)->st8 == state) + 
+        (KvadGetHexel(ptr, z + lbx, n + lby)->st8 == state)
+    );
+    b_back = 
+    (
+        (
+            KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns
+        )
+    );
+    b_forward =
+    (
+        (KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns) &&
+        (abs(right_sum - left_sum) < 2)
+    );
+    if(b_forward == 0)
+    {
+        if(right_sum > left_sum && (right_sum + left_sum <= 3)
+         && (KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns)
+         && (KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns))
+        {
+            b_leftfront = 1;
+        }
+        if(right_sum < left_sum && (right_sum + left_sum <= 3)
+         && (KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns)
+         && (KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns))
+        {
+            b_rightfront = 1;
+        }
+    }
+    
+    if(b_back        )  *dz -= fx,  *dn -= fy;
+    if(b_forward     )  *dz += fx,  *dn += fy;
+    if(b_rightfront  )  *dz += rfx, *dn += rfy;
+    if(b_leftfront   )  *dz += lfx, *dn += lfy;
 }
 
 void Border(Kvad_t* ptr)
