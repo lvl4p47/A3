@@ -61,7 +61,7 @@ There are 9 types of cells:
 * Turns into Dirt (5) when in contact with Dirt (5).
 ### 5 -- Dirt. 
 * Falls.
-* Can be supported by other cells on both sides and forms caves.
+* Forms steep piles, can even form a vertical wall if you carefully remove it at the foot.
 * Does not collapse on 1 - tile tunnels.
 * Turns Sand (4) to Dirt (5).
 * Turns into Sand (4) when in contact with Water (3).
@@ -79,7 +79,7 @@ There are 9 types of cells:
 * Turns into Water (3) when in contact with Fire (2).
 ### 8 -- Rock.
 * Falls.
-* Forms steep piles, can even form a vertical wall if you carefully remove it at the foot.
+* Can be supported by other cells on both sides and forms caves.
 * Does not collapse on 1 - tile tunnels.
 * Turns into Sand (4) when in contact with Water (3).
 

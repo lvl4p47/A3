@@ -151,7 +151,7 @@ Kvad_t* KvadInitialize(int width, int height)
         st8_dns_clr[0][2] = 7;
         
         st8_dns_clr[1][0] = 5;
-        st8_dns_clr[1][1] = 4;
+        st8_dns_clr[1][1] = 2;
         st8_dns_clr[1][2] = 2;
         
         st8_dns_clr[2][0] = 1;
@@ -159,7 +159,7 @@ Kvad_t* KvadInitialize(int width, int height)
         st8_dns_clr[2][2] = 1;
         
         st8_dns_clr[3][0] = 6;
-        st8_dns_clr[3][1] = 3;
+        st8_dns_clr[3][1] = 4;
         st8_dns_clr[3][2] = 3;
         
         st8_dns_clr[4][0] = 3;
@@ -175,7 +175,7 @@ Kvad_t* KvadInitialize(int width, int height)
         st8_dns_clr[6][2] = 7;
         
         st8_dns_clr[7][0] = 7;
-        st8_dns_clr[7][1] = 2;
+        st8_dns_clr[7][1] = 3;
         st8_dns_clr[7][2] = 4;
         
         st8_dns_clr[8][0] = 2;
@@ -1219,10 +1219,11 @@ void ForceDirt(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
-    int b_forward = 0, 
+    int b_back = 0, b_forward = 0, 
     b_rightfront = 0, b_leftfront = 0;
 
     int right_sum = 0, left_sum = 0;
+    int state = KvadGetHexel(ptr, z, n)->st8;
 
     for(int i = 0; i < 6; i++)
     {
@@ -1241,59 +1242,37 @@ void ForceDirt(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 
     right_sum =
     (
-        (KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
-        (KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns)
+        (KvadGetHexel(ptr, z + rfx, n + rfy)->st8 == state) + 
+        (KvadGetHexel(ptr, z + rbx, n + rby)->st8 == state)
     );
     left_sum =
     (
-        (KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
-        (KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns)
+        (KvadGetHexel(ptr, z + lfx, n + lfy)->st8 == state) + 
+        (KvadGetHexel(ptr, z + lbx, n + lby)->st8 == state)
+    );
+    b_back = 
+    (
+        (
+            KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns
+        )
     );
     b_forward =
     (
-        KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-        (
-            (
-                KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns
-            ) ||
-            (
-                KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
-            )
-        ) &&
-        (
-            NeighbourCount(ptr, z, n, 5) != 3 ||
-            abs(right_sum - left_sum) != 1
-        ) &&
-        !(
-            (
-                KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-                KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-                (
-                    (
-                        KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-                        KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-                        KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-                        KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
-                    ) ||
-                    (
-                        KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-                        KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-                        KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
-                        KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns
-                    )
-                )
-            )
-        )
+        (KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns) &&
+        (abs(right_sum - left_sum) < 2)
     );
     if(b_forward == 0)
     {
-        if(right_sum > left_sum && (right_sum + left_sum < 3)
+        if(right_sum > left_sum && (right_sum + left_sum <= 3)
          && (KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns)
          && (KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns))
         {
             b_leftfront = 1;
         }
-        if(right_sum < left_sum && (right_sum + left_sum < 3)
+        if(right_sum < left_sum && (right_sum + left_sum <= 3)
          && (KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns)
          && (KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns))
         {
@@ -1301,6 +1280,7 @@ void ForceDirt(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
         }
     }
     
+    if(b_back        )  *dz -= fx,  *dn -= fy;
     if(b_forward     )  *dz += fx,  *dn += fy;
     if(b_rightfront  )  *dz += rfx, *dn += rfy;
     if(b_leftfront   )  *dz += lfx, *dn += lfy;
@@ -1822,17 +1802,16 @@ void ForceGas(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 }
 
 void ForceRock(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
-{
+{   
     *dz = 0, *dn = 0;
     int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
-    int b_back = 0, b_forward = 0, 
+    int b_forward = 0, 
     b_rightfront = 0, b_leftfront = 0;
 
     int right_sum = 0, left_sum = 0;
-    int state = KvadGetHexel(ptr, z, n)->st8;
 
     for(int i = 0; i < 6; i++)
     {
@@ -1851,37 +1830,59 @@ void ForceRock(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 
     right_sum =
     (
-        (KvadGetHexel(ptr, z + rfx, n + rfy)->st8 == state) + 
-        (KvadGetHexel(ptr, z + rbx, n + rby)->st8 == state)
+        (KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns)
     );
     left_sum =
     (
-        (KvadGetHexel(ptr, z + lfx, n + lfy)->st8 == state) + 
-        (KvadGetHexel(ptr, z + lbx, n + lby)->st8 == state)
-    );
-    b_back = 
-    (
-        (
-            KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns
-        )
+        (KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns)
     );
     b_forward =
     (
-        (KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns) &&
-        (abs(right_sum - left_sum) < 2)
+        KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+        (
+            (
+                KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns
+            ) ||
+            (
+                KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
+            )
+        ) &&
+        (
+            NeighbourCount(ptr, z, n, 5) != 3 ||
+            abs(right_sum - left_sum) != 1
+        ) &&
+        !(
+            (
+                KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+                KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+                (
+                    (
+                        KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+                        KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+                        KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+                        KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
+                    ) ||
+                    (
+                        KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+                        KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+                        KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
+                        KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns
+                    )
+                )
+            )
+        )
     );
     if(b_forward == 0)
     {
-        if(right_sum > left_sum && (right_sum + left_sum <= 3)
+        if(right_sum > left_sum && (right_sum + left_sum < 3)
          && (KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns)
          && (KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns))
         {
             b_leftfront = 1;
         }
-        if(right_sum < left_sum && (right_sum + left_sum <= 3)
+        if(right_sum < left_sum && (right_sum + left_sum < 3)
          && (KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns)
          && (KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns))
         {
@@ -1889,7 +1890,6 @@ void ForceRock(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
         }
     }
     
-    if(b_back        )  *dz -= fx,  *dn -= fy;
     if(b_forward     )  *dz += fx,  *dn += fy;
     if(b_rightfront  )  *dz += rfx, *dn += rfy;
     if(b_leftfront   )  *dz += lfx, *dn += lfy;
