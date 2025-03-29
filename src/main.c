@@ -22,6 +22,8 @@ void update_frame(uint64_t* ft, int64_t* dr)
 {
 	InputRegister();
     InputUpdate();
+    
+    //AudioUpdate(k1, b_pause);
 
     DisplayListUpdate();
     ScreenInput(k1, displaylist[0]);
@@ -29,7 +31,6 @@ void update_frame(uint64_t* ft, int64_t* dr)
     ScreenClear();
 
     DisplayListDraw(k1, b_ui);
-    
     
     InterfaceUpdate();
     InterfaceDraw(f1, displaylist[0]);
@@ -75,6 +76,7 @@ int main( int argc, char * argv[] )
     AudioInitialize();
     VideoInitialize();
     InputInitialize();
+    HexagonsInitialize();
 
     k1 = KvadInitialize(side, side);
      DisplayListInitialize();
@@ -93,7 +95,6 @@ int main( int argc, char * argv[] )
 
 		if (dr <= 0) {
 			update_frame(&frame_time, &dr);
-            AudioUpdate(k1, b_pause);
 		}
 
 		calculate_delta(&dr, &ds, cur_time, frame_time, step_time, t_f, t_s);
@@ -104,6 +105,8 @@ int main( int argc, char * argv[] )
     DisplayListTerminate();
     FontTerminate(f1);
     InterfaceTerminate();
+    HexagonsTerminate();
+    InputTerminate();
     VideoTerminate();
     AudioTerminate();
 

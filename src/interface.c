@@ -73,12 +73,12 @@ void InterfaceInitialize()
     
     s_rules_editor = L"  Порядок установления значений:\n1) \"ИЗ\";\n2) \"В\";\n3) \"УСЛ\";\n4) остальное.\n\n  ФЛАГ:\n\"--\" игнорировать данный набор условий;\n\"+0\" необходимо >= зеленых соседей и < красных;\n\"+1\" необходимо точное (не)совпадение количества соседей.\n\n  Для перехода клетки из начального состояния в конечное необходимо выполнение хотя бы одного из условий в списке.";
     s_toolpad = L"  Кнопки справа налево:\n* Задать курсору следующий по номеру материал;\n* Задать курсору материал \"воздух\";\n* Поменять правое и левое значения курсора местами;\n* Переход в режим передвижения по массиву клеток с помощью ЛКМ.\n\n  Слайдер изменяет размер закрашивания курсором.";
-    s_control_panel = L"  Кнопки справа налево:\n* Пауза;\n* Сделать 1 шаг клеточного автомата (во время паузы);\n* Переключить режим отображения плотности материалов;\n* Переключить режим более подробного отображения миникарты.\n\n  Слайдер изменяет время шага клеточного автомата.";
+    s_control_panel = L"  Кнопки справа налево:\n* Пауза;\n* Сделать 1 шаг клеточного автомата (во время паузы);\n* Переключить режим отображения плотности материалов;\n* Сместить выбираемые миникартой клетки.\n\n  Слайдер изменяет время шага клеточного автомата.";
         
-    info_box.x = 1;
-    info_box.y = 9;
-    info_box.w = 17;
-    info_box.h = 8;
+    info_box.x = 63;
+    info_box.y = 28;
+    info_box.w = 16;
+    info_box.h = 16;
     info_box.s = L"";
     info_box.shift = 0;
     
@@ -803,16 +803,16 @@ void FontUIDraw(Font_t* f, Display_t* d)
     
     FontRulesEditorDraw(f);
     
-    FontStringDraw(f, 64, 28, 15, 15, 
-    L"0 - воздух\n1 - верёвка\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень", 
-    inform_color);
+    // FontStringDraw(f, 64, 28, 15, 15, 
+    // L"0 - воздух\n1 - верёвка\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень", 
+    // inform_color);
     
-    int mat_list_x = 75, mat_list_y = 28;
+    // int mat_list_x = 75, mat_list_y = 28;
     
-    for(int i = 0; i < mat_amount; i++)
-    {
-        HexelDrawOnUI(mat_list_x + 2 * mod(i, 2), mat_list_y + i, i, d->angle, b_ui);
-    }
+    // for(int i = 0; i < mat_amount; i++)
+    // {
+    //     HexelDrawOnUI(mat_list_x + 2 * mod(i, 2), mat_list_y + i, i, d->angle, b_ui);
+    // }
 }
 
 void FontRulesEditorDraw(Font_t* f)
@@ -844,7 +844,7 @@ void FontRulesEditorDraw(Font_t* f)
     FontStringDraw(f, rules_x + hex_x + 11, rules_y + hex_y + 4, 1, 1, L">", inform_color);
     FontStringDraw(f, rules_x + hex_x + 9, rules_y + hex_y + 7, 3, 1, L"УСЛ", inform_color);
     
-    int tree_x = 1, tree_y = 12, list_y = 0, list_h = hmax(rules_editor.h - tree_y + 1, 1);
+    int tree_x = 1, tree_y = 12, list_y = 0, list_h = hmax(rules_editor.h - tree_y - hex_x - 1, 1);
     
     list_y = hmax(rules_editor.cond_num - list_h, 0);
     
@@ -867,8 +867,8 @@ void FontRulesEditorDraw(Font_t* f)
             
     int arrow_y = 
         hmax(
-            hmin( rules_editor.y + rules_editor.h, rules_y + hex_x + tree_y + 
-                rules_editor.cond_num - rules_editor.list_begin),
+            hmin( rules_editor.y + rules_editor.h - 1, rules_y + hex_x + tree_y + 
+                rules_editor.cond_num + 1 - rules_editor.list_begin),
             rules_y + hex_y + tree_y
         );
     FontCharDraw(f, L'>', 

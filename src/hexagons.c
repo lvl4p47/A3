@@ -15,6 +15,73 @@ int firevolume;
 
 Rules_t *RULES;
 
+void HexagonsInitialize()
+{
+    st8_dns_clr = (int**)malloc(mat_amount * sizeof(int*));
+    for (int i = 0; i < mat_amount; i++)
+	{
+		st8_dns_clr[i] = (int*)malloc(3 * sizeof(int));
+        st8_dns_clr[i][0] = 2;
+        st8_dns_clr[i][1] = 6;
+        st8_dns_clr[i][2] = 7;
+    }
+    {
+        st8_dns_clr[0][0] = 0;
+        st8_dns_clr[0][1] = 0;
+        st8_dns_clr[0][2] = 7;
+        
+        st8_dns_clr[1][0] = 5;
+        st8_dns_clr[1][1] = 2;
+        st8_dns_clr[1][2] = 7;
+        
+        st8_dns_clr[2][0] = 1;
+        st8_dns_clr[2][1] = 1;
+        st8_dns_clr[2][2] = 1;
+        
+        st8_dns_clr[3][0] = 6;
+        st8_dns_clr[3][1] = 4;
+        st8_dns_clr[3][2] = 3;
+        
+        st8_dns_clr[4][0] = 3;
+        st8_dns_clr[4][1] = 5;
+        st8_dns_clr[4][2] = 6;
+        
+        st8_dns_clr[5][0] = 4;
+        st8_dns_clr[5][1] = 5;
+        st8_dns_clr[5][2] = 1;
+        
+        st8_dns_clr[6][0] = 1;
+        st8_dns_clr[6][1] = 1;
+        st8_dns_clr[6][2] = 7;
+        
+        st8_dns_clr[7][0] = 7;
+        st8_dns_clr[7][1] = 3;
+        st8_dns_clr[7][2] = 4;
+        
+        st8_dns_clr[8][0] = 2;
+        st8_dns_clr[8][1] = 5;
+        st8_dns_clr[8][2] = 7;
+    }
+    
+    t = 0;
+
+    RulesInitialize();
+    
+    firevolume = 0;
+}
+
+void HexagonsTerminate()
+{
+    
+    for (int i = 0; i < mat_amount; i++)
+    {
+		free(st8_dns_clr[i]);
+    }
+    free(st8_dns_clr);
+
+    RulesTerminate();
+}
+
 void RulesInitialize()
 {
     RULES = (Rules_t*)
@@ -137,58 +204,8 @@ Kvad_t* KvadInitialize(int width, int height)
 		ptr->arr[i] = (Cell_t*)malloc(width * sizeof(Cell_t));
     }
     
-    st8_dns_clr = (int**)malloc(mat_amount * sizeof(int*));
-    for (int i = 0; i < mat_amount; i++)
-	{
-		st8_dns_clr[i] = (int*)malloc(3 * sizeof(int));
-        st8_dns_clr[i][0] = 2;
-        st8_dns_clr[i][1] = 6;
-        st8_dns_clr[i][2] = 7;
-    }
-    {
-        st8_dns_clr[0][0] = 0;
-        st8_dns_clr[0][1] = 0;
-        st8_dns_clr[0][2] = 7;
-        
-        st8_dns_clr[1][0] = 5;
-        st8_dns_clr[1][1] = 2;
-        st8_dns_clr[1][2] = 2;
-        
-        st8_dns_clr[2][0] = 1;
-        st8_dns_clr[2][1] = 1;
-        st8_dns_clr[2][2] = 1;
-        
-        st8_dns_clr[3][0] = 6;
-        st8_dns_clr[3][1] = 4;
-        st8_dns_clr[3][2] = 3;
-        
-        st8_dns_clr[4][0] = 3;
-        st8_dns_clr[4][1] = 5;
-        st8_dns_clr[4][2] = 6;
-        
-        st8_dns_clr[5][0] = 4;
-        st8_dns_clr[5][1] = 5;
-        st8_dns_clr[5][2] = 1;
-        
-        st8_dns_clr[6][0] = 1;
-        st8_dns_clr[6][1] = 1;
-        st8_dns_clr[6][2] = 7;
-        
-        st8_dns_clr[7][0] = 7;
-        st8_dns_clr[7][1] = 3;
-        st8_dns_clr[7][2] = 4;
-        
-        st8_dns_clr[8][0] = 2;
-        st8_dns_clr[8][1] = 5;
-        st8_dns_clr[8][2] = 7;
-    }
-    KvadZero(ptr);
-    t = 0;
-
-    RulesInitialize();
     
-    firevolume = 0;
-
+    KvadZero(ptr);
     return ptr;
 }
 
@@ -200,14 +217,6 @@ void KvadTerminate(Kvad_t* ptr)
     }
 	free(ptr->arr);
 	free(ptr);
-    
-    for (int i = 0; i < mat_amount; i++)
-    {
-		free(st8_dns_clr[i]);
-    }
-    free(st8_dns_clr);
-
-    RulesTerminate();
 }
 
 void KvadZero(Kvad_t* ptr)
@@ -314,8 +323,6 @@ void KvadSetBlob(Kvad_t* ptr, int z, int n, int value, int rad)
                     KvadSetMat(ptr, z + j, n + i, value);
                     KvadGetHexel(ptr, z + j, n + i)->prs_grav = 0;
                     KvadGetHexel(ptr, z + j, n + i)->prs_dist = 0;
-                    
-                    //KvadGetHexel(ptr, z + j, n + i)->prs_dist = value;
                 }
             }
         }

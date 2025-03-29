@@ -19,6 +19,8 @@ void ScreenRefresh();
 
 void HexelDraw(Display_t* d, int z, int n, Cell_t* c, int b_ui);
 
+void DotsDraw(Display_t* d, int z, int n, int amount);
+
 void HexelDrawOnUI(int x, int y, int mat, int ang, int b_ui);
 
 void KvadRender(Kvad_t* ptr, Display_t* d, int x, int y, int b_ui);

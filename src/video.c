@@ -22,6 +22,7 @@ int rgb[8][3] = {
                 {255, 255, 0},  // Yellow
                 {255, 255, 255}  // White
                 };
+int color_cycle[6] = {1, 6, 2, 4, 3, 5};
 SDL_Rect hexel;
 Sprite_t* s1;
 Sprite_t* s2;
@@ -102,6 +103,25 @@ void HexelDraw(Display_t* d, int z, int n, Cell_t* c, int b_ui)
         srcy = c->mat * 9;
         SpriteDraw(s1, srcx, srcy, hexel.x, hexel.y, c->clr);
     }
+}
+
+void DotsDraw(Display_t* d, int z, int n, int amount)
+{
+    hexel.x = d->screen.x + d->screen.w / 2 + d->hshift.w * 1 +
+    (z + d->hshift.x) * hcos(d->angle) + (n + d->hshift.y) * hcos(d->angle + 8);
+    hexel.y = d->screen.y + d->screen.h / 2 + d->hshift.h * 1 +
+    (z + d->hshift.x) * hsin(d->angle) + (n + d->hshift.y) * hsin(d->angle + 8);
+
+    int srcx;
+    int srcy;
+
+    srcx = d->angle * 9;
+    if(amount == 0) srcy = 0;
+    else
+    {
+        srcy = (1 + mod(amount - 1, 21)) * 9;
+    }
+    SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y, 7); // color_cycle[mod( (amount - 1) / 10 + 3, 6)]
 }
 
 void HexelDrawOnUI(int x, int y, int mat, int ang, int b_ui)
@@ -244,7 +264,7 @@ void DisplayScan(Kvad_t* ptr, Display_t* d, int b_ui, int scale_selection)
     }
 
 	int y0, y1, y2, y3;
-	int sclz, scln;
+	int sclz, scln, quantity;
 
 	for (int j = zmin; j <= zmax; j++) {
         if(corner_z[0] == corner_z[3]) y0 = hmin(corner_n[0], corner_n[3]);
@@ -268,11 +288,31 @@ void DisplayScan(Kvad_t* ptr, Display_t* d, int b_ui, int scale_selection)
         nmax = hmin(y2, y3);
 
         for (int i = nmin; i <= nmax; i++) {
-            sclz = (j) * d->scale;
-            scln = (i) * d->scale;
-            sclz += mod((scale_selection), d->scale);
-            scln += mod((scale_selection) / d->scale, d->scale);
-            HexelDraw(d, j, i, KvadGetHexel(ptr, sclz, scln), b_ui);
+            if(d->scale > 1)
+            {
+                quantity = 0;
+                sclz = (j) * d->scale;
+                scln = (i) * d->scale;
+                sclz += mod((scale_selection), d->scale);
+                scln += mod((scale_selection) / d->scale, d->scale);
+                for(int c = 0; c < d->scale; c++)
+                {
+                    for(int v = 0; v < d->scale; v++)
+                    {
+                        if(KvadGetHexel(ptr, sclz + c, scln + v)->mat != 0)
+                        {
+                            quantity++;
+                        }
+                    }
+                }
+                DotsDraw(d, j, i, quantity);
+            }
+            else
+            {
+                sclz = j;
+                scln = i;
+                HexelDraw(d, j, i, KvadGetHexel(ptr, sclz, scln), b_ui);
+            }
 		}
 	}
 }

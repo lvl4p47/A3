@@ -38,6 +38,10 @@ typedef struct
 
 extern Rules_t *RULES;
 
+void HexagonsInitialize();
+
+void HexagonsTerminate();
+
 void RulesInitialize();
 
 void RulesTerminate();
