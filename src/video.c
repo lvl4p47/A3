@@ -345,7 +345,7 @@ void DisplayListInitialize()
     }
     
     displaylist[0] = DisplayInitialize(19, 1, 43, 43, 4, 1);
-    displaylist[1] = DisplayInitialize(63, 1, 16, 18, 4, 4);
+    displaylist[1] = DisplayInitialize(63, 1, 16, 22, 4, 4);
 }
 
 void DisplayListTerminate()

@@ -31,7 +31,7 @@ typedef struct
 
 typedef struct
 {
-    int mat, tmp, prs_grav, prs_dist, fld, fld2, dx, dy, st8, dns, clr;
+    int mat, tmp, prs_grav, prs_dist, fld, fld2, dx, dy, st8, dns, clr, stress;
 } Cell_t;
 
 

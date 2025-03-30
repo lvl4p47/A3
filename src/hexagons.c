@@ -235,6 +235,7 @@ void KvadZero(Kvad_t* ptr)
             ptr->arr[i][j].dy = 0;
             ptr->arr[i][j].st8 = 0;
             ptr->arr[i][j].dns = 0;
+            ptr->arr[i][j].stress = 1;
         }
     }
 }
@@ -252,6 +253,7 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
         cptr->st8 = st8_dns_clr[0][0];
         cptr->dns = st8_dns_clr[0][1];
         cptr->clr = st8_dns_clr[0][2];
+        cptr->stress = 0;
         break;
     case 1:
         cptr->st8 = st8_dns_clr[1][0];
@@ -695,6 +697,7 @@ void DirtUpdate(Kvad_t* ptr)
         {
             if(KvadGetHexel(ptr, j, i)->st8 == 4)
             {
+                KvadGetHexel(ptr, j, i)->stress = 1;
                 ForceDirt(ptr, j, i, gx, gy, &dz, &dn);
                 f_direct = 0;
                 if(dz == gx && dn == gy && 0)

@@ -22,13 +22,15 @@ Cursor_t cursor;
 
 RulesEditor_t rules_editor;
 
+Select_List_t select_list;
+
 ui_rectangle_t hex_screen, toolpad, control_panel;
 
 InfoBox_t info_box;
 
 wchar_t *s_rules_editor, *s_toolpad, *s_control_panel;
 
-int b_panning, b_pause, b_step, b_drawing, b_button, b_slider, b_grab;
+int b_panning, b_pause, b_step, b_drawing, b_button, b_slider, b_grab, b_select_list;
 int max_curs;
 int b_ui;
 
@@ -41,7 +43,7 @@ int min_neigh, max_neigh;
 
 void InterfaceInitialize()
 {
-    cursor.lm = 8;
+    cursor.lm = 5;
     cursor.rm = 0;
     cursor.lrad = 3;
     cursor.rrad = 3;
@@ -56,29 +58,37 @@ void InterfaceInitialize()
     rules_editor.mat_to      = 0;
     rules_editor.cond_num    = 0;
     
+    select_list.rectangle.x = 1;
+    select_list.rectangle.y = 1;
+    select_list.rectangle.w = 17;
+    select_list.rectangle.h = 6;
+    select_list.s = L"0 - воздух\n1 - верёвка\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень";
+    select_list.min = 0;
+    select_list.max = 8;
+    
     hex_screen.x = 19;
     hex_screen.y = 1;
     hex_screen.w = 43;
     hex_screen.h = 43;
     
     toolpad.x = 1;
-    toolpad.y = 1;
+    toolpad.y = 8;
     toolpad.w = 17;
     toolpad.h = 7;
     
-    control_panel.x = 63;
-    control_panel.y = 20;
+    control_panel.x = 1;
+    control_panel.y = 16;
     control_panel.w = 16;
     control_panel.h = 7;
     
     s_rules_editor = L"  Порядок установления значений:\n1) \"ИЗ\";\n2) \"В\";\n3) \"УСЛ\";\n4) остальное.\n\n  ФЛАГ:\n\"--\" игнорировать данный набор условий;\n\"+0\" необходимо >= зеленых соседей и < красных;\n\"+1\" необходимо точное (не)совпадение количества соседей.\n\n  Для перехода клетки из начального состояния в конечное необходимо выполнение хотя бы одного из условий в списке.";
     s_toolpad = L"  Кнопки справа налево:\n* Задать курсору следующий по номеру материал;\n* Задать курсору материал \"воздух\";\n* Поменять правое и левое значения курсора местами;\n* Переход в режим передвижения по массиву клеток с помощью ЛКМ.\n\n  Слайдер изменяет размер закрашивания курсором.";
     s_control_panel = L"  Кнопки справа налево:\n* Пауза;\n* Сделать 1 шаг клеточного автомата (во время паузы);\n* Переключить режим отображения плотности материалов;\n* Сместить выбираемые миникартой клетки.\n\n  Слайдер изменяет время шага клеточного автомата.";
-        
+       
     info_box.x = 63;
-    info_box.y = 28;
+    info_box.y = 24;
     info_box.w = 16;
-    info_box.h = 16;
+    info_box.h = 20;
     info_box.s = L"";
     info_box.shift = 0;
     
@@ -96,6 +106,8 @@ void InterfaceInitialize()
     b_button    = -1;
     b_slider    = -1;
     b_grab      = 0;
+    b_select_list = 0;
+    
     
     max_curs    = 8;
     
@@ -114,6 +126,8 @@ void InterfaceDraw(Font_t* f, Display_t* d)
     ButtonListDraw(f);
     SliderListDraw(f);
     FontPrintToInfoBox(f);
+    SelectListDraw(f, d, &select_list);
+    inpst.mouse.scroll = 0;
 }
 
 void InterfaceUpdate()
@@ -121,6 +135,7 @@ void InterfaceUpdate()
     ButtonListCheck();
     SliderListCheck();
     InfoBoxUpdate();
+    SelectListUpdate();
 }
 
 void ButtonListInitialize()
@@ -131,14 +146,14 @@ void ButtonListInitialize()
 	{
 		buttonlist[i] = NULL;
     }
-    buttonlist[0] = ButtonInitialize(toolpad.x      , toolpad.y , 3, 3, 0, L"/=\\‖ ‖\\=/", L".../=\\‖ ‖"); //L"/=\\‖o‖\\=/", L".../=\\‖o‖"
-    buttonlist[1] = ButtonInitialize(toolpad.x + 4  , toolpad.y , 3, 3, 1, L"r-`___\\_№", L"...r-`___");
-    buttonlist[2] = ButtonInitialize(control_panel.x        , control_panel.y, 3, 3, 2, L"n n‖ ‖u u", L"|\\ | >|/ ");
-    buttonlist[3] = ButtonInitialize(toolpad.x + 14 , toolpad.y , 3, 3, 3, L" ‖‖nVV\\l№", L"   /mm\\l№");
-    buttonlist[4] = ButtonInitialize(control_panel.x + 4    , control_panel.y, 3, 3, 4, L"\\ | >|/ |", L" \\   > / ");
+    buttonlist[0] = ButtonInitialize(toolpad.x + 9  , toolpad.y , 3, 3, 0, L".........", L"---------");
+    buttonlist[1] = ButtonInitialize(toolpad.x + 13 , toolpad.y , 3, 3, 1, L".........", L"---------");
+    buttonlist[2] = ButtonInitialize(control_panel.x + 1    , control_panel.y, 3, 3, 2, L"n n‖ ‖u u", L"|\\ | >|/ ");
+    buttonlist[3] = ButtonInitialize(toolpad.x + 5  , toolpad.y , 3, 3, 3, L" ‖‖nVV\\l№", L"   /mm\\l№");
+    buttonlist[4] = ButtonInitialize(control_panel.x + 5    , control_panel.y, 3, 3, 4, L"\\ | >|/ |", L" \\   > / ");
     buttonlist[5] = ButtonInitialize(control_panel.x + 9    , control_panel.y, 3, 3, 5, L" _ <o> - ", L"\\_/<X>/-\\");
     buttonlist[6] = ButtonInitialize(79 , 0 , 1, 1, 6, L"X", L"+");
-    buttonlist[7] = ButtonInitialize(toolpad.x + 10 , toolpad.y , 3, 3, 7, L" T lв№\\_/", L".(.rT`lв№");
+    buttonlist[7] = ButtonInitialize(toolpad.x + 1 , toolpad.y , 3, 3, 7, L" T lв№\\_/", L".(.rT`lв№");
     buttonlist[8] = ButtonInitialize(78 , 0 , 1, 1, 8, L"o", L"0");
     buttonlist[9] = ButtonInitialize(77 , 0 , 1, 1, 9, L"-", L"_");
     
@@ -216,8 +231,8 @@ void ButtonListDraw(Font_t* f)
     {
         ButtonDraw(buttonlist[i], f);
     }
-    FontNumberDraw(f, toolpad.x + 10, 1, 1, 1, cursor.lm, important_color, 0, 1);
-    FontNumberDraw(f, toolpad.x + 12, 1, 1, 1, cursor.rm, important_color, 0, 1);
+    FontNumberDraw(f, toolpad.x + 1, toolpad.y, 1, 1, cursor.lm, important_color, 0, 1);
+    FontNumberDraw(f, toolpad.x + 3, toolpad.y, 1, 1, cursor.rm, important_color, 0, 1);
 }
 
 void ButtonListCheck()
@@ -225,7 +240,7 @@ void ButtonListCheck()
     Button_t* b;
     int x, y;
     MouseToGrid(&x, &y);
-    if(inpst.mouse.pressed && b_panning == 0 && b_drawing == 0)
+    if(inpst.mouse.pressed && b_panning == 0 && b_drawing == 0 && b_select_list == 0)
     {
         for(int i = 0; i < buttonlistsize; i++)
         {
@@ -264,19 +279,12 @@ void ButtonDown(Button_t* b)
         switch (b->type)
         {
         case 0:
-            if(inpst.mouse.lmc)
-                cursor.lm = 1 + (cursor.lm) % max_curs;
-            if(inpst.mouse.rmc)
-                cursor.rm = 1 + (cursor.rm) % max_curs;
             
             b->act_b = 1;
             b->text = 2;
             break;
         case 1:
-            if(inpst.mouse.lmc)
-                cursor.lm = 0;
-            if(inpst.mouse.rmc)
-                cursor.rm = 0;
+        
             b->act_b = 1;
             b->text = 2;
             break;
@@ -647,8 +655,8 @@ void SliderListInitialize()
     int c0, c1;
     c0 = 1 + (cursor.lrad - 0) / 1;
     c1 = 1 + (t_s - 0) * 1000 / (20 * SDL_GetPerformanceFrequency());
-    sliderlist[0] = SliderInitialize(1, 5, 17, 3, 0, 1, c0, 0);
-    sliderlist[1] = SliderInitialize(63, 24, 16, 3, 0, 20, c1, 1);
+    sliderlist[0] = SliderInitialize(1, 12, 17, 3, 0, 1, c0, 0);
+    sliderlist[1] = SliderInitialize(control_panel.x, control_panel.y + 4, 17, 3, 0, 20, c1, 1);
 }
 
 void SliderListTerminate()
@@ -682,7 +690,7 @@ void SliderListCheck()
     Slider_t* s;
     int x, y, c;
     MouseToGrid(&x, &y);
-    if(inpst.mouse.pressed && b_panning == 0 && b_drawing == 0)
+    if(inpst.mouse.pressed && b_panning == 0 && b_drawing == 0 && b_select_list == 0)
     {
         for(int i = 0; i < sliderlistsize; i++)
         {
@@ -754,12 +762,14 @@ void FontUIDraw(Font_t* f, Display_t* d)
 
     int x, y;
     MouseToGrid(&x, &y);
-    wchar_t str[240];
-    swprintf(str, 240, L"угол: %i\nсдвиг по х: %i\nсдвиг по y: %i\nмышь х: %i\nмышь y: %i\n", 
-    d->angle, d->hshift.x, d->hshift.y, x, y);
+    FontNumberDraw(f, 1, 0, 2, 1, x, frame_color, 0, 1);
+    FontNumberDraw(f, 4, 0, 2, 1, y, frame_color, 0, 1);
+    // wchar_t str[240];
+    // swprintf(str, 240, L"угол: %i\nсдвиг по х: %i\nсдвиг по y: %i\nмышь х: %i\nмышь y: %i\n", 
+    // d->angle, d->hshift.x, d->hshift.y, x, y);
     
-    FontStringDraw(f, 2, 18, 15, 16,
-    str, inform_color);
+    // FontStringDraw(f, 2, 18, 15, 16,
+    // str, inform_color);
     
     if(b_ui)
     {
@@ -912,13 +922,15 @@ void FontRulesEditorNeighborsDraw(Font_t* f, int x, int y, int w, int h, int n)
 void FontPrintToInfoBox(Font_t* f)
 {
     int lines = 0;
-    if((inpst.mouse.scroll)) 
+    int x, y;
+    MouseToGrid(&x, &y);
+    
+    if((inpst.mouse.scroll) &&
+        isinrec(info_box.x, info_box.y, info_box.w, info_box.h, x, y ))
     {
         info_box.shift -= inpst.mouse.scroll;
     }
-    
     lines = StringLinesCount(info_box.w, info_box.s);
-    inpst.mouse.scroll = 0;
     info_box.shift = hmin
     (
         hmax
@@ -971,4 +983,75 @@ void DisplayListUpdate()
     //  * displaylist[0]->scale / displaylist[1]->scale;
     // displaylist[1]->screen_shift.y = displaylist[0]->screen_shift.y
     //  * displaylist[0]->scale / displaylist[1]->scale;
+}
+
+void SelectListDraw(Font_t* f, Display_t* d, Select_List_t *p_sl)
+{
+    int lines;
+    int x, y;
+    MouseToGrid(&x, &y);
+    
+    if(isinrec(p_sl->rectangle.x, p_sl->rectangle.y, p_sl->rectangle.w, p_sl->rectangle.h, x, y )
+         && (inpst.mouse.scroll))
+    {
+        p_sl->shift -= inpst.mouse.scroll;
+        inpst.mouse.scroll = 0;
+    }
+    lines = p_sl->max + 1 - p_sl->min;
+    p_sl->shift = hmin
+    (
+        hmax
+        (
+            p_sl->shift,
+            0
+        ), lines - p_sl->rectangle.h
+    );
+    FontStringSHiftDraw(f, p_sl->rectangle.x + 5, p_sl->rectangle.y, p_sl->rectangle.w - 5, p_sl->rectangle.h, p_sl->s, inform_color, p_sl->shift); 
+    
+    for(int i = p_sl->shift; i < p_sl->rectangle.h + p_sl->shift; i++)
+    {
+        HexelDrawOnUI(p_sl->rectangle.x + 2 * mod(i, 2), 
+            p_sl->rectangle.y + i - p_sl->shift, i, d->angle, b_ui);
+    }
+    
+    int lm_arrow, rm_arrow;
+    lm_arrow = cursor.lm - p_sl->shift;
+    rm_arrow = cursor.rm - p_sl->shift;
+    
+    if(lm_arrow == rm_arrow)
+        FontStringDraw(f, p_sl->rectangle.x + 4, p_sl->rectangle.y + lm_arrow, 
+            1, 1, L"Д", inform_color);
+    else
+    {
+        if(lm_arrow >= 0 && lm_arrow < p_sl->rectangle.h)
+            FontStringDraw(f, p_sl->rectangle.x + 4, p_sl->rectangle.y + lm_arrow, 
+                1, 1, L"Л", inform_color);
+        if(rm_arrow >= 0 && rm_arrow < p_sl->rectangle.h)
+            FontStringDraw(f, p_sl->rectangle.x + 4, p_sl->rectangle.y + rm_arrow, 
+                1, 1, L"П", inform_color);
+    }
+}
+
+void SelectListUpdate()
+{
+    Select_List_t *s = &select_list;
+    int x, y, c;
+    MouseToGrid(&x, &y);
+    if(inpst.mouse.pressed && b_panning == 0 && b_drawing == 0)
+    {
+        if( (isinrec(s->rectangle.x, s->rectangle.y, s->rectangle.w, s->rectangle.h, x, y) == 1
+                && b_button == -1 && b_slider == -1) )
+        {
+            c = hmax(y - s->rectangle.y + s->shift, 0);
+            if(inpst.mouse.lmc)
+                cursor.lm = c;
+            if(inpst.mouse.rmc)
+                cursor.rm = c;
+            b_select_list = 1;
+        }
+    }
+    else
+    {
+        b_select_list = 0;
+    }
 }

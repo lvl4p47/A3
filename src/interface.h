@@ -50,6 +50,15 @@ typedef struct
     
 } InfoBox_t;
 
+typedef struct
+{
+    ui_rectangle_t rectangle;
+    int act_b, lmc, mmc;
+    int min, max, shift;
+    int type;
+    wchar_t* s;
+} Select_List_t;
+
 void InterfaceInitialize();
 
 void InterfaceTerminate();
@@ -111,5 +120,9 @@ void FontPrintToInfoBox(Font_t* f);
 void InfoBoxUpdate();
 
 void DisplayListUpdate();
+
+void SelectListDraw(Font_t* f, Display_t* d, Select_List_t *p_sl);
+
+void SelectListUpdate();
 
 #endif
