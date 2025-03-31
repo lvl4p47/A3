@@ -148,42 +148,42 @@ void ButtonListInitialize()
     }
     buttonlist[0] = ButtonInitialize(toolpad.x + 9  , toolpad.y , 3, 3, 0, L".........", L"---------");
     buttonlist[1] = ButtonInitialize(toolpad.x + 13 , toolpad.y , 3, 3, 1, L".........", L"---------");
-    buttonlist[2] = ButtonInitialize(control_panel.x + 1    , control_panel.y, 3, 3, 2, L"n n‖ ‖u u", L"|\\ | >|/ ");
-    buttonlist[3] = ButtonInitialize(toolpad.x + 5  , toolpad.y , 3, 3, 3, L" ‖‖nVV\\l№", L"   /mm\\l№");
+    buttonlist[2] = ButtonInitialize(control_panel.x + 1    , control_panel.y, 3, 3, 2, L"П П‖ ‖U U", L"|\\ | >|/ ");
+    buttonlist[3] = ButtonInitialize(toolpad.x + 5  , toolpad.y , 3, 3, 3, L" ‖‖Лvv\\L№", L"   /mm\\L№");
     buttonlist[4] = ButtonInitialize(control_panel.x + 5    , control_panel.y, 3, 3, 4, L"\\ | >|/ |", L" \\   > / ");
     buttonlist[5] = ButtonInitialize(control_panel.x + 9    , control_panel.y, 3, 3, 5, L" _ <o> - ", L"\\_/<X>/-\\");
     buttonlist[6] = ButtonInitialize(79 , 0 , 1, 1, 6, L"X", L"+");
-    buttonlist[7] = ButtonInitialize(toolpad.x + 1 , toolpad.y , 3, 3, 7, L" T lв№\\_/", L".(.rT`lв№");
-    buttonlist[8] = ButtonInitialize(78 , 0 , 1, 1, 8, L"o", L"0");
+    buttonlist[7] = ButtonInitialize(toolpad.x + 1 , toolpad.y , 3, 3, 7, L" T L8№\\_/", L".(.ГT`L8№");
+    buttonlist[8] = ButtonInitialize(78 , 0 , 1, 1, 8, L"O", L"o");
     buttonlist[9] = ButtonInitialize(77 , 0 , 1, 1, 9, L"-", L"_");
     
-    buttonlist[10] = ButtonInitialize(rules_editor.x + 14, rules_editor.y + 2, 2, 1, 10, L"/\\", L"№l");
-    buttonlist[11] = ButtonInitialize(rules_editor.x + 14, rules_editor.y + 5, 2, 1, 11, L"/\\", L"№l");
-    buttonlist[12] = ButtonInitialize(rules_editor.x + 14, rules_editor.y + 8, 2, 1, 12, L"/\\", L"№l");
+    buttonlist[10] = ButtonInitialize(rules_editor.x + 14, rules_editor.y + 2, 2, 1, 10, L"/\\", L"№L");
+    buttonlist[11] = ButtonInitialize(rules_editor.x + 14, rules_editor.y + 5, 2, 1, 11, L"/\\", L"№L");
+    buttonlist[12] = ButtonInitialize(rules_editor.x + 14, rules_editor.y + 8, 2, 1, 12, L"/\\", L"№L");
     buttonlist[13] = ButtonInitialize(rules_editor.x + 14, rules_editor.y + 4, 2, 1, 13, L"\\/", L"`r");
     buttonlist[14] = ButtonInitialize(rules_editor.x + 14, rules_editor.y + 7, 2, 1, 14, L"\\/", L"`r");
     buttonlist[15] = ButtonInitialize(rules_editor.x + 14, rules_editor.y + 10, 2, 1, 15, L"\\/", L"`r");
     
-    buttonlist[16] = ButtonInitialize(rules_editor.x + 3, rules_editor.y + 2, 2, 1, 16, L"/\\", L"№l");
-    buttonlist[17] = ButtonInitialize(rules_editor.x + 3, rules_editor.y + 4, 2, 1, 17, L"\\/", L"`r");
-    buttonlist[18] = ButtonInitialize(rules_editor.x + 7, rules_editor.y + 2, 2, 1, 18, L"/\\", L"№l");
-    buttonlist[19] = ButtonInitialize(rules_editor.x + 7, rules_editor.y + 4, 2, 1, 19, L"\\/", L"`r");
-    buttonlist[20] = ButtonInitialize(rules_editor.x + 9, rules_editor.y + 5, 2, 1, 20, L"/\\", L"№l");
-    buttonlist[21] = ButtonInitialize(rules_editor.x + 9, rules_editor.y + 7, 2, 1, 21, L"\\/", L"`r");
-    buttonlist[22] = ButtonInitialize(rules_editor.x + 7, rules_editor.y + 8, 2, 1, 22, L"/\\", L"№l");
-    buttonlist[23] = ButtonInitialize(rules_editor.x + 7, rules_editor.y + 10, 2, 1, 23, L"\\/", L"`r");
-    buttonlist[24] = ButtonInitialize(rules_editor.x + 3, rules_editor.y + 8, 2, 1, 24, L"/\\", L"№l");
-    buttonlist[25] = ButtonInitialize(rules_editor.x + 3, rules_editor.y + 10, 2, 1, 25, L"\\/", L"`r");
-    buttonlist[26] = ButtonInitialize(rules_editor.x + 1, rules_editor.y + 5, 2, 1, 26, L"/\\", L"№l");
-    buttonlist[27] = ButtonInitialize(rules_editor.x + 1, rules_editor.y + 7, 2, 1, 27, L"\\/", L"`r");
+    buttonlist[16] = ButtonInitialize(rules_editor.x + 3, rules_editor.y + 2, 2, 1, 16, L"/\\", L"№L");
+    buttonlist[17] = ButtonInitialize(rules_editor.x + 3, rules_editor.y + 4, 2, 1, 17, L"\\/", L"`Г");
+    buttonlist[18] = ButtonInitialize(rules_editor.x + 7, rules_editor.y + 2, 2, 1, 18, L"/\\", L"№L");
+    buttonlist[19] = ButtonInitialize(rules_editor.x + 7, rules_editor.y + 4, 2, 1, 19, L"\\/", L"`Г");
+    buttonlist[20] = ButtonInitialize(rules_editor.x + 9, rules_editor.y + 5, 2, 1, 20, L"/\\", L"№L");
+    buttonlist[21] = ButtonInitialize(rules_editor.x + 9, rules_editor.y + 7, 2, 1, 21, L"\\/", L"`Г");
+    buttonlist[22] = ButtonInitialize(rules_editor.x + 7, rules_editor.y + 8, 2, 1, 22, L"/\\", L"№L");
+    buttonlist[23] = ButtonInitialize(rules_editor.x + 7, rules_editor.y + 10, 2, 1, 23, L"\\/", L"`Г");
+    buttonlist[24] = ButtonInitialize(rules_editor.x + 3, rules_editor.y + 8, 2, 1, 24, L"/\\", L"№L");
+    buttonlist[25] = ButtonInitialize(rules_editor.x + 3, rules_editor.y + 10, 2, 1, 25, L"\\/", L"`Г");
+    buttonlist[26] = ButtonInitialize(rules_editor.x + 1, rules_editor.y + 5, 2, 1, 26, L"/\\", L"№L");
+    buttonlist[27] = ButtonInitialize(rules_editor.x + 1, rules_editor.y + 7, 2, 1, 27, L"\\/", L"`Г");
     
-    buttonlist[28] = ButtonInitialize(rules_editor.x + 5, rules_editor.y + 5, 2, 1, 28, L"/\\", L"№l");
-    buttonlist[29] = ButtonInitialize(rules_editor.x + 5, rules_editor.y + 7, 2, 1, 29, L"\\/", L"`r");
+    buttonlist[28] = ButtonInitialize(rules_editor.x + 5, rules_editor.y + 5, 2, 1, 28, L"/\\", L"№L");
+    buttonlist[29] = ButtonInitialize(rules_editor.x + 5, rules_editor.y + 7, 2, 1, 29, L"\\/", L"`Г");
     
     buttonlist[30] = ButtonInitialize(rules_editor.x + 11, rules_editor.y + 8, 1, 1, 30, L"+", L"*");
     buttonlist[31] = ButtonInitialize(rules_editor.x + 11, rules_editor.y + 10, 1, 1, 31, L"-", L".");
     
-    buttonlist[32] = ButtonInitialize(control_panel.x + 13 , control_panel.y, 3, 3, 32, L"r ` > l №", L"r ` ‖ l №");
+    buttonlist[32] = ButtonInitialize(control_panel.x + 13 , control_panel.y, 3, 3, 32, L"Г ` > L №", L"Г ` ‖ L №");
     
     //buttonlist[] = ButtonInitialize(, , , , , L"", L"");
 }
@@ -671,7 +671,7 @@ void SliderListTerminate()
 void SliderDraw(Slider_t* s, Font_t* f)
 {
     FontCharFill(f, L'-', s->x + 1, s->y + 1, s->w - 2, 1, interact_color);
-    FontStringDraw(f, s->x + s->c - 1, s->y, 3, 2, L" V с=э", interact_color);
+    FontStringDraw(f, s->x + s->c - 1, s->y, 3, 2, L" V [=]", interact_color);
     int value = s->a + s->d * (s->c - 1);
     FontNumberDraw(f, s->x + s->c - 1, s->y + 2, 3, 1, value, important_color, 0, 1);
 }
