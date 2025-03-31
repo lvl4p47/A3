@@ -330,3 +330,10 @@ void HexToGrid(Display_t* d, int *z, int *n, int centz, int centn)
     *z = xnew;
     *n = ynew;
 }
+
+int floordiv(int dend, int dsor)
+{
+    int qent = 0;
+    if(dend > 0)
+    return qent;
+}

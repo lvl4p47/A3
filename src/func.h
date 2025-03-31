@@ -25,6 +25,7 @@ typedef struct
 {
     MouseState_t mouse;
     int vx, vy;
+    int shift;
 } InputState_t;
 
 //HEXAGONS
@@ -47,6 +48,7 @@ typedef struct
     SDL_Rect screen_shift;
     int angle, scale;
     int grid_x, grid_y, grid_w, grid_h;
+    int subz, subn;
 } Display_t;
 
 typedef struct
@@ -88,5 +90,7 @@ int hlog(int a, double p);
 void PixelToHex(Display_t* d, int *z, int *n);
 
 void HexToGrid(Display_t* d, int *z, int *n, int centz, int centn);
+
+int floordiv(int dend, int dsor);
 
 #endif

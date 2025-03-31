@@ -167,6 +167,7 @@ Display_t* DisplayInitialize(int x, int y, int w, int h, int angle, int scale)
     d->angle = angle;       d->scale = scale;
     d->grid_x = x;          d->grid_y = y;
     d->grid_w = w;          d->grid_h = h;
+    d->subz = 0;            d->subn = 0;
     
     d->screen_shift.x = 1 * d->hshift.w +
         (d->hshift.x) * hcos(d->angle) + (d->hshift.y) * hcos(d->angle + 8);
@@ -288,7 +289,37 @@ void DisplayScan(Kvad_t* ptr, Display_t* d, int b_ui, int scale_selection)
         nmax = hmin(y2, y3);
 
         for (int i = nmin; i <= nmax; i++) {
-            if(d->scale > 1)
+            if(d->scale < 0) {
+
+                sclz = hdiv((j + d->subz), (-d->scale)) + 0;
+                scln = hdiv((i + d->subn), (-d->scale)) + 0;
+                
+                int s = -d->scale, s1 = s, s2 = 2 * s;
+                int x = mod(j, s);
+                int y = mod(i, s);
+                if(mod(s , 3) == 0) s1++, s2++;
+                int conds[5] = {
+                    x + 2 * y < s1,
+                    2 * x + y <= s1,
+                    x - y < 0,
+                    x + 2 * y < s2,
+                    2 * x + y <= s2
+                };
+
+                if      (conds[0] == 1 && conds[1] == 1);
+                else if (conds[2] == 0 && conds[3] == 1) sclz++;
+                else if (conds[4] == 1) scln++;
+                else    sclz++, scln++;
+
+            }
+            if(d->scale == 1)
+            {
+                sclz = j;
+                scln = i;
+            }
+            if(d->scale <= 1)
+                HexelDraw(d, j, i, KvadGetHexel(ptr, sclz, scln), b_ui);
+            else
             {
                 quantity = 0;
                 sclz = (j) * d->scale;
@@ -306,12 +337,6 @@ void DisplayScan(Kvad_t* ptr, Display_t* d, int b_ui, int scale_selection)
                     }
                 }
                 DotsDraw(d, j, i, quantity);
-            }
-            else
-            {
-                sclz = j;
-                scln = i;
-                HexelDraw(d, j, i, KvadGetHexel(ptr, sclz, scln), b_ui);
             }
 		}
 	}
@@ -352,7 +377,7 @@ void DisplayListTerminate()
 {
     for(int i = 0; i < displaylistsize; i++)
     {
-        SliderTerminate(displaylist[i]);
+        DisplayTerminate(displaylist[i]);
     }
     free(displaylist);
 }

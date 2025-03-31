@@ -572,12 +572,10 @@ void DisplayPanning(Display_t* d)
         b_panning = 0;
     }
     
-    if((inpst.mouse.scroll)
+    if((inpst.mouse.scroll && inpst.shift == 1)
          && (b_panning || b_inrec))
     {
-        printf("\n scroll %i", inpst.mouse.scroll);
         d->angle = (d->angle + 48 + inpst.mouse.scroll) % 48;
-        inpst.mouse.scroll = 0;
 
         d->screen_shift.x = 1 * d->hshift.w +
         (d->hshift.x) * hcos(d->angle) + (d->hshift.y) * hcos(d->angle + 8);
@@ -590,6 +588,65 @@ void DisplayPanning(Display_t* d)
         d->screen_shift.w = d->screen_shift.x;
         d->screen_shift.h = d->screen_shift.y;
 
+    }
+    else if((inpst.mouse.scroll && inpst.shift == 0)
+         && (b_panning || b_inrec))
+    {
+        int old_scale = d->scale, new_scale;
+        
+        d->scale = 
+        hmin(
+            hmax(
+                d->scale -inpst.mouse.scroll,
+                -8
+            ),
+         2
+        );
+        
+        if(d->scale == 0 || d->scale == -1)
+        {
+            if(inpst.mouse.scroll < 0)
+                d->scale += 2;
+            else
+                d->scale -= 2;
+        }
+        new_scale = d->scale;
+        
+        if(old_scale >= 1)
+        {
+            d->screen_shift.x = d->screen_shift.x * old_scale;
+            d->screen_shift.y = d->screen_shift.y * old_scale;
+        }
+        if(old_scale <= -2)
+        {
+            d->screen_shift.x = d->screen_shift.x / (-old_scale);
+            d->screen_shift.y = d->screen_shift.y / (-old_scale);
+        }
+        
+        if(new_scale >= 1)
+        {
+            d->screen_shift.x = d->screen_shift.x / new_scale;
+            d->screen_shift.y = d->screen_shift.y / new_scale;
+        }
+        if(new_scale <= -2)
+        {
+            d->screen_shift.x = d->screen_shift.x * (-new_scale);
+            d->screen_shift.y = d->screen_shift.y * (-new_scale);
+        }
+        
+        d->screen_shift.w = d->screen_shift.x;
+        d->screen_shift.h = d->screen_shift.y;
+    
+        d->hshift.x = 4 + d->screen.x + d->screen_shift.x * 2  + d->screen.w / 2;
+        d->hshift.y = 4 + d->screen.y + d->screen_shift.y * 2  + d->screen.h / 2;
+        PixelToHex(d, &d->hshift.x, &d->hshift.y);
+            
+        d->hshift.w = d->screen_shift.x -
+        (d->hshift.x) * hcos(d->angle) - (d->hshift.y) * hcos(d->angle + 8);
+        d->hshift.h = d->screen_shift.y -
+        (d->hshift.x) * hsin(d->angle) - (d->hshift.y) * hsin(d->angle + 8);
+            
+        MouseResetPrev();
     }
 }
 
@@ -764,6 +821,13 @@ void FontUIDraw(Font_t* f, Display_t* d)
     MouseToGrid(&x, &y);
     FontNumberDraw(f, 1, 0, 2, 1, x, frame_color, 0, 1);
     FontNumberDraw(f, 4, 0, 2, 1, y, frame_color, 0, 1);
+    
+    FontNumberDraw(f, 11, 0, 5, 1, d->hshift.x, frame_color, 1, 1);
+    FontNumberDraw(f, 17, 0, 5, 1, d->hshift.y, frame_color, 1, 1);
+    
+    // FontNumberDraw(f, 11, 0, 3, 1, d->screen_shift.x, frame_color, 0, 1);
+    // FontNumberDraw(f, 15, 0, 3, 1, d->screen_shift.y, frame_color, 0, 1);
+    
     // wchar_t str[240];
     // swprintf(str, 240, L"угол: %i\nсдвиг по х: %i\nсдвиг по y: %i\nмышь х: %i\nмышь y: %i\n", 
     // d->angle, d->hshift.x, d->hshift.y, x, y);

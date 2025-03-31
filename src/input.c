@@ -23,6 +23,7 @@ void InputInitialize()
 
     inpst.vx = 0;
     inpst.vy = 0;
+    inpst.shift = 0;
 }
 
 void InputRegister()
@@ -33,7 +34,7 @@ void InputRegister()
     {
         inpst.vx = 0;
         inpst.vy = 0;
-
+        
         switch( event.type ){
         case SDL_KEYDOWN:
             switch( event.key.keysym.sym ){
@@ -49,13 +50,22 @@ void InputRegister()
                 case SDLK_DOWN:
                     inpst.vy -= 1;
                     break;
+                case SDLK_LSHIFT:
+                    inpst.shift = 1;
+                    break;
                 default:
                     break;
             }
             break;
 
         case SDL_KEYUP:
-            //printf( "Key release detected\n" );
+            switch( event.key.keysym.sym ){
+                case SDLK_LSHIFT:
+                    inpst.shift = 0;
+                    break;
+                default:
+                    break;
+            }
             break;
 
         case SDL_QUIT:
@@ -162,26 +172,40 @@ void MouseToHex(Display_t* d, int *z, int *n)
     int a = d->angle;
     int det = hcos(a) * hsin(a + 8) - hsin(a) * hcos(a + 8);
 
-    int x, y;
+    int x, y, subz, subn;
     MouseToPixels(&x, &y);
 
     PixelToHex(d, &x, &y);
 
     *z = x;
     *n = y;
-
-    /*
-    x += -d->screen.x - d->screen.w / 2 - d->screen_shift.x;
-    y += -d->screen.y - d->screen.h / 2 - d->screen_shift.y;
-
-    *z = hdiv( x * hsin(a + 8) - y * hcos(a + 8), det );
-    *n = hdiv(-x * hsin(  a  ) + y * hcos(  a  ), det);
-    */
-    /*
-    dz = hdiv( dx * hsin(a + 8) - dy * hcos(a + 8), det );
-    dn = hdiv(-dx * hsin(  a  ) + dy * hcos(  a  ), det );
-
-    *z += dz;
-    *n += dn;
-    */
+    
+    subz = *z, subn = *n;
+    
+    if(d->scale <= -2)
+    {
+        *z = hdiv(*z, -d->scale);
+        *n = hdiv(*n, -d->scale);
+        int s = -d->scale, s1 = s, s2 = 2 * s;
+        subz = mod( subz, s);
+        subn = mod( subn, s);
+        if(mod(s , 3) == 0) s1++, s2++;
+        int conds[5] = {
+            subz + 2 * subn < s1,
+            2 * subz + subn <= s1,
+            subz - subn < 0,
+            subz + 2 * subn < s2,
+            2 * subz + subn <= s2
+        };
+        printf("\n");
+        if      (conds[0] == 1 && conds[1] == 1);
+        else if (conds[2] == 0 && conds[3] == 1) *z = *z + 1;
+        else if (conds[4] == 1) *n = *n + 1;
+        else    *z = *z + 1, *n = *n + 1;
+    }
+    else if(d->scale >= 1)
+    {
+        *z = *z * d->scale;
+        *n = *n * d->scale;
+    }
 }
