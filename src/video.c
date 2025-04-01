@@ -235,12 +235,25 @@ void DisplayScan(Kvad_t* ptr, Display_t* d, int b_ui, int scale_selection)
     int cz, cn;
     int corner_z[4], corner_n[4];
     
-    int border = 0;
+    int border = 4;
     
-    corner_z[0] = d->screen.x               + border , corner_n[0] = d->screen.y + border;
-    corner_z[1] = d->screen.x + d->screen.w - border , corner_n[1] = d->screen.y + border;
-    corner_z[2] = d->screen.x + d->screen.w - border , corner_n[2] = d->screen.y + d->screen.h - border;
-    corner_z[3] = d->screen.x               + border , corner_n[3] = d->screen.y + d->screen.h - border;
+    corner_z[0] = d->screen.x               + border - d->hshift.w * 0  ; 
+    corner_n[0] = d->screen.y + border               - d->hshift.h * 0  ;
+    corner_z[1] = d->screen.x + d->screen.w - border - d->hshift.w * 0  ; 
+    corner_n[1] = d->screen.y + border               - d->hshift.h * 0  ;
+    corner_z[2] = d->screen.x + d->screen.w - border - d->hshift.w * 0  ; 
+    corner_n[2] = d->screen.y + d->screen.h - border - d->hshift.h * 0  ;
+    corner_z[3] = d->screen.x               + border - d->hshift.w * 0  ; 
+    corner_n[3] = d->screen.y + d->screen.h - border - d->hshift.h * 0  ;
+    
+    corner_z[0] += d->hshift.w * 1  ; 
+    corner_n[0] += d->hshift.h * 1  ;
+    corner_z[1] += d->hshift.w * 1  ; 
+    corner_n[1] += d->hshift.h * 1  ;
+    corner_z[2] += d->hshift.w * 1  ; 
+    corner_n[2] += d->hshift.h * 1  ;
+    corner_z[3] += d->hshift.w * 1  ; 
+    corner_n[3] += d->hshift.h * 1  ;
     
     for(int i = 0; i < 4; i++)
         PixelToHex(d, &corner_z[i], &corner_n[i]);
@@ -270,20 +283,16 @@ void DisplayScan(Kvad_t* ptr, Display_t* d, int b_ui, int scale_selection)
 	for (int j = zmin; j <= zmax; j++) {
         if(corner_z[0] == corner_z[3]) y0 = hmin(corner_n[0], corner_n[3]);
         else y0 = corner_n[3]
-         + (j - corner_z[3])
-         * (corner_n[0] - corner_n[3]) / (corner_z[0] - corner_z[3]);
+         + ( (j - corner_z[3]) * (corner_n[0] - corner_n[3]) / (corner_z[0] - corner_z[3]));
         if(corner_z[1] == corner_z[0]) y1 = hmin(corner_n[1], corner_n[0]);
         else y1 = corner_n[0]
-         + (j - corner_z[0])
-         * (corner_n[1] - corner_n[0]) / (corner_z[1] - corner_z[0]);
+         + ( (j - corner_z[0]) * (corner_n[1] - corner_n[0]) / (corner_z[1] - corner_z[0]));
         if(corner_z[2] == corner_z[1]) y2 = hmax(corner_n[2], corner_n[1]);
         else y2 = corner_n[1]
-         + (j - corner_z[1])
-         * (corner_n[2] - corner_n[1]) / (corner_z[2] - corner_z[1]);
+         + ( (j - corner_z[1]) * (corner_n[2] - corner_n[1]) / (corner_z[2] - corner_z[1]));
         if(corner_z[3] == corner_z[2]) y3 = hmax(corner_n[3], corner_n[2]);
         else y3 = corner_n[2]
-         + (j - corner_z[2])
-         * (corner_n[3] - corner_n[2]) / (corner_z[3] - corner_z[2]);
+         + ( (j - corner_z[2]) * (corner_n[3] - corner_n[2]) / (corner_z[3] - corner_z[2]));
 
         nmin = hmax(y0, y1);
         nmax = hmin(y2, y3);

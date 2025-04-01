@@ -43,7 +43,7 @@ int min_neigh, max_neigh;
 
 void InterfaceInitialize()
 {
-    cursor.lm = 5;
+    cursor.lm = 1;
     cursor.rm = 0;
     cursor.lrad = 3;
     cursor.rrad = 3;
@@ -62,7 +62,7 @@ void InterfaceInitialize()
     select_list.rectangle.y = 1;
     select_list.rectangle.w = 17;
     select_list.rectangle.h = 6;
-    select_list.s = L"0 - воздух\n1 - верёвка\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень";
+    select_list.s = L"0 - воздух\n1 - ткань\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень";
     select_list.min = 0;
     select_list.max = 8;
     
@@ -81,7 +81,7 @@ void InterfaceInitialize()
     control_panel.w = 16;
     control_panel.h = 7;
     
-    s_rules_editor = L"  Порядок установления значений:\n1) \"ИЗ\";\n2) \"В\";\n3) \"УСЛ\";\n4) остальное.\n\n  ФЛАГ:\n\"--\" игнорировать данный набор условий;\n\"+0\" необходимо >= зеленых соседей и < красных;\n\"+1\" необходимо точное (не)совпадение количества соседей.\n\n  Для перехода клетки из начального состояния в конечное необходимо выполнение хотя бы одного из условий в списке.";
+    s_rules_editor = L"  Порядок установления значений:\n1) \"ИЗ\";\n2) \"В\";\n3) \"УСЛ\";\n4) Остальное.\n\n  ФЛАГ:\n\"--\" игнорировать данный набор условий;\n\"+0\" необходимо >= зеленых соседей и < красных;\n\"+1\" необходимо точное (не)совпадение количества соседей.\n\n  Для перехода клетки из начального состояния в конечное необходимо выполнение хотя бы одного из условий в списке.";
     s_toolpad = L"  Правой / левой кнопкой мыши по списку можно задать материал курсора. Колесико мыши позволяет перемещаться по списку\n\n  Кнопки слева направо:\n* Поменять правое и левое значения курсора местами;\n* Переход в режим передвижения по массиву клеток с помощью ЛКМ.\n\n  Слайдер изменяет размер закрашивания курсором.";
     s_control_panel = L"  Кнопки слева направо:\n* Пауза;\n* Сделать 1 шаг клеточного автомата (во время паузы);\n* Переключить режим отображения плотности материалов;\n* Сместить выбираемые миникартой клетки.\n\n  Слайдер изменяет время шага клеточного автомата.";
        
@@ -153,7 +153,7 @@ void ButtonListInitialize()
     buttonlist[4] = ButtonInitialize(control_panel.x + 5    , control_panel.y, 3, 3, 4, L"\\ | >|/ |", L" \\   > / ");
     buttonlist[5] = ButtonInitialize(control_panel.x + 9    , control_panel.y, 3, 3, 5, L" _ <o> - ", L"\\_/<x>/-\\");
     buttonlist[6] = ButtonInitialize(79 , 0 , 1, 1, 6, L"x", L"+");
-    buttonlist[7] = ButtonInitialize(toolpad.x + 1 , toolpad.y , 3, 3, 7, L" + l8№\\_/", L".(.r+`l8№");
+    buttonlist[7] = ButtonInitialize(toolpad.x + 1 , toolpad.y , 3, 3, 7, L" т l8№\\_/", L".(.rт`l8№");
     buttonlist[8] = ButtonInitialize(78 , 0 , 1, 1, 8, L"0", L"o");
     buttonlist[9] = ButtonInitialize(77 , 0 , 1, 1, 9, L"-", L"_");
     
@@ -1004,7 +1004,7 @@ void FontPrintToInfoBox(Font_t* f)
         ), lines - info_box.h
     );
     
-    FontStringSHiftDraw(f, info_box.x, info_box.y, 
+    FontStringShiftDraw(f, info_box.x, info_box.y, 
         info_box.w, info_box.h, info_box.s, inform_color, info_box.shift);
     
 }
@@ -1072,7 +1072,7 @@ void SelectListDraw(Font_t* f, Display_t* d, Select_List_t *p_sl)
             0
         ), lines - p_sl->rectangle.h
     );
-    FontStringSHiftDraw(f, p_sl->rectangle.x + 5, p_sl->rectangle.y, p_sl->rectangle.w - 5, p_sl->rectangle.h, p_sl->s, inform_color, p_sl->shift); 
+    FontStringShiftDraw(f, p_sl->rectangle.x + 5, p_sl->rectangle.y, p_sl->rectangle.w - 5, p_sl->rectangle.h, p_sl->s, inform_color, p_sl->shift); 
     
     for(int i = p_sl->shift; i < p_sl->rectangle.h + p_sl->shift; i++)
     {
@@ -1086,7 +1086,7 @@ void SelectListDraw(Font_t* f, Display_t* d, Select_List_t *p_sl)
     
     if(lm_arrow == rm_arrow)
         FontStringDraw(f, p_sl->rectangle.x + 4, p_sl->rectangle.y + lm_arrow, 
-            1, 1, L"Д", inform_color);
+            1, 1, L"А", inform_color);
     else
     {
         if(lm_arrow >= 0 && lm_arrow < p_sl->rectangle.h)

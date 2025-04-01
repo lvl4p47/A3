@@ -86,6 +86,8 @@ void AudioCount(Kvad_t* ptr, int b_pause);
 
 void AudioUpdate(Kvad_t* ptr, int b_pause);
 
+void PhysicsUpdate(Kvad_t* ptr);
+
 void KvadUpdate(Kvad_t* ptr);
 
 int NeighbourCount(Kvad_t* ptr, int z, int n, int val);

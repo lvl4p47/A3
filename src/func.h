@@ -91,6 +91,4 @@ void PixelToHex(Display_t* d, int *z, int *n);
 
 void HexToGrid(Display_t* d, int *z, int *n, int centz, int centn);
 
-int floordiv(int dend, int dsor);
-
 #endif

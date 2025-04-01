@@ -101,8 +101,6 @@ void InputRegister()
                     break;
                 case SDL_BUTTON_MIDDLE:
                     inpst.mouse.mmc = 0;
-                    //inpst.mouse.px = inpst.mouse.x;
-                    //inpst.mouse.py = inpst.mouse.y;
                     break;
                 case SDL_BUTTON_RIGHT:
                     inpst.mouse.rmc = 0;
