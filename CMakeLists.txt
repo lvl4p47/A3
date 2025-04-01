@@ -1,25 +1,13 @@
-# необходимая минимальная версия cmake
-cmake_minimum_required(VERSION 3.16)
-# даем название проекта и задаем версию сборки
-project(A3 VERSION 0.1)
-# указываем что проект собирается на основе си кода 11 стандарта
-set(CMAKE_C_STANDARD 11)
+cmake_minimum_required(VERSION 3.10)
 
-# задаем переменную SOURCES как набор твоих исходников
-set(SOURCES src/main.c src/func.c src/hexagons.c src/input.c src/main.c src/text.c src/video.c media/tiles.png media/ui_tiles.png media/font.png media/ui.txt src/interface.c src/audio.c src/audio.h)
-
-# задаем цель сборки под именем main и указываем исходники
-add_executable(main ${SOURCES})
+project(main)
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-set(CMAKE_BUILD_TYPE Debug)
+set(SOURCES src/main.c src/func.c src/hexagons.c src/input.c src/main.c src/text.c src/video.c media/tiles.png media/ui_tiles.png media/font.png media/ui.txt src/interface.c src/audio.h src/audio.c)
 
-set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+add_executable(main ${SOURCES})
 
-# задаем пути поиска библиотек для линкера
-# потребуется при использовании сторонних библиотек
-#target_link_directories(main PUBLIC "third_party/mylib")
+set(CMAKE_BUILD_TYPE Release)
 
-# говорим cmake что надо будет линковать бибку к нашей цели main
 target_link_libraries(main SDL2 SDL2_image SDL2_mixer)
