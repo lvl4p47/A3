@@ -47,7 +47,7 @@ void HexagonsInitialize()
         st8_dns_clr[4][2] = 6;
         
         st8_dns_clr[5][0] = 4;
-        st8_dns_clr[5][1] = 5;
+        st8_dns_clr[5][1] = 6;
         st8_dns_clr[5][2] = 1;
         
         st8_dns_clr[6][0] = 1;
@@ -59,7 +59,7 @@ void HexagonsInitialize()
         st8_dns_clr[7][2] = 4;
         
         st8_dns_clr[8][0] = 2;
-        st8_dns_clr[8][1] = 5;
+        st8_dns_clr[8][1] = 6;
         st8_dns_clr[8][2] = 7;
     }
     
