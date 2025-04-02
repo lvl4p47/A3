@@ -48,7 +48,7 @@ void RulesTerminate();
 
 void RulesAdd(int from, int to, int flag, int n1, int n2, int n3, int n4, int n5, int n6);
 
-void RulesCHange(int from, int to, int num, int flag, int n1, int n2, int n3, int n4, int n5, int n6);
+void RulesChange(int from, int to, int num, int flag, int n1, int n2, int n3, int n4, int n5, int n6);
 
 void RulesRemove(int from, int to, int num);
 
@@ -67,20 +67,6 @@ void KvadSetBlob(Kvad_t* ptr, int z, int n, int value, int rad);
 void WaveUpdate(Kvad_t* ptr);
 
 void SolidUpdate(Kvad_t* ptr);
-
-void GasUpdate(Kvad_t* ptr);
-
-void SandUpdate(Kvad_t* ptr);
-
-void DirtUpdate(Kvad_t* ptr);
-
-void RopeUpdate(Kvad_t* ptr);
-
-void LiquidUpdate(Kvad_t* ptr);
-
-void IceUpdate(Kvad_t* ptr);
-
-void RockUpdate(Kvad_t* ptr);
 
 void AudioCount(Kvad_t* ptr, int b_pause);
 
