@@ -125,9 +125,9 @@ void RulesInitialize()
 void RulesTerminate()
 {
 
-    RulesConditions_t *p_conds;
-    RulesToMat_t **p_tomat;
-    RulesFromMat_t **p_frommat;
+    __attribute__((unused)) RulesConditions_t *p_conds;
+    __attribute__((unused)) RulesToMat_t **p_tomat;
+    __attribute__((unused)) RulesFromMat_t **p_frommat;
     for(int i = 0; i < mat_amount; i++)
     {
         for(int j = 0; j < mat_amount; j++)
@@ -182,7 +182,7 @@ void RulesChange(int from, int to, int num, int flag, int n1, int n2, int n3, in
     }
 }
 
-void RulesRemove(int from, int to, int num)
+void RulesRemove(int from, int to, __attribute__((unused)) int num)
 {
     if(RULES->frommat[from]->tomat[to]->num > 1)
     {
@@ -520,10 +520,10 @@ void PhysicsUpdate(Kvad_t* ptr)
 {
     int gx = 0, gy = 1;
     int dz = 0, dn = 0;
-    int density = 3;
+    __attribute__((unused)) int density = 3;
     int f_direct = 0;
     int b_dir_fall = 0;
-    int b_side_fall = 0;
+    __attribute__((unused)) int b_side_fall = 0;
     int b_up_fall = 0;
     int border = 1;
     int field_value = 0;
@@ -806,7 +806,7 @@ void Repulsion(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn, int 
     }
 }
 
-void RelToAbs(Kvad_t* ptr, int fx, int fy, int rel, int* dz, int* dn)
+void RelToAbs(__attribute__((unused)) Kvad_t* ptr, int fx, int fy, int rel, int* dz, int* dn)
 {
     int dir = -1;
     *dz = 0, *dn = 0;
@@ -828,7 +828,7 @@ void RelToAbs(Kvad_t* ptr, int fx, int fy, int rel, int* dz, int* dn)
 void ForceDirt(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
-    int dir = -1;
+    __attribute__((unused)) int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
@@ -922,7 +922,7 @@ void ForceDirt(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 void ForceSand(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
-    int dir = -1;
+    __attribute__((unused)) int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
@@ -979,7 +979,7 @@ void ForceSand(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 void ForceRope(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
-    int dir = -1;
+    __attribute__((unused)) int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
@@ -1148,7 +1148,7 @@ void ForceRope(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
-    int dir = -1;
+    __attribute__((unused)) int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
@@ -1231,7 +1231,7 @@ void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
-    int dir = -1;
+    __attribute__((unused)) int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
@@ -1374,7 +1374,7 @@ void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 void ForceGas(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
-    int dir = -1;
+    __attribute__((unused)) int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
@@ -1457,7 +1457,7 @@ void ForceGas(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 void ForceRock(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {   
     *dz = 0, *dn = 0;
-    int dir = -1;
+    __attribute__((unused)) int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
