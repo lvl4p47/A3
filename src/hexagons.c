@@ -112,13 +112,14 @@ void RulesInitialize()
     RulesChange (1, 2, 0, 0, 2, 0, -1, -1, -1, -1);
     RulesChange (2, 0, 0, 0, -4, -1, -1, -1, -1, -1);
     RulesAdd    (2, 0, 0, -2, -1, -1, -1, -1, -1);
-    RulesChange (3, 7, 0, 0, 7, 7, 7, 7, 7, -1);
+    RulesChange (3, 7, 0, 1, 7, 0, 0, 0, 0, -1);
     RulesChange (3, 6, 0, 0, 2, -1, -1, -1, -1, -1);
     // RulesChange (4, 5, 0, 0, 5, 5, 5, 5, -1, -1);
     // RulesChange (5, 4, 0, 0, 5, 5, 5, 3, 3, 0);
     RulesChange (6, 3, 0, 0, -2, -2, -2, -2, -5, -4);
     RulesAdd    (6, 3, 0, 7, 7, 7, -1, -1, -1);
     RulesChange (7, 3, 0, 0, 2, -1, -1, -1, -1, -1);
+    RulesAdd    (7, 3, 0, 3, 3, 3, 3, 3, -1);
     // RulesChange (8, 4, 0, 1, 3, 3, 3, 3, 8, 8);
 }
 
@@ -522,6 +523,14 @@ void PhysicsUpdate(Kvad_t* ptr)
     int border = 1;
     int field_value = 0;
     
+    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+
+    RelToAbs(gx, gy, 2, &rbx, &rby);
+    RelToAbs(gx, gy, -2, &lbx, &lby);
+
+    RelToAbs(gx, gy, 1, &rfx, &rfy);
+    RelToAbs(gx, gy, -1, &lfx, &lfy);
+    
     for(int i = 0; i < ptr->height; i++)
     {
         for(int j = 0; j < ptr->width; j++)
@@ -554,23 +563,10 @@ void PhysicsUpdate(Kvad_t* ptr)
                 }
             
                 break;
-            case 6:
-            
-                KvadGetHexel(ptr, j, i)->fld2 += 1;
-                for(int di = -1; di < 2; di++)
-                {
-                    for(int dj = -1; dj < 2; dj++)
-                    {
-                        if( di * dj != 1)
-                            KvadGetHexel(ptr, j + dj, i + di)->fld2 += 1;
-                    }
-                }
-                
-                break;
             
             default:
             
-                if(KvadGetHexel(ptr, j, i)->dns > 4)
+                if(KvadGetHexel(ptr, j, i)->dns > 1)
                 {
                     KvadGetHexel(ptr, j, i)->fld2 += 1;
                 }
@@ -627,6 +623,16 @@ void PhysicsUpdate(Kvad_t* ptr)
             case 6:
             
                 ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+                {    
+                    priority = 1;
+                    
+                }
+                if( (dz == gx && dn == gy) )
+                {    
+                    priority = 2;
+                    
+                }
                 
                 break;
             case 7:
@@ -712,6 +718,16 @@ void PhysicsUpdate(Kvad_t* ptr)
             case 6:
             
                 ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+                {    
+                    priority = 1;
+                    
+                }
+                if( (dz == gx && dn == gy) )
+                {    
+                    priority = 2;
+                    
+                }
                 
                 break;
             case 7:
@@ -1109,7 +1125,7 @@ void ForceRope(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     if(b_leftfront   )  *dz += lfx, *dn += lfy;
 }
 
-void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
+void ForceLiquid0(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
 
@@ -1180,6 +1196,78 @@ void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     if(b_leftfront   )  *dz += lfx, *dn += lfy;
     if(b_rightback   )  *dz += rbx, *dn += rby;
     if(b_leftback    )  *dz += lbx, *dn += lby;
+}
+
+void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
+{
+    *dz = 0, *dn = 0;
+
+    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    
+    int b_forward = 0, b_back = 0,
+    b_rightfront = 0, b_leftfront = 0,
+    b_rightback = 0, b_leftback = 0;
+
+    int right_sum = 0, left_sum = 0, back_sum = 0, front_sum = 0;
+
+    RelToAbs(fx, fy, 2, &rbx, &rby);
+    RelToAbs(fx, fy, -2, &lbx, &lby);
+
+    RelToAbs(fx, fy, 1, &rfx, &rfy);
+    RelToAbs(fx, fy, -1, &lfx, &lfy);
+
+    b_back =
+    (
+        !(KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns)
+    );
+    b_forward =
+    (
+        KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns
+    );
+
+    right_sum =
+    (
+        (KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns)
+    );
+    left_sum =
+    (
+        (KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns)
+    );
+    back_sum =
+    (
+        (KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns) +
+        (KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns)
+    );
+    front_sum =
+    (
+        (KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns) +
+        (KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns)
+    );
+    
+    if(right_sum > left_sum)
+    {
+        if(back_sum >= front_sum || b_forward == 0) b_leftfront = 1;
+        else b_leftback = 1;
+    } 
+    if(right_sum < left_sum)
+    {
+        if(back_sum >= front_sum || b_forward == 0) b_rightfront = 1;
+        else b_rightback = 1;
+    }
+
+    if(b_leftback || b_rightback) b_back = 0;
+    if(b_leftfront || b_rightfront) b_forward = 0;
+    
+    if(b_back       )  *dz -= fx,  *dn -= fy;
+    if(b_forward    )  *dz += fx,  *dn += fy;
+    if(b_rightfront )  *dz += rfx, *dn += rfy;
+    if(b_leftfront  )  *dz += lfx, *dn += lfy;
+    if(b_rightback  )  *dz += rbx, *dn += rby;
+    if(b_leftback   )  *dz += lbx, *dn += lby;
 }
 
 void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)

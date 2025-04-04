@@ -88,6 +88,8 @@ void ForceSand(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void ForceRope(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
+void ForceLiquid0(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
+
 void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);

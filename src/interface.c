@@ -44,9 +44,9 @@ int min_neigh, max_neigh;
 void InterfaceInitialize()
 {
     cursor.lm = 3;
-    cursor.rm = 8;
-    cursor.lrad = 3;
-    cursor.rrad = 3;
+    cursor.rm = 0;
+    cursor.lrad = 5;
+    cursor.rrad = 5;
     
     rules_editor.x = 1;
     rules_editor.y = 24;
