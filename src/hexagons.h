@@ -50,7 +50,7 @@ void RulesAdd(int from, int to, int flag, int n1, int n2, int n3, int n4, int n5
 
 void RulesChange(int from, int to, int num, int flag, int n1, int n2, int n3, int n4, int n5, int n6);
 
-void RulesRemove(int from, int to, int num);
+void RulesRemove(int from, int to);
 
 Kvad_t* KvadInitialize(int width, int height);
 
@@ -80,7 +80,7 @@ int NeighbourCount(Kvad_t* ptr, int z, int n, int val);
 
 void Repulsion(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn, int empty_st8);
 
-void RelToAbs(Kvad_t* ptr, int fx, int fy, int rel, int* dz, int* dn);
+void RelToAbs(int fx, int fy, int rel, int* dz, int* dn);
 
 void ForceDirt(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 

@@ -47,7 +47,7 @@ void HexagonsInitialize()
         st8_dns_clr[4][2] = 6;
         
         st8_dns_clr[5][0] = 4;
-        st8_dns_clr[5][1] = 5;
+        st8_dns_clr[5][1] = 6;
         st8_dns_clr[5][2] = 1;
         
         st8_dns_clr[6][0] = 1;
@@ -59,7 +59,7 @@ void HexagonsInitialize()
         st8_dns_clr[7][2] = 4;
         
         st8_dns_clr[8][0] = 2;
-        st8_dns_clr[8][1] = 5;
+        st8_dns_clr[8][1] = 6;
         st8_dns_clr[8][2] = 7;
     }
     
@@ -114,20 +114,16 @@ void RulesInitialize()
     RulesAdd    (2, 0, 0, -2, -1, -1, -1, -1, -1);
     RulesChange (3, 7, 0, 0, 7, 7, 7, 7, 7, -1);
     RulesChange (3, 6, 0, 0, 2, -1, -1, -1, -1, -1);
-    RulesChange (4, 5, 0, 0, 5, 5, 5, 5, -1, -1);
-    RulesChange (5, 4, 0, 0, 5, 5, 5, 3, 3, 0);
+    // RulesChange (4, 5, 0, 0, 5, 5, 5, 5, -1, -1);
+    // RulesChange (5, 4, 0, 0, 5, 5, 5, 3, 3, 0);
     RulesChange (6, 3, 0, 0, -2, -2, -2, -2, -5, -4);
     RulesAdd    (6, 3, 0, 7, 7, 7, -1, -1, -1);
     RulesChange (7, 3, 0, 0, 2, -1, -1, -1, -1, -1);
-    RulesChange (8, 4, 0, 1, 3, 3, 3, 3, 8, 8);
+    // RulesChange (8, 4, 0, 1, 3, 3, 3, 3, 8, 8);
 }
 
 void RulesTerminate()
 {
-
-    __attribute__((unused)) RulesConditions_t *p_conds;
-    __attribute__((unused)) RulesToMat_t **p_tomat;
-    __attribute__((unused)) RulesFromMat_t **p_frommat;
     for(int i = 0; i < mat_amount; i++)
     {
         for(int j = 0; j < mat_amount; j++)
@@ -182,7 +178,7 @@ void RulesChange(int from, int to, int num, int flag, int n1, int n2, int n3, in
     }
 }
 
-void RulesRemove(int from, int to, __attribute__((unused)) int num)
+void RulesRemove(int from, int to)
 {
     if(RULES->frommat[from]->tomat[to]->num > 1)
     {
@@ -520,10 +516,8 @@ void PhysicsUpdate(Kvad_t* ptr)
 {
     int gx = 0, gy = 1;
     int dz = 0, dn = 0;
-    __attribute__((unused)) int density = 3;
-    int f_direct = 0;
+    int priority = 0;
     int b_dir_fall = 0;
-    __attribute__((unused)) int b_side_fall = 0;
     int b_up_fall = 0;
     int border = 1;
     int field_value = 0;
@@ -576,7 +570,7 @@ void PhysicsUpdate(Kvad_t* ptr)
             
             default:
             
-                if(KvadGetHexel(ptr, j, i)->dns > 0)
+                if(KvadGetHexel(ptr, j, i)->dns > 4)
                 {
                     KvadGetHexel(ptr, j, i)->fld2 += 1;
                 }
@@ -590,7 +584,7 @@ void PhysicsUpdate(Kvad_t* ptr)
     {
         for(int j = border; j < ptr->width - border; j++)
         {
-            f_direct = 0;
+            priority = 0;
             switch (KvadGetHexel(ptr, j, i)->st8)
             {
             case 1:
@@ -608,7 +602,7 @@ void PhysicsUpdate(Kvad_t* ptr)
                 ForceSand(ptr, j, i, gx, gy, &dz, &dn);
                 if(dz == gx && dn == gy)
                 {
-                    f_direct = 1;
+                    priority = 1;
                 }
             
                 break;
@@ -617,7 +611,7 @@ void PhysicsUpdate(Kvad_t* ptr)
                 ForceDirt(ptr, j, i, gx, gy, &dz, &dn);
                 if(dz == gx && dn == gy)
                 {
-                    f_direct = 1;
+                    priority = 1;
                 }
                 
                 break;
@@ -627,7 +621,7 @@ void PhysicsUpdate(Kvad_t* ptr)
                 b_up_fall = dz == -gx && dn == -gy;
                 b_dir_fall = dz == gx && dn == gy;
                 
-                f_direct = b_dir_fall + b_up_fall * 2;
+                priority = b_dir_fall + b_up_fall * 2;
                 
                 break;
             case 6:
@@ -641,14 +635,14 @@ void PhysicsUpdate(Kvad_t* ptr)
                 b_up_fall = dz == -gx && dn == -gy;
                 b_dir_fall = dz == gx && dn == gy;
                 
-                f_direct = b_dir_fall + b_up_fall * 2;
+                priority = b_dir_fall + b_up_fall * 2;
                 
                 break;
             default:
                 break;
             }
             
-            field_value = KvadGetHexel(ptr, j, i)->dns + f_direct;
+            field_value = KvadGetHexel(ptr, j, i)->dns + priority;
                 
             if(KvadGetHexel(ptr, j, i)->st8 != 0)
             {
@@ -669,7 +663,7 @@ void PhysicsUpdate(Kvad_t* ptr)
     {
         for(int j = border; j < ptr->width - border; j++)
         {
-            f_direct = 0;
+            priority = 0;
             switch (KvadGetHexel(ptr, j, i)->st8)
             {
             case 1:
@@ -687,7 +681,7 @@ void PhysicsUpdate(Kvad_t* ptr)
                 ForceSand(ptr, j, i, gx, gy, &dz, &dn);
                 if(dz == gx && dn == gy)
                 {
-                    f_direct = 1;
+                    priority = 1;
                 }
                 
                 break;
@@ -696,7 +690,7 @@ void PhysicsUpdate(Kvad_t* ptr)
                 ForceDirt(ptr, j, i, gx, gy, &dz, &dn);
                 if(dz == gx && dn == gy)
                 {
-                    f_direct = 1;
+                    priority = 1;
                 }
                 
                 break;
@@ -705,12 +699,12 @@ void PhysicsUpdate(Kvad_t* ptr)
                 ForceRope(ptr, j, i, gx, gy, &dz, &dn);
                 if(dz == gx && dn == gy)
                 {    
-                    f_direct = 1;
+                    priority = 1;
                     
                 }
                 if(dz == -gx && dn == -gy)
                 {    
-                    f_direct = 2;
+                    priority = 2;
                     
                 }
                 
@@ -725,12 +719,12 @@ void PhysicsUpdate(Kvad_t* ptr)
                 ForceIce(ptr, j, i, gx, gy, &dz, &dn);
                 if(dz == gx && dn == gy)
                 {    
-                    f_direct = 1;
+                    priority = 1;
                     
                 }
                 if(dz == -gx && dn == -gy)
                 {    
-                    f_direct = 2;
+                    priority = 2;
                     
                 }
                 
@@ -739,7 +733,7 @@ void PhysicsUpdate(Kvad_t* ptr)
                 break;
             }
             
-            field_value = KvadGetHexel(ptr, j, i)->dns + f_direct;
+            field_value = KvadGetHexel(ptr, j, i)->dns + priority;
             if(KvadGetHexel(ptr, j + dz, i + dn)->fld == field_value &&
                 KvadGetHexel(ptr, j, i)->st8 != 0)
             {
@@ -806,7 +800,7 @@ void Repulsion(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn, int 
     }
 }
 
-void RelToAbs(__attribute__((unused)) Kvad_t* ptr, int fx, int fy, int rel, int* dz, int* dn)
+void RelToAbs(int fx, int fy, int rel, int* dz, int* dn)
 {
     int dir = -1;
     *dz = 0, *dn = 0;
@@ -828,7 +822,6 @@ void RelToAbs(__attribute__((unused)) Kvad_t* ptr, int fx, int fy, int rel, int*
 void ForceDirt(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
-    __attribute__((unused)) int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
@@ -837,20 +830,11 @@ void ForceDirt(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 
     int right_sum = 0, left_sum = 0;
 
-    for(int i = 0; i < 6; i++)
-    {
-        if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
-        {
-            dir = i;
-            i = 6;
-        }
-    }
+    RelToAbs(fx, fy, 2, &rbx, &rby);
+    RelToAbs(fx, fy, -2, &lbx, &lby);
 
-    RelToAbs(ptr, fx, fy, 2, &rbx, &rby);
-    RelToAbs(ptr, fx, fy, -2, &lbx, &lby);
-
-    RelToAbs(ptr, fx, fy, 1, &rfx, &rfy);
-    RelToAbs(ptr, fx, fy, -1, &lfx, &lfy);
+    RelToAbs(fx, fy, 1, &rfx, &rfy);
+    RelToAbs(fx, fy, -1, &lfx, &lfy);
 
     right_sum =
     (
@@ -922,7 +906,6 @@ void ForceDirt(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 void ForceSand(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
-    __attribute__((unused)) int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
@@ -931,20 +914,11 @@ void ForceSand(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 
     int right_sum = 0, left_sum = 0;
 
-    for(int i = 0; i < 6; i++)
-    {
-        if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
-        {
-            dir = i;
-            i = 6;
-        }
-    }
+    RelToAbs(fx, fy, 2, &rbx, &rby);
+    RelToAbs(fx, fy, -2, &lbx, &lby);
 
-    RelToAbs(ptr, fx, fy, 2, &rbx, &rby);
-    RelToAbs(ptr, fx, fy, -2, &lbx, &lby);
-
-    RelToAbs(ptr, fx, fy, 1, &rfx, &rfy);
-    RelToAbs(ptr, fx, fy, -1, &lfx, &lfy);
+    RelToAbs(fx, fy, 1, &rfx, &rfy);
+    RelToAbs(fx, fy, -1, &lfx, &lfy);
 
     right_sum =
     (
@@ -979,7 +953,6 @@ void ForceSand(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 void ForceRope(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
-    __attribute__((unused)) int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
@@ -988,20 +961,11 @@ void ForceRope(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     
     int density = KvadGetHexel(ptr, z, n)->dns;
 
-    for(int i = 0; i < 6; i++)
-    {
-        if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
-        {
-            dir = i;
-            i = 6;
-        }
-    }
+    RelToAbs(fx, fy, 2, &rbx, &rby);
+    RelToAbs(fx, fy, -2, &lbx, &lby);
 
-    RelToAbs(ptr, fx, fy, 2, &rbx, &rby);
-    RelToAbs(ptr, fx, fy, -2, &lbx, &lby);
-
-    RelToAbs(ptr, fx, fy, 1, &rfx, &rfy);
-    RelToAbs(ptr, fx, fy, -1, &lfx, &lfy);
+    RelToAbs(fx, fy, 1, &rfx, &rfy);
+    RelToAbs(fx, fy, -1, &lfx, &lfy);
     
     b_back =
     (
@@ -1148,7 +1112,6 @@ void ForceRope(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
-    __attribute__((unused)) int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
@@ -1158,20 +1121,11 @@ void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 
     int right_sum = 0, left_sum = 0, back_sum = 0, front_sum = 0;
 
-    for(int i = 0; i < 6; i++)
-    {
-        if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
-        {
-            dir = i;
-            i = 6;
-        }
-    }
+    RelToAbs(fx, fy, 2, &rbx, &rby);
+    RelToAbs(fx, fy, -2, &lbx, &lby);
 
-    RelToAbs(ptr, fx, fy, 2, &rbx, &rby);
-    RelToAbs(ptr, fx, fy, -2, &lbx, &lby);
-
-    RelToAbs(ptr, fx, fy, 1, &rfx, &rfy);
-    RelToAbs(ptr, fx, fy, -1, &lfx, &lfy);
+    RelToAbs(fx, fy, 1, &rfx, &rfy);
+    RelToAbs(fx, fy, -1, &lfx, &lfy);
 
 
     right_sum =
@@ -1231,7 +1185,6 @@ void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
-    __attribute__((unused)) int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
@@ -1239,20 +1192,11 @@ void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     b_rightfront = 0, b_leftfront = 0,
     b_rightback = 0, b_leftback = 0;
 
-    for(int i = 0; i < 6; i++)
-    {
-        if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
-        {
-            dir = i;
-            i = 6;
-        }
-    }
+    RelToAbs(fx, fy, 2, &rbx, &rby);
+    RelToAbs(fx, fy, -2, &lbx, &lby);
 
-    RelToAbs(ptr, fx, fy, 2, &rbx, &rby);
-    RelToAbs(ptr, fx, fy, -2, &lbx, &lby);
-
-    RelToAbs(ptr, fx, fy, 1, &rfx, &rfy);
-    RelToAbs(ptr, fx, fy, -1, &lfx, &lfy);
+    RelToAbs(fx, fy, 1, &rfx, &rfy);
+    RelToAbs(fx, fy, -1, &lfx, &lfy);
 
     b_back =
     (
@@ -1374,7 +1318,6 @@ void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 void ForceGas(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {
     *dz = 0, *dn = 0;
-    __attribute__((unused)) int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
@@ -1384,20 +1327,11 @@ void ForceGas(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 
     int right_sum = 0, left_sum = 0, back_sum = 0, front_sum = 0;
 
-    for(int i = 0; i < 6; i++)
-    {
-        if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
-        {
-            dir = i;
-            i = 6;
-        }
-    }
+    RelToAbs(fx, fy, 2, &rbx, &rby);
+    RelToAbs(fx, fy, -2, &lbx, &lby);
 
-    RelToAbs(ptr, fx, fy, 2, &rbx, &rby);
-    RelToAbs(ptr, fx, fy, -2, &lbx, &lby);
-
-    RelToAbs(ptr, fx, fy, 1, &rfx, &rfy);
-    RelToAbs(ptr, fx, fy, -1, &lfx, &lfy);
+    RelToAbs(fx, fy, 1, &rfx, &rfy);
+    RelToAbs(fx, fy, -1, &lfx, &lfy);
 
 
     right_sum =
@@ -1457,7 +1391,6 @@ void ForceGas(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 void ForceRock(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {   
     *dz = 0, *dn = 0;
-    __attribute__((unused)) int dir = -1;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
@@ -1467,20 +1400,11 @@ void ForceRock(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     int right_sum = 0, left_sum = 0;
     int state = KvadGetHexel(ptr, z, n)->st8;
 
-    for(int i = 0; i < 6; i++)
-    {
-        if(fx == Yrot[i] && fy == Yrot[mod(i - 2, 6)])
-        {
-            dir = i;
-            i = 6;
-        }
-    }
+    RelToAbs(fx, fy, 2, &rbx, &rby);
+    RelToAbs(fx, fy, -2, &lbx, &lby);
 
-    RelToAbs(ptr, fx, fy, 2, &rbx, &rby);
-    RelToAbs(ptr, fx, fy, -2, &lbx, &lby);
-
-    RelToAbs(ptr, fx, fy, 1, &rfx, &rfy);
-    RelToAbs(ptr, fx, fy, -1, &lfx, &lfy);
+    RelToAbs(fx, fy, 1, &rfx, &rfy);
+    RelToAbs(fx, fy, -1, &lfx, &lfy);
 
     right_sum =
     (

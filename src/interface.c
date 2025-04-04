@@ -44,7 +44,7 @@ int min_neigh, max_neigh;
 void InterfaceInitialize()
 {
     cursor.lm = 3;
-    cursor.rm = 5;
+    cursor.rm = 8;
     cursor.lrad = 3;
     cursor.rrad = 3;
     
@@ -469,7 +469,7 @@ void ButtonDown(Button_t* b)
             b->text = 2;
             break;
         case 31:
-            RulesRemove(rules_editor.mat_from, rules_editor.mat_to, rules_editor.cond_num);
+            RulesRemove(rules_editor.mat_from, rules_editor.mat_to);
             rules_editor.cond_num = RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->num - 1;
             if(rules_editor.list_begin > 0) rules_editor.list_begin--;
             b->act_b = 1;
@@ -526,7 +526,7 @@ void ButtonUp(Button_t* b)
 void DisplayPanning(Display_t* d)
 {
     int wx, wy, pwx, pwy;
-    int x, y, dz, dn, gridx, gridy;
+    int gridx, gridy;
     MouseToGrid(&gridx, &gridy);
     int b_inrec = isinrec(d->grid_x, d->grid_y, d->grid_w, d->grid_h, gridx, gridy);
     
@@ -763,7 +763,6 @@ void SliderListCheck()
             }
             else
             {
-                SliderUp(s);
                 s->b_grab = 0;
             }
         }
@@ -773,7 +772,6 @@ void SliderListCheck()
         for(int i = 0; i < sliderlistsize; i++)
         {
             s = sliderlist[i];
-            SliderUp(s);
             s->b_grab = 0;
             b_slider = -1;
         }
@@ -797,11 +795,6 @@ void SliderDown(Slider_t* s, int c)
     default:
         break;
     }
-}
-
-void SliderUp(Slider_t* s)
-{
-    
 }
 
 void FontUIDraw(Font_t* f, Display_t* d)
@@ -1084,7 +1077,7 @@ void SelectListDraw(Font_t* f, Display_t* d, Select_List_t *p_sl)
     lm_arrow = cursor.lm - p_sl->shift;
     rm_arrow = cursor.rm - p_sl->shift;
     
-    if(lm_arrow == rm_arrow)
+    if(lm_arrow == rm_arrow && lm_arrow >= 0 && lm_arrow < p_sl->rectangle.h)
         FontStringDraw(f, p_sl->rectangle.x + 4, p_sl->rectangle.y + lm_arrow, 
             1, 1, L"А", inform_color);
     else

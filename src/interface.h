@@ -107,8 +107,6 @@ void SliderListCheck();
 
 void SliderDown(Slider_t* s, int c);
 
-void SliderUp(Slider_t* s);
-
 void FontUIDraw(Font_t* f, Display_t* d);
 
 void FontRulesEditorDraw(Font_t* f);
