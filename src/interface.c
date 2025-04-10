@@ -44,7 +44,7 @@ int min_neigh, max_neigh;
 void InterfaceInitialize()
 {
     cursor.lm = 8;
-    cursor.rm = 5;
+    cursor.rm = 3;
     cursor.lrad = 7;
     cursor.rrad = 7;
     
@@ -598,9 +598,9 @@ void DisplayPanning(Display_t* d)
         hmin(
             hmax(
                 d->scale -inpst.mouse.scroll,
-                -8
+                -7
             ),
-        2
+        3
         );
         
         if(d->scale == 0 || d->scale == -1)

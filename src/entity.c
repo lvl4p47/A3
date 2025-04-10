@@ -9,8 +9,9 @@ Entity_t* EntityInitialize(z, n)
     p_e->n = n;
     p_e->subz = 0;
     p_e->subn = 0;
-    p_e->magn = 8;
+    p_e->magn = 7;
     p_e->fuel = 20;
+    
     
     return p_e;
 }

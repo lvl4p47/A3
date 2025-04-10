@@ -913,22 +913,24 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
         p_e->z = p_e->z + 1, p_e->subz = p_e->subz - p_e->magn, 
         p_e->n = p_e->n + 1, p_e->subn = p_e->subn - p_e->magn;
     
-    if(KvadGetHexel(ptr, p_e->z, p_e->n)->mat != 0)
+    if(inpst.delete == 1)
+        KvadSetMat(ptr, p_e->z, p_e->n, 0);
+    if(KvadGetHexel(ptr, p_e->z, p_e->n)->dns > 4)
     {
-        if(inpst.delete == 1)
-            KvadSetMat(ptr, p_e->z, p_e->n, 0);
         p_e->z = oldz, p_e->n = oldn;
         p_e->subz = oldsubz, p_e->subn = oldsubn;
         p_e->fuel = hmin(p_e->fuel + 3, 20);
-        if(inpst.jump)
-            inpst.vy = - 1 * 64;
+    }
+    else if(KvadGetHexel(ptr, p_e->z, p_e->n)->dns > 1)
+    {
+        p_e->fuel = hmin(p_e->fuel + 1, 20);
     }
     printf("\nfuel: %i", p_e->fuel);
     
     if(inpst.insertB)
         KvadSetMat(ptr, p_e->z, p_e->n, 1);
     if(inpst.insertA)
-        KvadSetMat(ptr, p_e->z, p_e->n, 8);
+        KvadSetMat(ptr, p_e->z, p_e->n, 2);
     
     // printf("\nex %i\tey %i", p_e->z, p_e->n);
 }
