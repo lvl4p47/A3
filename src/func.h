@@ -14,26 +14,14 @@ extern int side;
 
 //INPUT
 
-
-
 typedef struct
 {
-    int x, y, pressed, down, up, lmc, mmc, rmc, px, py, wheel, scroll;
-} MouseState_t;
+    int x, y;
+} Vector_t;
 
-typedef struct
-{
-    MouseState_t mouse;
-    int vx, vy;
-    int shift;
-} InputState_t;
+
 
 //HEXAGONS
-
-typedef struct
-{
-    int mat, tmp, prs_grav, prs_dist, fld, fld2, dx, dy, st8, dns, clr, stress;
-} Cell_t;
 
 
 

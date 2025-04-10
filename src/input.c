@@ -21,6 +21,10 @@ void InputInitialize()
     inpst.mouse.x       = 0;
     inpst.mouse.y       = 0;
 
+    inpst.left = 0;
+    inpst.right = 0;
+    inpst.up = 0;
+    inpst.down = 0;
     inpst.vx = 0;
     inpst.vy = 0;
     inpst.shift = 0;
@@ -31,27 +35,36 @@ void InputRegister()
     inpst.mouse.down = 0;
     inpst.mouse.up   = 0;
     while( SDL_PollEvent( &event ) )
-    {
-        inpst.vx = 0;
-        inpst.vy = 0;
-        
+    {   
         switch( event.type ){
         case SDL_KEYDOWN:
             switch( event.key.keysym.sym ){
                 case SDLK_LEFT:
-                    inpst.vx -= 1;
+                    inpst.left = 1;
                     break;
                 case SDLK_RIGHT:
-                    inpst.vx += 1;
+                    inpst.right = 1;
                     break;
                 case SDLK_UP:
-                    inpst.vy += 1;
+                    inpst.up = 1;
                     break;
                 case SDLK_DOWN:
-                    inpst.vy -= 1;
+                    inpst.down = 1;
                     break;
                 case SDLK_LSHIFT:
                     inpst.shift = 1;
+                    break;
+                case SDLK_x:
+                    inpst.delete = 1;
+                    break;
+                case SDLK_c:
+                    inpst.insertA = 1;
+                    break;
+                case SDLK_v:
+                    inpst.insertB = 1;
+                    break;
+                case SDLK_SPACE:
+                    inpst.jump = 1;
                     break;
                 default:
                     break;
@@ -60,8 +73,32 @@ void InputRegister()
 
         case SDL_KEYUP:
             switch( event.key.keysym.sym ){
+                case SDLK_LEFT:
+                    inpst.left = 0;
+                    break;
+                case SDLK_RIGHT:
+                    inpst.right = 0;
+                    break;
+                case SDLK_UP:
+                    inpst.up = 0;
+                    break;
+                case SDLK_DOWN:
+                    inpst.down = 0;
+                    break;
                 case SDLK_LSHIFT:
                     inpst.shift = 0;
+                    break;
+                case SDLK_x:
+                    inpst.delete = 0;
+                    break;
+                case SDLK_c:
+                    inpst.insertA = 0;
+                    break;
+                case SDLK_v:
+                    inpst.insertB = 0;
+                    break;
+                case SDLK_SPACE:
+                    inpst.jump = 0;
                     break;
                 default:
                     break;
@@ -133,6 +170,10 @@ void InputUpdate()
     {
         SDL_GetMouseState(&inpst.mouse.x, &inpst.mouse.y);
     }
+    
+    
+    
+    
 }
 
 void InputTerminate()

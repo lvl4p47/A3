@@ -77,7 +77,8 @@ int main( int argc, char * argv[] )
     VideoInitialize();
     InputInitialize();
     HexagonsInitialize();
-
+    EntitySystemInitialize();
+    
     k1 = KvadInitialize(side, side);
      DisplayListInitialize();
      f1 = FontInitialise();
@@ -100,7 +101,7 @@ int main( int argc, char * argv[] )
 		calculate_delta(&dr, &ds, cur_time, frame_time, step_time, t_f, t_s);
 		delay(dr, ds);
     }
-
+    EntitySystemTerminate();
     KvadTerminate(k1);
     DisplayListTerminate();
     FontTerminate(f1);

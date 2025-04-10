@@ -47,4 +47,6 @@ void DisplayListInitialize();
 
 void DisplayListTerminate();
 
+void EntityDraw(Kvad_t* ptr, Display_t* d, Entity_t* p_e);
+
 #endif

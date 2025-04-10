@@ -43,10 +43,10 @@ int min_neigh, max_neigh;
 
 void InterfaceInitialize()
 {
-    cursor.lm = 3;
-    cursor.rm = 0;
-    cursor.lrad = 5;
-    cursor.rrad = 5;
+    cursor.lm = 8;
+    cursor.rm = 5;
+    cursor.lrad = 7;
+    cursor.rrad = 7;
     
     rules_editor.x = 1;
     rules_editor.y = 24;
@@ -62,9 +62,9 @@ void InterfaceInitialize()
     select_list.rectangle.y = 1;
     select_list.rectangle.w = 17;
     select_list.rectangle.h = 6;
-    select_list.s = L"0 - воздух\n1 - ткань\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень";
+    select_list.s = L"0 - воздух\n1 - ткань\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень\n9 - ???";
     select_list.min = 0;
-    select_list.max = 8;
+    select_list.max = mat_amount - 1;
     
     hex_screen.x = 19;
     hex_screen.y = 1;
@@ -571,9 +571,9 @@ void DisplayPanning(Display_t* d)
         MouseResetPrev();
         b_panning = 0;
     }
-    
+        
     if((inpst.mouse.scroll && inpst.shift == 1)
-         && (b_panning || b_inrec))
+        && (b_panning || b_inrec))
     {
         d->angle = (d->angle + 48 + inpst.mouse.scroll) % 48;
 
@@ -590,7 +590,7 @@ void DisplayPanning(Display_t* d)
 
     }
     else if((inpst.mouse.scroll && inpst.shift == 0)
-         && (b_panning || b_inrec))
+        && (b_panning || b_inrec))
     {
         int old_scale = d->scale, new_scale;
         
@@ -600,7 +600,7 @@ void DisplayPanning(Display_t* d)
                 d->scale -inpst.mouse.scroll,
                 -8
             ),
-         2
+        2
         );
         
         if(d->scale == 0 || d->scale == -1)
@@ -648,6 +648,67 @@ void DisplayPanning(Display_t* d)
             
         MouseResetPrev();
     }
+}
+
+void DisplayToEntity(Display_t* d, Entity_t* p_e)
+{
+    int dz = -p_e->z - d->hshift.x;
+    // dz = 0;
+    int dn = p_e->n + d->hshift.y;
+    
+    if(d->scale > 1)
+    {
+        dz = -p_e->z / d->scale - d->hshift.x ,
+        dn = p_e->n / d->scale + d->hshift.y;
+    }
+    else if(d->scale < -1)
+        dz = -p_e->z - d->hshift.x / -d->scale,
+        dn = p_e->n + d->hshift.y / -d->scale;
+    // dn = 0;
+    // printf("\n\tdz %i\tdn %i", p_e->z, p_e->n);
+    // printf("\thsw %i\thsh %i", d->hshift.x, d->hshift.y);
+    d->screen_shift.x = d->screen_shift.x +
+    (dz) * hcos(d->angle) - (dn) * hcos(d->angle + 8);
+    d->screen_shift.y = d->screen_shift.y +
+    (dz) * hsin(d->angle) - (dn) * hsin(d->angle + 8);
+
+    // d->screen_shift.x = d->screen_shift.w + 0;
+    // d->screen_shift.y = d->screen_shift.h + 0;
+    
+    d->hshift.x = 4 + d->screen.x + d->screen_shift.x * 2  + d->screen.w / 2;
+    d->hshift.y = 4 + d->screen.y + d->screen_shift.y * 2  + d->screen.h / 2;
+    PixelToHex(d, &d->hshift.x, &d->hshift.y);
+    
+    // d->hshift.x = -p_e->z;
+    // // d->hshift.y = -p_e->n;
+    
+    d->hshift.w = d->screen_shift.x -
+    (d->hshift.x) * hcos(d->angle) - (d->hshift.y) * hcos(d->angle + 8);
+    d->hshift.h = d->screen_shift.y -
+    (d->hshift.x) * hsin(d->angle) - (d->hshift.y) * hsin(d->angle + 8);
+    
+    d->screen_shift.w = d->screen_shift.x;
+    d->screen_shift.h = d->screen_shift.y;
+
+    // d->hshift.x = 4 + d->screen.x + d->screen_shift.x * 2  + d->screen.w / 2;
+    // d->hshift.y = 4 + d->screen.y + d->screen_shift.y * 2  + d->screen.h / 2;
+    // PixelToHex(d, &d->hshift.x, &d->hshift.y);
+        
+    // d->hshift.w = d->screen_shift.x -
+    // (d->hshift.x) * hcos(d->angle) - (d->hshift.y) * hcos(d->angle + 8);
+    // d->hshift.h = d->screen_shift.y -
+    // (d->hshift.x) * hsin(d->angle) - (d->hshift.y) * hsin(d->angle + 8);
+
+    // d->hshift.x++;
+    // d->hshift.x = -p_e->z;
+    // d->hshift.y = -p_e->n;
+    
+    // d->hshift.w = d->screen_shift.x -
+    // (d->hshift.x) * hcos(d->angle) - (d->hshift.y) * hcos(d->angle + 8);
+    // d->hshift.h = d->screen_shift.y -
+    // (d->hshift.x) * hsin(d->angle) - (d->hshift.y) * hsin(d->angle + 8);
+    
+    // printf("\n\thsw %i\thsh %i", d->hshift.x, d->hshift.y);
 }
 
 void ScreenInput(Kvad_t* ptr, Display_t* d)
@@ -890,22 +951,29 @@ void FontRulesEditorDraw(Font_t* f)
     FontNumberDraw(f, rules_x + hex_x + 4, rules_y + hex_y + 4,     2, 1, rules_editor.mat_from, important_color, 0, 1);
     
     FontRulesEditorNeighborsDraw(f, rules_x + hex_x + 13  , rules_y + hex_y + 1   , 2, 1, 
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag,
             RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag);
     FontNumberDraw(f, rules_x + hex_x + 13  , rules_y + hex_y + 4   , 2, 1, rules_editor.mat_to, important_color, 0, 1);
     FontNumberDraw(f, rules_x + hex_x + 13  , rules_y + hex_y + 7   , 2, 1, rules_editor.cond_num, inform_color, 0, 1);
           
     FontRulesEditorNeighborsDraw(f, rules_x + hex_x + 2   , rules_y + hex_y + 1   , 2, 1, 
-            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[0]);
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[0],
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag);
     FontRulesEditorNeighborsDraw(f, rules_x + hex_x + 6   , rules_y + hex_y + 1   , 2, 1, 
-            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[1]);
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[1],
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag);
     FontRulesEditorNeighborsDraw(f, rules_x + hex_x + 8   , rules_y + hex_y + 4   , 2, 1, 
-            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[2]);
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[2],
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag);
     FontRulesEditorNeighborsDraw(f, rules_x + hex_x + 6   , rules_y + hex_y + 7   , 2, 1, 
-            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[3]);
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[3],
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag);
     FontRulesEditorNeighborsDraw(f, rules_x + hex_x + 2   , rules_y + hex_y + 7   , 2, 1, 
-            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[4]);
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[4],
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag);
     FontRulesEditorNeighborsDraw(f, rules_x + hex_x + 0   , rules_y + hex_y + 4   , 2, 1, 
-            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[5]);
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->neighbors[5],
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[rules_editor.cond_num]->flag);
     
     FontStringDraw(f, rules_x + hex_x + 9, rules_y + hex_y + 1, 3, 1, L"ФЛГ", inform_color);
     FontStringDraw(f, rules_x + hex_x + 11, rules_y + hex_y + 4, 1, 1, L">", inform_color);
@@ -947,28 +1015,24 @@ void FontRulesEditorDraw(Font_t* f)
         FontRulesEditorNeighborsDraw(f, 
             rules_x + hex_x + tree_x, 
             rules_y + hex_y + tree_y + number  - rules_editor.list_begin, 2, 1, 
-            RULES->frommat[rules_editor.mat_from]->
-            tomat[rules_editor.mat_to]->
-            req[number]->flag);
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[number]->flag, 
+            RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[number]->flag);
         for(int k = 0; k < 6; k++)
         {
             FontRulesEditorNeighborsDraw(f, 
                 rules_x + hex_x + tree_x + 2 + k * 2 , 
                 rules_y + hex_y + tree_y + number - rules_editor.list_begin, 2, 1, 
-                RULES->frommat[rules_editor.mat_from]->
-                tomat[rules_editor.mat_to]->
-                req[number]->neighbors[k]);
+                RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[number]->neighbors[k], 
+                RULES->frommat[rules_editor.mat_from]->tomat[rules_editor.mat_to]->req[number]->flag);
         }
         
     }
 }
 
-void FontRulesEditorNeighborsDraw(Font_t* f, int x, int y, int w, int h, int n)
+void FontRulesEditorNeighborsDraw(Font_t* f, int x, int y, int w, int h, int n, int flag)
 {
     int other_neigh_color = inform_color;
-    if(RULES->frommat[rules_editor.mat_from]->
-            tomat[rules_editor.mat_to]->
-            req[rules_editor.cond_num]->flag == 0) other_neigh_color = maybe_color;
+    if(flag == 0) other_neigh_color = maybe_color;
     if(n >= 0)  FontNumberDraw(f, x, y, w, h, n, yes_color, 1, 1);
     else if(n == -1) FontStringDraw(f, x, y, w, h, L"--", other_neigh_color);
     else if(n == -2) FontStringDraw(f, x, y, w, h, L"-0", no_color);
@@ -1030,6 +1094,7 @@ void InfoBoxUpdate()
 void DisplayListUpdate()
 {
     DisplayPanning(displaylist[0]);
+    DisplayToEntity(displaylist[0], e1);
     
     // displaylist[1]->angle = displaylist[0]->angle;
     

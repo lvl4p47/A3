@@ -3,6 +3,20 @@
 
 #include "audio.h"
 
+typedef struct
+{
+    int x, y, pressed, down, up, lmc, mmc, rmc, px, py, wheel, scroll;
+} MouseState_t;
+
+typedef struct
+{
+    MouseState_t mouse;
+    int left, right, up, down;
+    int vx, vy, delete, insertA, insertB;
+    int jump;
+    int shift;
+} InputState_t;
+
 extern int b_quit;
 extern SDL_Event event;
 extern int pixelsize;

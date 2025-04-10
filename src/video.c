@@ -246,14 +246,14 @@ void DisplayScan(Kvad_t* ptr, Display_t* d, int b_ui, int scale_selection)
     corner_z[3] = d->screen.x               + border - d->hshift.w * 0  ; 
     corner_n[3] = d->screen.y + d->screen.h - border - d->hshift.h * 0  ;
     
-    corner_z[0] += d->hshift.w * 1  ; 
-    corner_n[0] += d->hshift.h * 1  ;
-    corner_z[1] += d->hshift.w * 1  ; 
-    corner_n[1] += d->hshift.h * 1  ;
-    corner_z[2] += d->hshift.w * 1  ; 
-    corner_n[2] += d->hshift.h * 1  ;
-    corner_z[3] += d->hshift.w * 1  ; 
-    corner_n[3] += d->hshift.h * 1  ;
+    // corner_z[0] -= d->hshift.x * 1  ; 
+    // corner_n[0] -= d->hshift.y * 1  ;
+    // corner_z[1] -= d->hshift.x * 1  ; 
+    // corner_n[1] -= d->hshift.y * 1  ;
+    // corner_z[2] -= d->hshift.x * 1  ; 
+    // corner_n[2] -= d->hshift.y * 1  ;
+    // corner_z[3] -= d->hshift.x * 1  ; 
+    // corner_n[3] -= d->hshift.y * 1  ;
     
     for(int i = 0; i < 4; i++)
         PixelToHex(d, &corner_z[i], &corner_n[i]);
@@ -367,6 +367,8 @@ void DisplayListDraw(Kvad_t* ptr, int b_ui)
         }
     }
     else selection_time = 0;
+    
+    EntityDraw(ptr, displaylist[0], e1);
 }
 
 void DisplayListInitialize()
@@ -389,4 +391,34 @@ void DisplayListTerminate()
         DisplayTerminate(displaylist[i]);
     }
     free(displaylist);
+}
+
+
+void EntityDraw(Kvad_t* ptr, Display_t* d, Entity_t* p_e)
+{
+    int z, n;
+    z = p_e->z;
+    n = p_e->n;
+    
+    // z = 10, n = 10;
+    
+    if(d->scale >= 1)
+    {
+        z /= d->scale;
+        n /= d->scale;
+    }
+    else
+    {
+        z *= -d->scale;
+        n *= -d->scale;
+        z += p_e->subz * -d->scale / p_e->magn;
+        n += p_e->subn * -d->scale / p_e->magn;
+    }
+    // z /= p_e->magn;
+    // n /= p_e->magn;
+
+    
+    
+    DotsDraw(d, z, n, 10);
+    // HexelDraw(d, z, n, KvadGetHexel(ptr, z, n), 0);
 }

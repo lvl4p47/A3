@@ -7,7 +7,7 @@
 
 
 //HEXAGONS
-int side = 100;
+int side = 96;
 
 //VIDEO
 

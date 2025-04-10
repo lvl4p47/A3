@@ -1,7 +1,7 @@
 #ifndef HEXAGONS_H_INCLUDED
 #define HEXAGONS_H_INCLUDED
 
-#include "input.h"
+#include "entity.h"
 
 extern const int mat_amount;
 
@@ -29,6 +29,12 @@ typedef struct
 {
     RulesFromMat_t **frommat;// * mat_amount
 } Rules_t;
+
+typedef struct
+{
+    int mat, tmp, fld, fld2, val1, val2, dx, dy, st8, dns, clr, stress;
+    
+} Cell_t;
 
 typedef struct
 {
@@ -62,6 +68,10 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value);
 
 Cell_t* KvadGetHexel(Kvad_t* ptr, int z, int n);
 
+void KvadSwapCells(Kvad_t* ptr, int z, int n, int dz, int dn);
+
+void KvadPartSwapCells(Kvad_t* ptr, int z, int n, int dz, int dn);
+
 void KvadSetBlob(Kvad_t* ptr, int z, int n, int value, int rad);
 
 void WaveUpdate(Kvad_t* ptr);
@@ -76,6 +86,8 @@ void PhysicsUpdate(Kvad_t* ptr);
 
 void KvadUpdate(Kvad_t* ptr);
 
+void EntityCollision(Kvad_t* ptr, Entity_t* p_e);
+
 int NeighbourCount(Kvad_t* ptr, int z, int n, int val);
 
 void Repulsion(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn, int empty_st8);
@@ -88,8 +100,6 @@ void ForceSand(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void ForceRope(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
-void ForceLiquid0(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
-
 void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
@@ -97,6 +107,8 @@ void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 void ForceGas(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void ForceRock(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
+
+void ForceRigid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void Border(Kvad_t* ptr);
 
