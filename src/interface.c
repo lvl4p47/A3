@@ -653,7 +653,6 @@ void DisplayPanning(Display_t* d)
 void DisplayToEntity(Display_t* d, Entity_t* p_e)
 {
     int dz = -p_e->z - d->hshift.x;
-    // dz = 0;
     int dn = p_e->n + d->hshift.y;
     
     if(d->scale > 1)
@@ -664,23 +663,14 @@ void DisplayToEntity(Display_t* d, Entity_t* p_e)
     else if(d->scale < -1)
         dz = -p_e->z - d->hshift.x / -d->scale,
         dn = p_e->n + d->hshift.y / -d->scale;
-    // dn = 0;
-    // printf("\n\tdz %i\tdn %i", p_e->z, p_e->n);
-    // printf("\thsw %i\thsh %i", d->hshift.x, d->hshift.y);
     d->screen_shift.x = d->screen_shift.x +
     (dz) * hcos(d->angle) - (dn) * hcos(d->angle + 8);
     d->screen_shift.y = d->screen_shift.y +
     (dz) * hsin(d->angle) - (dn) * hsin(d->angle + 8);
-
-    // d->screen_shift.x = d->screen_shift.w + 0;
-    // d->screen_shift.y = d->screen_shift.h + 0;
     
     d->hshift.x = 4 + d->screen.x + d->screen_shift.x * 2  + d->screen.w / 2;
     d->hshift.y = 4 + d->screen.y + d->screen_shift.y * 2  + d->screen.h / 2;
     PixelToHex(d, &d->hshift.x, &d->hshift.y);
-    
-    // d->hshift.x = -p_e->z;
-    // // d->hshift.y = -p_e->n;
     
     d->hshift.w = d->screen_shift.x -
     (d->hshift.x) * hcos(d->angle) - (d->hshift.y) * hcos(d->angle + 8);
@@ -689,26 +679,6 @@ void DisplayToEntity(Display_t* d, Entity_t* p_e)
     
     d->screen_shift.w = d->screen_shift.x;
     d->screen_shift.h = d->screen_shift.y;
-
-    // d->hshift.x = 4 + d->screen.x + d->screen_shift.x * 2  + d->screen.w / 2;
-    // d->hshift.y = 4 + d->screen.y + d->screen_shift.y * 2  + d->screen.h / 2;
-    // PixelToHex(d, &d->hshift.x, &d->hshift.y);
-        
-    // d->hshift.w = d->screen_shift.x -
-    // (d->hshift.x) * hcos(d->angle) - (d->hshift.y) * hcos(d->angle + 8);
-    // d->hshift.h = d->screen_shift.y -
-    // (d->hshift.x) * hsin(d->angle) - (d->hshift.y) * hsin(d->angle + 8);
-
-    // d->hshift.x++;
-    // d->hshift.x = -p_e->z;
-    // d->hshift.y = -p_e->n;
-    
-    // d->hshift.w = d->screen_shift.x -
-    // (d->hshift.x) * hcos(d->angle) - (d->hshift.y) * hcos(d->angle + 8);
-    // d->hshift.h = d->screen_shift.y -
-    // (d->hshift.x) * hsin(d->angle) - (d->hshift.y) * hsin(d->angle + 8);
-    
-    // printf("\n\thsw %i\thsh %i", d->hshift.x, d->hshift.y);
 }
 
 void ScreenInput(Kvad_t* ptr, Display_t* d)
@@ -876,18 +846,10 @@ void FontUIDraw(Font_t* f, Display_t* d)
     FontNumberDraw(f, 1, 0, 2, 1, x, frame_color, 0, 1);
     FontNumberDraw(f, 4, 0, 2, 1, y, frame_color, 0, 1);
     
-    FontNumberDraw(f, 11, 0, 5, 1, d->hshift.x, frame_color, 1, 1);
-    FontNumberDraw(f, 17, 0, 5, 1, d->hshift.y, frame_color, 1, 1);
+    // FontNumberDraw(f, 11, 0, 5, 1, d->hshift.x, frame_color, 1, 1);
+    // FontNumberDraw(f, 17, 0, 5, 1, d->hshift.y, frame_color, 1, 1);
     
-    // FontNumberDraw(f, 11, 0, 3, 1, d->screen_shift.x, frame_color, 0, 1);
-    // FontNumberDraw(f, 15, 0, 3, 1, d->screen_shift.y, frame_color, 0, 1);
-    
-    // wchar_t str[240];
-    // swprintf(str, 240, L"угол: %i\nсдвиг по х: %i\nсдвиг по y: %i\nмышь х: %i\nмышь y: %i\n", 
-    // d->angle, d->hshift.x, d->hshift.y, x, y);
-    
-    // FontStringDraw(f, 2, 18, 15, 16,
-    // str, inform_color);
+    FontNumberDraw(f, 19, 0, 2, 1, e1->fuel, frame_color, 0, 1);
     
     if(b_ui)
     {

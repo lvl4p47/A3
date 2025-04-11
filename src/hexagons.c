@@ -830,42 +830,12 @@ void KvadUpdate(Kvad_t* ptr)
 void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
 {
     int oldz, oldn, oldsubz, oldsubn;
+    int newz, newn;
     oldz = p_e->z, oldn = p_e->n;
     oldsubz = p_e->subz, oldsubn = p_e->subn;
     
-    if(inpst.vx > 0 && inpst.right == 0) inpst.vx -= 1;
-    if(inpst.vx < 0 && inpst.left == 0) inpst.vx += 1;
-    if(inpst.vy > 0 && inpst.down == 0) inpst.vy -= 1;
-    if(inpst.vy < 0 && inpst.up == 0) inpst.vy += 1;
-    
-    inpst.vx = 1 * (inpst.right - inpst.left);
-    inpst.vy = 1 * (inpst.down - inpst.up);
-    
-    // printf("\nvx %i\tvy %i", inpst.vx, inpst.vy);
-    
-    // inpst.vy++;
-    
-    int maxspeed = 1;
-    inpst.vx = 
-    hmax
-    (
-        hmin
-        (
-            maxspeed,
-            inpst.vx
-        ),
-        -maxspeed
-    );
-    inpst.vy = 
-    hmax
-    (
-        hmin
-        (
-            maxspeed,
-            inpst.vy
-        ),
-        -maxspeed
-    );
+    inpst.vx = (inpst.right - inpst.left);
+    inpst.vy = (inpst.down - inpst.up);
     
     p_e->z += hdiv(p_e->subz, p_e->magn);
     p_e->n += hdiv(p_e->subn, p_e->magn);
@@ -884,15 +854,10 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
     else if(inpst.vx < 0)
         dz += -1, dn += 1;
     
-        
-    if(dz == 0 && dn == 0)
+    if(dz == 0 && dn == 0 && KvadGetHexel(ptr, oldz, oldn)->dns < 2)
         dn = 1;
         
     p_e->subz += dz, p_e->subn += dn;
-    
-    
-    // p_e->subz += 2 * inpst.vx + 0 * inpst.vy;
-    // p_e->subn += -1 * inpst.vx + 2 * inpst.vy;
     
     int s = p_e->magn, s1 = s, s2 = 2 * s;
     if(mod(s , 3) == 0) s1++, s2++;
@@ -903,7 +868,7 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
         p_e->subz + 2 * p_e->subn < s2,
         2 * p_e->subz + p_e->subn <= s2
     };
-    // printf("\n");
+    
     if      (conds[0] == 1 && conds[1] == 1);
     else if (conds[2] == 0 && conds[3] == 1) 
         p_e->z = p_e->z + 1, p_e->subz = p_e->subz - p_e->magn;
@@ -912,9 +877,10 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
     else    
         p_e->z = p_e->z + 1, p_e->subz = p_e->subz - p_e->magn, 
         p_e->n = p_e->n + 1, p_e->subn = p_e->subn - p_e->magn;
+        
+    newz = p_e->z;
+    newn = p_e->n;
     
-    if(inpst.delete == 1)
-        KvadSetMat(ptr, p_e->z, p_e->n, 0);
     if(KvadGetHexel(ptr, p_e->z, p_e->n)->dns > 4)
     {
         p_e->z = oldz, p_e->n = oldn;
@@ -925,14 +891,15 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
     {
         p_e->fuel = hmin(p_e->fuel + 1, 20);
     }
-    printf("\nfuel: %i", p_e->fuel);
     
+    if(inpst.delete == 1)
+        KvadSetMat(ptr, newz, newn, 0);
     if(inpst.insertB)
-        KvadSetMat(ptr, p_e->z, p_e->n, 1);
+        KvadSetMat(ptr, newz, newn, 1);
     if(inpst.insertA)
-        KvadSetMat(ptr, p_e->z, p_e->n, 2);
+        KvadSetMat(ptr, newz, newn, 2);
     
-    // printf("\nex %i\tey %i", p_e->z, p_e->n);
+    // printf("\nez %i\ten %i", p_e->z, p_e->n);
 }
 
 int NeighbourCount(Kvad_t* ptr, int z, int n, int val)
