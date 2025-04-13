@@ -553,7 +553,7 @@ void AudioUpdate(Kvad_t* ptr, int b_pause)
 
 void PhysicsUpdate(Kvad_t* ptr)
 {
-    int gx = 0, gy = 1;
+    int gx = 0, gy = 0;
     int dz = 0, dn = 0;
     int priority = 0;
     int b_dir_fall = 0;
@@ -562,12 +562,6 @@ void PhysicsUpdate(Kvad_t* ptr)
     int field_value = 0;
     
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
-
-    RelToAbs(gx, gy, 2, &rbx, &rby);
-    RelToAbs(gx, gy, -2, &lbx, &lby);
-
-    RelToAbs(gx, gy, 1, &rfx, &rfy);
-    RelToAbs(gx, gy, -1, &lfx, &lfy);
     
     for(int i = 0; i < ptr->height; i++)
     {
@@ -618,6 +612,14 @@ void PhysicsUpdate(Kvad_t* ptr)
     {
         for(int j = border; j < ptr->width - border; j++)
         {
+            gx = KvadGetHexel(ptr, j, i)->dx;
+            gy = KvadGetHexel(ptr, j, i)->dy;
+
+            RelToAbs(gx, gy, 2, &rbx, &rby);
+            RelToAbs(gx, gy, -2, &lbx, &lby);
+
+            RelToAbs(gx, gy, 1, &rfx, &rfy);
+            RelToAbs(gx, gy, -1, &lfx, &lfy);
             priority = 0;
             switch (KvadGetHexel(ptr, j, i)->st8)
             {
@@ -712,6 +714,14 @@ void PhysicsUpdate(Kvad_t* ptr)
     {
         for(int j = border; j < ptr->width - border; j++)
         {
+            gx = KvadGetHexel(ptr, j, i)->dx;
+            gy = KvadGetHexel(ptr, j, i)->dy;
+
+            RelToAbs(gx, gy, 2, &rbx, &rby);
+            RelToAbs(gx, gy, -2, &lbx, &lby);
+
+            RelToAbs(gx, gy, 1, &rfx, &rfy);
+            RelToAbs(gx, gy, -1, &lfx, &lfy);
             priority = 0;
             switch (KvadGetHexel(ptr, j, i)->st8)
             {
@@ -814,7 +824,8 @@ void PhysicsUpdate(Kvad_t* ptr)
                
             KvadGetHexel(ptr, j, i)->fld = 0;
             KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp);
-
+            KvadGetHexel(ptr, j, i)->dx = 0;
+            KvadGetHexel(ptr, j, i)->dy = 1;
         }
     }
 }
@@ -831,6 +842,7 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
 {
     int oldz, oldn, oldsubz, oldsubn;
     int newz, newn;
+    int max_fuel = 40;
     oldz = p_e->z, oldn = p_e->n;
     oldsubz = p_e->subz, oldsubn = p_e->subn;
     
@@ -845,17 +857,25 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
     
     int dz = 0, dn = 0;
     
-    if(inpst.vy < 0 && p_e->fuel > 0)
-        dn += -1, p_e->fuel--;
+    if(inpst.vy < 0 && p_e->fuel > 1)
+        dn += -1, p_e->fuel -= 2;
     if(inpst.vy > 0)
         dn += 1;
     else if(inpst.vx > 0)
+    {
         dz += 1, dn += 0;
+    }
     else if(inpst.vx < 0)
+    {
         dz += -1, dn += 1;
+    }
     
     if(dz == 0 && dn == 0 && KvadGetHexel(ptr, oldz, oldn)->dns < 2)
+    {
         dn = 1;
+        if(inpst.vy >= 0 || 1)
+            p_e->fuel = hmin(p_e->fuel + 1, max_fuel);
+    }
         
     p_e->subz += dz, p_e->subn += dn;
     
@@ -885,19 +905,42 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
     {
         p_e->z = oldz, p_e->n = oldn;
         p_e->subz = oldsubz, p_e->subn = oldsubn;
-        p_e->fuel = hmin(p_e->fuel + 3, 20);
+        
+        if(inpst.vy >= 0)
+            p_e->fuel = max_fuel;
     }
     else if(KvadGetHexel(ptr, p_e->z, p_e->n)->dns > 1)
     {
-        p_e->fuel = hmin(p_e->fuel + 1, 20);
+        p_e->fuel = hmin(p_e->fuel + 1, max_fuel);
     }
+    
+    // if(KvadGetHexel(ptr, oldz, oldn)->dns > 4)
+    //     p_e->fuel = max_fuel;
     
     if(inpst.delete == 1)
         KvadSetMat(ptr, newz, newn, 0);
     if(inpst.insertB)
-        KvadSetMat(ptr, newz, newn, 1);
+    {
+        KvadGetHexel(ptr, newz, newn)->dx = -dz;
+        KvadGetHexel(ptr, newz, newn)->dy = -dn;
+        
+        KvadGetHexel(ptr, oldz, oldn)->dx = -dz;
+        KvadGetHexel(ptr, oldz, oldn)->dy = -dn;
+    }
     if(inpst.insertA)
-        KvadSetMat(ptr, newz, newn, 2);
+    {
+        if(newz != oldz || newn != oldn)
+        {
+            KvadGetHexel(ptr, newz, newn)->dx = dz;
+            KvadGetHexel(ptr, newz, newn)->dy = dn;
+        }
+        
+        if(inpst.vy < 0)
+        {
+            KvadGetHexel(ptr, oldz, oldn)->dx = dz;
+            KvadGetHexel(ptr, oldz, oldn)->dy = dn;
+        }
+    }
     
     // printf("\nez %i\ten %i", p_e->z, p_e->n);
 }

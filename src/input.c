@@ -127,7 +127,6 @@ void InputRegister()
             inpst.mouse.pressed = 1;
             SDL_GetMouseState(&inpst.mouse.x, &inpst.mouse.y);
             
-            //
             break;
         case SDL_MOUSEBUTTONUP:
             inpst.mouse.up   = 1;

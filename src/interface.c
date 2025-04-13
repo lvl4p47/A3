@@ -32,7 +32,7 @@ wchar_t *s_rules_editor, *s_toolpad, *s_control_panel;
 
 int b_panning, b_pause, b_step, b_drawing, b_button, b_slider, b_grab, b_select_list;
 int max_curs;
-int b_ui;
+int b_ui, b_entity;
 
 uint64_t t_f;
 uint64_t t_s;
@@ -107,6 +107,7 @@ void InterfaceInitialize()
     b_slider    = -1;
     b_grab      = 0;
     b_select_list = 0;
+    b_entity = 0;
     
     
     max_curs    = 8;
@@ -146,7 +147,7 @@ void ButtonListInitialize()
 	{
 		buttonlist[i] = NULL;
     }
-    buttonlist[0] = ButtonInitialize(toolpad.x + 9  , toolpad.y , 3, 3, 0, L".........", L"---------");
+    buttonlist[0] = ButtonInitialize(toolpad.x + 9  , toolpad.y , 3, 3, 0, L" o /т\\ п ", L"\\o/ т  п ");
     buttonlist[1] = ButtonInitialize(toolpad.x + 13 , toolpad.y , 3, 3, 1, L".........", L"---------");
     buttonlist[2] = ButtonInitialize(control_panel.x + 1    , control_panel.y, 3, 3, 2, L"n n‖ ‖u u", L"|\\ | >|/ ");
     buttonlist[3] = ButtonInitialize(toolpad.x + 5  , toolpad.y , 3, 3, 3, L" ‖‖nvv\\l№", L"   /mm\\l№");
@@ -279,9 +280,9 @@ void ButtonDown(Button_t* b)
         switch (b->type)
         {
         case 0:
-            
+            b_entity = 1 - b_entity;
             b->act_b = 1;
-            b->text = 2;
+            b->text = 3 - b->text;
             break;
         case 1:
         
@@ -495,7 +496,6 @@ void ButtonUp(Button_t* b)
     switch (b->type)
         {
         case 0:
-            b->text = 1;
             break;
         case 1:
             b->text = 1;
@@ -532,7 +532,8 @@ void DisplayPanning(Display_t* d)
     
     if(b_inrec && inpst.mouse.down 
     && ((inpst.mouse.mmc == 1 && b_grab == 0) ||
-        (inpst.mouse.lmc == 1 && b_grab == 1)))
+        (inpst.mouse.lmc == 1 && b_grab == 1))
+    && b_entity == 0)
         b_panning = 1, MouseResetPrev();;
     if(((inpst.mouse.mmc == 1 && b_grab == 0) ||
         (inpst.mouse.lmc == 1 && b_grab == 1)) && b_panning)
@@ -679,6 +680,25 @@ void DisplayToEntity(Display_t* d, Entity_t* p_e)
     
     d->screen_shift.w = d->screen_shift.x;
     d->screen_shift.h = d->screen_shift.y;
+    
+    //
+    int da = 0;
+    if(d->angle < 4 || d->angle >= 28)
+        da = 1;
+    else if(d->angle > 4 && d->angle < 28)
+        da = -1;
+    d->angle = cycle(d->angle, 0, 47, da);
+
+    d->screen_shift.x = 1 * d->hshift.w +
+    (d->hshift.x) * hcos(d->angle) + (d->hshift.y) * hcos(d->angle + 8);
+    d->screen_shift.y = 1 * d->hshift.h +
+    (d->hshift.x) * hsin(d->angle) + (d->hshift.y) * hsin(d->angle + 8);
+
+    inpst.mouse.px = inpst.mouse.x;
+    inpst.mouse.py = inpst.mouse.y;
+
+    d->screen_shift.w = d->screen_shift.x;
+    d->screen_shift.h = d->screen_shift.y;
 }
 
 void ScreenInput(Kvad_t* ptr, Display_t* d)
@@ -687,7 +707,8 @@ void ScreenInput(Kvad_t* ptr, Display_t* d)
     MouseToGrid(&gridx, &gridy);
     int b_inrec = isinrec(hex_screen.x, hex_screen.y, hex_screen.w, hex_screen.h, gridx, gridy);
     
-    if(b_inrec && inpst.mouse.down && b_grab == 0)
+    if(b_inrec && inpst.mouse.down && b_grab == 0
+    && b_entity == 0)
         b_drawing = 1;
 
     if(inpst.mouse.pressed && b_inrec && b_drawing)
@@ -845,6 +866,7 @@ void FontUIDraw(Font_t* f, Display_t* d)
     MouseToGrid(&x, &y);
     FontNumberDraw(f, 1, 0, 2, 1, x, frame_color, 0, 1);
     FontNumberDraw(f, 4, 0, 2, 1, y, frame_color, 0, 1);
+    FontNumberDraw(f, 7, 0, 2, 1, d->angle, frame_color, 0, 1);
     
     // FontNumberDraw(f, 11, 0, 5, 1, d->hshift.x, frame_color, 1, 1);
     // FontNumberDraw(f, 17, 0, 5, 1, d->hshift.y, frame_color, 1, 1);
@@ -1056,19 +1078,8 @@ void InfoBoxUpdate()
 void DisplayListUpdate()
 {
     DisplayPanning(displaylist[0]);
-    DisplayToEntity(displaylist[0], e1);
-    
-    // displaylist[1]->angle = displaylist[0]->angle;
-    
-    // displaylist[1]->hshift.x = displaylist[0]->hshift.x
-    //  * displaylist[0]->scale / displaylist[1]->scale;
-    // displaylist[1]->screen_shift.x = displaylist[0]->screen_shift.x
-    //  * displaylist[0]->scale / displaylist[1]->scale;
-    
-    // displaylist[1]->hshift.y = displaylist[0]->hshift.y
-    //  * displaylist[0]->scale / displaylist[1]->scale;
-    // displaylist[1]->screen_shift.y = displaylist[0]->screen_shift.y
-    //  * displaylist[0]->scale / displaylist[1]->scale;
+    if(b_entity)
+        DisplayToEntity(displaylist[0], e1);
 }
 
 void SelectListDraw(Font_t* f, Display_t* d, Select_List_t *p_sl)
