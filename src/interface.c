@@ -43,8 +43,8 @@ int min_neigh, max_neigh;
 
 void InterfaceInitialize()
 {
-    cursor.lm = 8;
-    cursor.rm = 3;
+    cursor.lm = 10;
+    cursor.rm = 0;
     cursor.lrad = 7;
     cursor.rrad = 7;
     
@@ -62,7 +62,7 @@ void InterfaceInitialize()
     select_list.rectangle.y = 1;
     select_list.rectangle.w = 17;
     select_list.rectangle.h = 6;
-    select_list.s = L"0 - воздух\n1 - ткань\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень\n9 - ???";
+    select_list.s = L"0 - воздух\n1 - ткань\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень\n9 - ???\n10 - ???";
     select_list.min = 0;
     select_list.max = mat_amount - 1;
     

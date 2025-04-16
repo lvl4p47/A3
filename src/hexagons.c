@@ -1,6 +1,6 @@
 #include "hexagons.h"
 
-const int mat_amount = 10;
+const int mat_amount = 11;
 int ***p_rules;
 int *neighbours_required;
 
@@ -65,6 +65,10 @@ void HexagonsInitialize()
         st8_dns_clr[9][0] = 8;
         st8_dns_clr[9][1] = 4;
         st8_dns_clr[9][2] = 2;
+        
+        st8_dns_clr[10][0] = 9;
+        st8_dns_clr[10][1] = 4;
+        st8_dns_clr[10][2] = 5;
     }
     
     t = 0;
@@ -122,6 +126,8 @@ void RulesInitialize()
     RulesAdd    (6, 3, 0, 7, 7, 7, -1, -1, -1);
     RulesChange (7, 3, 0, 0, 2, -1, -1, -1, -1, -1);
     RulesAdd    (7, 3, 0, 3, 3, 3, 3, 3, -1);
+    RulesChange (9, 2, 0, 0, 2, 0, -1, -1, -1, -1);
+    RulesChange (10, 2, 0, 0, 2, 0, -1, -1, -1, -1);
 }
 
 void RulesTerminate()
@@ -636,10 +642,6 @@ void PhysicsUpdate(Kvad_t* ptr)
             case 3:
             
                 ForceSand(ptr, j, i, gx, gy, &dz, &dn);
-                if(dz == gx && dn == gy)
-                {
-                    priority = 1;
-                }
             
                 break;
             case 4:
@@ -689,7 +691,13 @@ void PhysicsUpdate(Kvad_t* ptr)
                 ForceRigid(ptr, j, i, gx, gy, &dz, &dn);
                 
                 break;
+            case 9:
+            
+                ForceSoft(ptr, j, i, gx, gy, &dz, &dn);
+                
+                break;
             default:
+                dz = 0, dn = 0;
                 break;
             }
             
@@ -738,10 +746,6 @@ void PhysicsUpdate(Kvad_t* ptr)
             case 3:
                 
                 ForceSand(ptr, j, i, gx, gy, &dz, &dn);
-                if(dz == gx && dn == gy)
-                {
-                    priority = 1;
-                }
                 
                 break;
             case 4:
@@ -803,7 +807,13 @@ void PhysicsUpdate(Kvad_t* ptr)
                 ForceRigid(ptr, j, i, gx, gy, &dz, &dn);
                 
                 break;
+            case 9:
+            
+                ForceSoft(ptr, j, i, gx, gy, &dz, &dn);
+                
+                break;
             default:
+                dz = 0, dn = 0;
                 break;
             }
             
@@ -1659,6 +1669,53 @@ void ForceRigid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
         )
         
     );
+    if(b_forward     )  *dz += fx,  *dn += fy;
+    if(b_rightfront  )  *dz += rfx, *dn += rfy;
+    if(b_leftfront   )  *dz += lfx, *dn += lfy;
+}
+
+void ForceSoft(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
+{   
+    *dz = 0, *dn = 0;
+
+    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    
+    int b_forward = 0, 
+    b_rightfront = 0, b_leftfront = 0;
+
+    int right_sum = 0, left_sum = 0;
+
+    RelToAbs(fx, fy, 2, &rbx, &rby);
+    RelToAbs(fx, fy, -2, &lbx, &lby);
+
+    RelToAbs(fx, fy, 1, &rfx, &rfy);
+    RelToAbs(fx, fy, -1, &lfx, &lfy);
+
+    right_sum = 0 *
+    (
+        (KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns)
+    );
+    left_sum = 0 *
+    (
+        (KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns)
+    );
+    b_forward =
+    (
+        KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns
+    );
+    if(right_sum > left_sum && (KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns))
+    {
+        b_leftfront = 1;
+    }
+    if(right_sum < left_sum && (KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns))
+    {
+        b_rightfront = 1;
+    }
+
+    if(b_leftfront || b_rightfront) b_forward = 0;
+    
     if(b_forward     )  *dz += fx,  *dn += fy;
     if(b_rightfront  )  *dz += rfx, *dn += rfy;
     if(b_leftfront   )  *dz += lfx, *dn += lfy;

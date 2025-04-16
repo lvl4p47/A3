@@ -94,7 +94,7 @@ void HexelDraw(Display_t* d, int z, int n, Cell_t* c, int b_ui)
     if(b_ui == 1)
     {
         srcx = d->angle * 9;
-        srcy = (mod(c->dns, 11)) * 9;
+        srcy = (mod(c->fld2, 11)) * 9;
         SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y, c->clr);
     }
     else
@@ -237,23 +237,14 @@ void DisplayScan(Kvad_t* ptr, Display_t* d, int b_ui, int scale_selection)
     
     int border = 4;
     
-    corner_z[0] = d->screen.x               + border - d->hshift.w * 0  ; 
-    corner_n[0] = d->screen.y + border               - d->hshift.h * 0  ;
-    corner_z[1] = d->screen.x + d->screen.w - border - d->hshift.w * 0  ; 
-    corner_n[1] = d->screen.y + border               - d->hshift.h * 0  ;
-    corner_z[2] = d->screen.x + d->screen.w - border - d->hshift.w * 0  ; 
-    corner_n[2] = d->screen.y + d->screen.h - border - d->hshift.h * 0  ;
-    corner_z[3] = d->screen.x               + border - d->hshift.w * 0  ; 
-    corner_n[3] = d->screen.y + d->screen.h - border - d->hshift.h * 0  ;
-    
-    // corner_z[0] -= d->hshift.x * 1  ; 
-    // corner_n[0] -= d->hshift.y * 1  ;
-    // corner_z[1] -= d->hshift.x * 1  ; 
-    // corner_n[1] -= d->hshift.y * 1  ;
-    // corner_z[2] -= d->hshift.x * 1  ; 
-    // corner_n[2] -= d->hshift.y * 1  ;
-    // corner_z[3] -= d->hshift.x * 1  ; 
-    // corner_n[3] -= d->hshift.y * 1  ;
+    corner_z[0] = d->screen.x               + border ; 
+    corner_n[0] = d->screen.y + border               ;
+    corner_z[1] = d->screen.x + d->screen.w - border ; 
+    corner_n[1] = d->screen.y + border               ;
+    corner_z[2] = d->screen.x + d->screen.w - border ; 
+    corner_n[2] = d->screen.y + d->screen.h - border ;
+    corner_z[3] = d->screen.x               + border ; 
+    corner_n[3] = d->screen.y + d->screen.h - border ;
     
     for(int i = 0; i < 4; i++)
         PixelToHex(d, &corner_z[i], &corner_n[i]);

@@ -71,6 +71,7 @@ There are 9 types of cells:
 * Turns into Ice (7) when in contact with it.
 ### 4 -- Sand. 
 * Falls down, but if this direction is blocked can go to the adjacent cell.
+* Allows caves to form.
 ### 5 -- Dirt. 
 * Falls.
 * Forms piles.

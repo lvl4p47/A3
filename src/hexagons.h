@@ -110,6 +110,8 @@ void ForceRock(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void ForceRigid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
+void ForceSoft(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
+
 void Border(Kvad_t* ptr);
 
 #endif
