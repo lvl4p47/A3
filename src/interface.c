@@ -93,7 +93,7 @@ void InterfaceInitialize()
     info_box.shift = 0;
     
     t_f = SDL_GetPerformanceFrequency() / 60;
-    t_s = SDL_GetPerformanceFrequency() / 25;
+    t_s = SDL_GetPerformanceFrequency() / 50;
     
     ButtonListInitialize();
     SliderListInitialize();

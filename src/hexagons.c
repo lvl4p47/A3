@@ -835,7 +835,11 @@ void PhysicsUpdate(Kvad_t* ptr)
         {
             switch (KvadGetHexel(ptr, j, i)->st8)
             {
-            
+            case 0:
+                KvadGetHexel(ptr, j, i)->val1 = 0;
+                KvadGetHexel(ptr, j, i)->dx = 0;
+                KvadGetHexel(ptr, j, i)->dy = 0;
+                break;
             case 9:
                 KvadGetHexel(ptr, j, i)->val1 = 
                 KvadGetHexel(ptr, j, i)->dx + KvadGetHexel(ptr, j, i)->dy * 3;
@@ -867,26 +871,17 @@ void PhysicsUpdate(Kvad_t* ptr)
                 }
                 break;
             case 9:
-                if(KvadGetHexel(ptr, j, i)->val1 != 0)
+                gx = mod(KvadGetHexel(ptr, j, i)->val1 + 1, 3) - 1;
+                gy = hdiv(KvadGetHexel(ptr, j, i)->val1 + 1, 3);
+
+                RelToAbs(gx, gy, 2, &rbx, &rby);
+                RelToAbs(gx, gy, -2, &lbx, &lby);
+
+                RelToAbs(gx, gy, 1, &rfx, &rfy);
+                RelToAbs(gx, gy, -1, &lfx, &lfy);
+                if(KvadGetHexel(ptr, j, i)->val1 != 0
+                 && KvadGetHexel(ptr, j, i)->tmp != KvadGetHexel(ptr, j, i)->mat)
                 {
-                    
-                    gx = mod(KvadGetHexel(ptr, j, i)->val1 + 1, 3) - 1;
-                    gy = hdiv(KvadGetHexel(ptr, j, i)->val1 + 1, 3);
-
-                    RelToAbs(gx, gy, 2, &rbx, &rby);
-                    RelToAbs(gx, gy, -2, &lbx, &lby);
-
-                    RelToAbs(gx, gy, 1, &rfx, &rfy);
-                    RelToAbs(gx, gy, -1, &lfx, &lfy);
-                    
-                    // KvadGetHexel(ptr, j + lfx, i + lfy)->dx = KvadGetHexel(ptr, j, i)->dx;
-                    // KvadGetHexel(ptr, j + lfx, i + lfy)->dy = KvadGetHexel(ptr, j, i)->dy;
-                    
-                    // KvadGetHexel(ptr, j + rfx, i + rfy)->dx = KvadGetHexel(ptr, j, i)->dx;
-                    // KvadGetHexel(ptr, j + rfx, i + rfy)->dy = KvadGetHexel(ptr, j, i)->dy;
-                    
-                    // KvadGetHexel(ptr, j + gx, i + gy)->dx = KvadGetHexel(ptr, j, i)->dx;
-                    // KvadGetHexel(ptr, j + gx, i + gy)->dy = KvadGetHexel(ptr, j, i)->dy;
                     
                     KvadGetHexel(ptr, j + lbx, i + lby)->dx = gx;
                     KvadGetHexel(ptr, j + lbx, i + lby)->dy = gy;
@@ -896,9 +891,38 @@ void PhysicsUpdate(Kvad_t* ptr)
                     
                     KvadGetHexel(ptr, j + -gx, i + -gy)->dx = gx;
                     KvadGetHexel(ptr, j + -gx, i + -gy)->dy = gy;
-        
                     
-                    // KvadGetHexel(ptr, j, i)->val1 = 0;
+                }
+                else 
+                {
+                    if(KvadGetHexel(ptr, j, i)->val1 != 0
+                    && KvadGetHexel(ptr, j, i)->tmp == KvadGetHexel(ptr, j, i)->mat
+                    && KvadGetHexel(ptr, j -gx, i - gy)->st8 == 9
+                    && KvadGetHexel(ptr, j -gx, i - gy)->val1 == 0
+                    && KvadGetHexel(ptr, j + rbx, i + rby)->val1 == 0
+                    && KvadGetHexel(ptr, j + lbx, i + lby)->val1 == 0
+                    && KvadGetHexel(ptr, j + rfx, i + rfy)->val1 == 0
+                    && KvadGetHexel(ptr, j + lfx, i + lfy)->val1 == 0 && 0
+                    )
+                    {
+                        
+                        KvadGetHexel(ptr, j + lfx, i + lfy)->dx = gx;
+                        KvadGetHexel(ptr, j + lfx, i + lfy)->dy = gy;
+                        
+                        KvadGetHexel(ptr, j + rfx, i + rfy)->dx = gx;
+                        KvadGetHexel(ptr, j + rfx, i + rfy)->dy = gy;
+                    }
+                    if(KvadGetHexel(ptr, j, i)->val1 != 0
+                    && KvadGetHexel(ptr, j, i)->tmp == KvadGetHexel(ptr, j, i)->mat
+                    && KvadGetHexel(ptr, j -gx, i - gy)->st8 == 9
+                    // && KvadGetHexel(ptr, j -gx, i - gy)->val1 == 0
+                    && KvadGetHexel(ptr, j + rbx, i + rby)->val1 == 0
+                    && KvadGetHexel(ptr, j + lbx, i + lby)->val1 == 0
+                    )
+                    {   
+                        KvadGetHexel(ptr, j + gx, i + gy)->dx = gx;
+                        KvadGetHexel(ptr, j + gx, i + gy)->dy = gy;
+                    }
                 }
                 break;
             
