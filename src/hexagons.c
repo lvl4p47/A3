@@ -257,18 +257,18 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
     cptr->dns = st8_dns_clr[value][1];
     cptr->clr = st8_dns_clr[value][2];
     
-    switch (value)
-    {
-    case 5:
-        cptr->val1 = 0;
-        cptr->val2 = 1;
-        break;
+    // switch (value)
+    // {
+    // case 5:
+        
+    //     cptr->val2 = 1;
+    //     break;
     
-    default:
-        cptr->val1 = 0;
-        cptr->val2 = 0;
-        break;
-    }
+    // default:
+        
+    //     cptr->val2 = 0;
+    //     break;
+    // }
 }
 
 Cell_t* KvadGetHexel(Kvad_t* ptr, int z, int n)
@@ -693,11 +693,12 @@ void PhysicsUpdate(Kvad_t* ptr)
                 break;
             case 9:
             
-                ForceSoft(ptr, j, i, gx, gy, &dz, &dn);
+                // ForceSoft(ptr, j, i, gx, gy, &dz, &dn);
+                dz = gx, dn = gy;
                 
                 break;
             default:
-                dz = 0, dn = 0;
+                dz = gx, dn = gy;
                 break;
             }
             
@@ -809,11 +810,12 @@ void PhysicsUpdate(Kvad_t* ptr)
                 break;
             case 9:
             
-                ForceSoft(ptr, j, i, gx, gy, &dz, &dn);
+                // ForceSoft(ptr, j, i, gx, gy, &dz, &dn);
+                dz = gx, dn = gy;
                 
                 break;
             default:
-                dz = 0, dn = 0;
+                dz = gx, dn = gy;
                 break;
             }
             
@@ -831,11 +833,107 @@ void PhysicsUpdate(Kvad_t* ptr)
     {
         for(int j = border; j < ptr->width - border; j++)
         {
+            switch (KvadGetHexel(ptr, j, i)->st8)
+            {
+            
+            case 9:
+                KvadGetHexel(ptr, j, i)->val1 = 
+                KvadGetHexel(ptr, j, i)->dx + KvadGetHexel(ptr, j, i)->dy * 3;
+                KvadGetHexel(ptr, j, i)->dx = 0;
+                KvadGetHexel(ptr, j, i)->dy = 0;
+                break;
+            
+            default:
+                KvadGetHexel(ptr, j, i)->val1 = 3;
+                KvadGetHexel(ptr, j, i)->dx = 0;
+                KvadGetHexel(ptr, j, i)->dy = 1;
+                break;
+            }
+        }
+    }
+    
+    for(int i = border; i < ptr->height - border; i++)
+    {
+        for(int j = border; j < ptr->width - border; j++)
+        {
+            switch (KvadGetHexel(ptr, j, i)->st8)
+            {
+            case 0:
+                if(KvadGetHexel(ptr, j, i)->val1 != 0)
+                {
+                    
+                    KvadGetHexel(ptr, j, i)->dx = 0;
+                    KvadGetHexel(ptr, j, i)->dy = 0;
+                }
+                break;
+            case 9:
+                if(KvadGetHexel(ptr, j, i)->val1 != 0)
+                {
+                    
+                    gx = mod(KvadGetHexel(ptr, j, i)->val1 + 1, 3) - 1;
+                    gy = hdiv(KvadGetHexel(ptr, j, i)->val1 + 1, 3);
+
+                    RelToAbs(gx, gy, 2, &rbx, &rby);
+                    RelToAbs(gx, gy, -2, &lbx, &lby);
+
+                    RelToAbs(gx, gy, 1, &rfx, &rfy);
+                    RelToAbs(gx, gy, -1, &lfx, &lfy);
+                    
+                    // KvadGetHexel(ptr, j + lfx, i + lfy)->dx = KvadGetHexel(ptr, j, i)->dx;
+                    // KvadGetHexel(ptr, j + lfx, i + lfy)->dy = KvadGetHexel(ptr, j, i)->dy;
+                    
+                    // KvadGetHexel(ptr, j + rfx, i + rfy)->dx = KvadGetHexel(ptr, j, i)->dx;
+                    // KvadGetHexel(ptr, j + rfx, i + rfy)->dy = KvadGetHexel(ptr, j, i)->dy;
+                    
+                    // KvadGetHexel(ptr, j + gx, i + gy)->dx = KvadGetHexel(ptr, j, i)->dx;
+                    // KvadGetHexel(ptr, j + gx, i + gy)->dy = KvadGetHexel(ptr, j, i)->dy;
+                    
+                    KvadGetHexel(ptr, j + lbx, i + lby)->dx = gx;
+                    KvadGetHexel(ptr, j + lbx, i + lby)->dy = gy;
+                    
+                    KvadGetHexel(ptr, j + rbx, i + rby)->dx = gx;
+                    KvadGetHexel(ptr, j + rbx, i + rby)->dy = gy;
+                    
+                    KvadGetHexel(ptr, j + -gx, i + -gy)->dx = gx;
+                    KvadGetHexel(ptr, j + -gx, i + -gy)->dy = gy;
+        
+                    
+                    // KvadGetHexel(ptr, j, i)->val1 = 0;
+                }
+                break;
+            
+            default:
+                KvadGetHexel(ptr, j, i)->dx = 0;
+                KvadGetHexel(ptr, j, i)->dy = 1;
+                break;
+            }
+            
+        }
+    }
+    
+    for(int i = border; i < ptr->height - border; i++)
+    {
+        for(int j = border; j < ptr->width - border; j++)
+        {
                
             KvadGetHexel(ptr, j, i)->fld = 0;
             KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp);
-            KvadGetHexel(ptr, j, i)->dx = 0;
-            KvadGetHexel(ptr, j, i)->dy = 1;
+            
+            switch (KvadGetHexel(ptr, j, i)->st8)
+            {
+            case 0:
+                KvadGetHexel(ptr, j, i)->dx = 0;
+                KvadGetHexel(ptr, j, i)->dy = 0;
+                break;
+            case 9:
+                
+                break;
+            
+            default:
+                KvadGetHexel(ptr, j, i)->dx = 0;
+                KvadGetHexel(ptr, j, i)->dy = 1;
+                break;
+            }
         }
     }
 }
@@ -916,12 +1014,12 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
         p_e->z = oldz, p_e->n = oldn;
         p_e->subz = oldsubz, p_e->subn = oldsubn;
         
-        if(inpst.vy >= 0)
+        if(inpst.vy >= 0 && inpst.insertA == 0)
             p_e->fuel = max_fuel;
     }
     else if(KvadGetHexel(ptr, p_e->z, p_e->n)->dns > 1)
     {
-        p_e->fuel = hmin(p_e->fuel + 1, max_fuel);
+        p_e->fuel = hmin(p_e->fuel + 3, max_fuel);//+1
     }
     
     // if(KvadGetHexel(ptr, oldz, oldn)->dns > 4)
@@ -939,7 +1037,7 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
     }
     if(inpst.insertA)
     {
-        if(newz != oldz || newn != oldn)
+        if(newz != oldz || newn != oldn || inpst.vy >= 0)
         {
             KvadGetHexel(ptr, newz, newn)->dx = dz;
             KvadGetHexel(ptr, newz, newn)->dy = dn;
