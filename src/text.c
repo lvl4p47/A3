@@ -19,7 +19,7 @@ void FontTerminate(Font_t* f)
 void FontCharDraw(Font_t* f, wchar_t c, int x, int y, int color)
 {
     //SDL_SetRenderDrawColor( m_renderer, rgb[val][0], rgb[val][1], rgb[val][2], 255 );
-    wchar_t n = c;     // ~    126
+    wchar_t n = c;          // ~    126
     if(n > 126) n -= 49;    // °    127
     if(n > 127) n -= 848;   // Ё    128
     if(n > 128) n -= 14;    // Ая   129 - 192

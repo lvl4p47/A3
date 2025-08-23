@@ -32,7 +32,7 @@ typedef struct
 
 typedef struct
 {
-    int mat, tmp, fld, fld2, val1, val2, dx, dy, st8, dns, clr, stress;
+    int mat, tmp, fld, fld2, val1, val2, dx, dy, st8, dns, clr, stress, v1t, v2t;
     
 } Cell_t;
 
@@ -110,7 +110,7 @@ void ForceRock(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void ForceRigid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
-void ForceSoft(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
+void ForceViscous(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void Border(Kvad_t* ptr);
 

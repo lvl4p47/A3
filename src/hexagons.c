@@ -1,6 +1,6 @@
 #include "hexagons.h"
 
-const int mat_amount = 11;
+const int mat_amount = 12;
 int ***p_rules;
 int *neighbours_required;
 
@@ -10,7 +10,7 @@ int **st8_dns_clr;
 
 int t;
 
-int firevolume;
+int firevolume, icevolume;
 
 
 Rules_t *RULES;
@@ -69,6 +69,10 @@ void HexagonsInitialize()
         st8_dns_clr[10][0] = 9;
         st8_dns_clr[10][1] = 4;
         st8_dns_clr[10][2] = 5;
+        
+        st8_dns_clr[11][0] = 10;
+        st8_dns_clr[11][1] = 6;
+        st8_dns_clr[11][2] = 1;
     }
     
     t = 0;
@@ -118,16 +122,24 @@ void RulesInitialize()
     neighbours_required = malloc(mat_amount * sizeof(int)); 
     
     RulesChange (1, 2, 0, 0, 2, 0, -1, -1, -1, -1);
+    RulesAdd    (1, 2, 0, 11, -1, -1, -1, -1, -1);
     RulesChange (2, 0, 0, 0, -4, -1, -1, -1, -1, -1);
     RulesAdd    (2, 0, 0, -2, -1, -1, -1, -1, -1);
     RulesChange (3, 7, 0, 1, 7, 0, 0, 0, 0, -1);
     RulesChange (3, 6, 0, 0, 2, -1, -1, -1, -1, -1);
+    RulesAdd    (3, 6, 0, 11, 11, -1, -1, -1, -1);
     RulesChange (6, 3, 0, 0, -2, -2, -2, -2, -5, -4);
     RulesAdd    (6, 3, 0, 7, 7, 7, -1, -1, -1);
     RulesChange (7, 3, 0, 0, 2, -1, -1, -1, -1, -1);
     RulesAdd    (7, 3, 0, 3, 3, 3, 3, 3, -1);
+    RulesAdd    (7, 3, 0, 11, -1, -1, -1, -1, -1);
+    RulesChange (8, 11, 0, 0, 11, 11, 11, 11, -1, -1);
     RulesChange (9, 2, 0, 0, 2, 0, -1, -1, -1, -1);
+    RulesAdd    (9, 2, 0, 11, -1, -1, -1, -1, -1);
     RulesChange (10, 2, 0, 0, 2, 0, -1, -1, -1, -1);
+    RulesAdd    (10, 2, 0, 11, -1, -1, -1, -1, -1);
+    RulesChange (11, 8, 0, 0, 3, 3, 3, -1, -1, -1);
+    RulesAdd    (11, 8, 0, 7, 7, 7, -1, -1, -1);
 }
 
 void RulesTerminate()
@@ -241,6 +253,9 @@ void KvadZero(Kvad_t* ptr)
             ptr->arr[i][j].dns = 0;
             ptr->arr[i][j].stress = 1;
             ptr->arr[i][j].clr = 7;
+            ptr->arr[i][j].v1t = 0;
+            ptr->arr[i][j].v2t = 0;
+            
             // KvadSetMat(ptr, j, i, 0);
         }
     }
@@ -522,6 +537,7 @@ void AudioCount(Kvad_t* ptr, int b_pause)
 {
     int curmat;
     int fire = 0;
+    int ice = 0;
     if(b_pause == 0)
     {
         for(int i = 0; i < ptr->height; i++)
@@ -534,6 +550,9 @@ void AudioCount(Kvad_t* ptr, int b_pause)
                 case 2:
                     fire++;
                     break;
+                case 7:
+                    
+                    break;
                 
                 default:
                     break;
@@ -543,17 +562,25 @@ void AudioCount(Kvad_t* ptr, int b_pause)
     }
     
     firevolume = (firevolume * 4 + fire) / 5;
+    icevolume = (icevolume * 4 + ice) / 5;
 }
 
 void AudioUpdate(Kvad_t* ptr, int b_pause)
 {
     AudioCount(ptr, b_pause);
-    int log_volume = hlog(firevolume, 1.07);
+    int log_volume;
     
     if(firevolume > 0)
     {
         AudioFirePlay();
+        log_volume = hlog(firevolume, 1.07);
         AudioFireSetVolume(log_volume);
+    }
+    if(icevolume > 0)
+    {
+        AudioIcePlay();
+        log_volume = hlog(icevolume, 1.10);
+        AudioIceSetVolume(log_volume);
     }
 }
 
@@ -568,6 +595,10 @@ void PhysicsUpdate(Kvad_t* ptr)
     int field_value = 0;
     
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    
+    int curmat;
+    int fire = 0;
+    int ice = 0;
     
     for(int i = 0; i < ptr->height; i++)
     {
@@ -691,10 +722,13 @@ void PhysicsUpdate(Kvad_t* ptr)
                 ForceRigid(ptr, j, i, gx, gy, &dz, &dn);
                 
                 break;
-            case 9:
+            case 10:
             
-                // ForceSoft(ptr, j, i, gx, gy, &dz, &dn);
-                dz = gx, dn = gy;
+                ForceViscous(ptr, j, i, gx, gy, &dz, &dn);
+                b_up_fall = dz == -gx && dn == -gy;
+                b_dir_fall = dz == gx && dn == gy;
+                
+                priority = b_dir_fall + b_up_fall * 2;
                 
                 break;
             default:
@@ -808,10 +842,19 @@ void PhysicsUpdate(Kvad_t* ptr)
                 ForceRigid(ptr, j, i, gx, gy, &dz, &dn);
                 
                 break;
-            case 9:
+            case 10:
             
-                // ForceSoft(ptr, j, i, gx, gy, &dz, &dn);
-                dz = gx, dn = gy;
+                ForceViscous(ptr, j, i, gx, gy, &dz, &dn);
+                if(dz == gx && dn == gy)
+                {    
+                    priority = 1;
+                    
+                }
+                if(dz == -gx && dn == -gy)
+                {    
+                    priority = 2;
+                    
+                }
                 
                 break;
             default:
@@ -825,9 +868,23 @@ void PhysicsUpdate(Kvad_t* ptr)
             {
                 swap(&KvadGetHexel(ptr, j     , i     )->tmp,
                     &KvadGetHexel(ptr, j + dz, i + dn)->tmp);
+                    
+                curmat = KvadGetHexel(ptr, j, i)->mat;
+                switch (curmat)
+                {
+                case 7:
+                    if (!(dz == gx && dn == gy)) 
+                        ice++;
+                    break;
+                
+                default:
+                    break;
+                }
             }
         }
     }
+    
+    icevolume = (icevolume * 4 + ice) / 5;
     
     for(int i = border; i < ptr->height - border; i++)
     {
@@ -967,6 +1024,7 @@ void KvadUpdate(Kvad_t* ptr)
     Border(ptr);
     SolidUpdate(ptr);
     PhysicsUpdate(ptr);
+    AudioUpdate(ptr, 0);
     EntityCollision(ptr, e1);
 }
 
@@ -1056,8 +1114,20 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
         KvadGetHexel(ptr, newz, newn)->dx = -dz;
         KvadGetHexel(ptr, newz, newn)->dy = -dn;
         
+        KvadGetHexel(ptr, newz, newn)->val1 = 
+        KvadGetHexel(ptr, newz, newn)->dx + KvadGetHexel(ptr, newz, newn)->dy * 3;
+        
         KvadGetHexel(ptr, oldz, oldn)->dx = -dz;
         KvadGetHexel(ptr, oldz, oldn)->dy = -dn;
+        
+        KvadGetHexel(ptr, oldz, oldn)->val1 = 
+        KvadGetHexel(ptr, oldz, oldn)->dx + KvadGetHexel(ptr, oldz, oldn)->dy * 3;
+        
+        KvadGetHexel(ptr, newz, newn)->val2 = 
+        KvadGetHexel(ptr, newz, newn)->dx + KvadGetHexel(ptr, newz, newn)->dy * 3;
+        
+        KvadGetHexel(ptr, oldz, oldn)->val2 = 
+        KvadGetHexel(ptr, oldz, oldn)->dx + KvadGetHexel(ptr, oldz, oldn)->dy * 3;
     }
     if(inpst.insertA)
     {
@@ -1065,12 +1135,24 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
         {
             KvadGetHexel(ptr, newz, newn)->dx = dz;
             KvadGetHexel(ptr, newz, newn)->dy = dn;
+            
+            KvadGetHexel(ptr, newz, newn)->val1 = 
+            KvadGetHexel(ptr, newz, newn)->dx + KvadGetHexel(ptr, newz, newn)->dy * 3;
+            
+            KvadGetHexel(ptr, newz, newn)->val2 = 
+            KvadGetHexel(ptr, newz, newn)->dx + KvadGetHexel(ptr, newz, newn)->dy * 3;
         }
         
         if(inpst.vy < 0)
         {
             KvadGetHexel(ptr, oldz, oldn)->dx = dz;
             KvadGetHexel(ptr, oldz, oldn)->dy = dn;
+            
+            KvadGetHexel(ptr, oldz, oldn)->val1 = 
+            KvadGetHexel(ptr, oldz, oldn)->dx + KvadGetHexel(ptr, oldz, oldn)->dy * 3;
+            
+            KvadGetHexel(ptr, oldz, oldn)->val2 = 
+            KvadGetHexel(ptr, oldz, oldn)->dx + KvadGetHexel(ptr, oldz, oldn)->dy * 3;
         }
     }
     
@@ -1796,16 +1878,17 @@ void ForceRigid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     if(b_leftfront   )  *dz += lfx, *dn += lfy;
 }
 
-void ForceSoft(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
+void ForceViscous(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 {   
     *dz = 0, *dn = 0;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
     
-    int b_forward = 0, 
-    b_rightfront = 0, b_leftfront = 0;
+    int b_forward = 0, b_back = 0,
+    b_rightfront = 0, b_leftfront = 0,
+    b_rightback = 0, b_leftback = 0;
 
-    int right_sum = 0, left_sum = 0;
+    int right_sum = 0, left_sum = 0, back_sum = 0, front_sum = 0;
 
     RelToAbs(fx, fy, 2, &rbx, &rby);
     RelToAbs(fx, fy, -2, &lbx, &lby);
@@ -1813,34 +1896,58 @@ void ForceSoft(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     RelToAbs(fx, fy, 1, &rfx, &rfy);
     RelToAbs(fx, fy, -1, &lfx, &lfy);
 
-    right_sum = 0 *
+    b_back =
     (
-        (KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
-        (KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns)
-    );
-    left_sum = 0 *
-    (
-        (KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
-        (KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns)
+        !(KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns)
     );
     b_forward =
     (
         KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns
     );
-    if(right_sum > left_sum && (KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns))
+
+    right_sum =
+    (
+        (KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns)
+    );
+    left_sum =
+    (
+        (KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns)
+    );
+    back_sum =
+    (
+        (KvadGetHexel(ptr, z - fx, n - fy)->dns >= KvadGetHexel(ptr, z, n)->dns) +
+        (KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns)
+    );
+    front_sum =
+    (
+        (KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns) +
+        (KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns) + 
+        (KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns)
+    );
+    
+    if(right_sum > left_sum)
     {
-        b_leftfront = 1;
-    }
-    if(right_sum < left_sum && (KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns))
+        if(back_sum > front_sum + 4) b_leftfront = 1;
+        else b_leftback = 1;
+    } 
+    if(right_sum < left_sum)
     {
-        b_rightfront = 1;
+        if(back_sum > front_sum + 4) b_rightfront = 1;
+        else b_rightback = 1;
     }
 
+    if(b_leftback || b_rightback) b_back = 0;
     if(b_leftfront || b_rightfront) b_forward = 0;
     
-    if(b_forward     )  *dz += fx,  *dn += fy;
-    if(b_rightfront  )  *dz += rfx, *dn += rfy;
-    if(b_leftfront   )  *dz += lfx, *dn += lfy;
+    if(b_back       )  *dz -= fx,  *dn -= fy;
+    if(b_forward    )  *dz += fx,  *dn += fy;
+    if(b_rightfront )  *dz += rfx, *dn += rfy;
+    if(b_leftfront  )  *dz += lfx, *dn += lfy;
+    if(b_rightback  )  *dz += rbx, *dn += rby;
+    if(b_leftback   )  *dz += lbx, *dn += lby;
 }
 
 void Border(Kvad_t* ptr)

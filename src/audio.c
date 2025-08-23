@@ -1,13 +1,15 @@
 #include "audio.h"
 
 Mix_Chunk *fire = NULL;
+Mix_Chunk *ice = NULL;
 
 void AudioInitialize()
 {
     SDL_Init(SDL_INIT_AUDIO);
-    Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 256 );
+    Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 4, 256 );
     
     fire = Mix_LoadWAV( "../media/fire.wav" );
+    ice = Mix_LoadWAV( "../media/ice.wav" );
 }
 
 void AudioTerminate()
@@ -30,10 +32,34 @@ void AudioFireSetVolume(int volume)
 
 void AudioFirePlay()
 {
-    if(Mix_Playing(-1) == 0)
+    if(Mix_Playing(0) == 0)
     {
         printf("\nresetting audio");
-        Mix_PlayChannel( -1, fire, 10 );
+        Mix_PlayChannel( 0, fire, 10 );
+    }
+    else printf("\naudio is playing");
+}
+
+
+void AudioIceSetVolume(int volume)
+{
+    Mix_VolumeChunk(ice, volume);
+    printf("\tvolume:\t%i\n", volume);
+    int loop_volume = volume;
+    
+    while(loop_volume > 0)
+    {
+        printf("|");
+        loop_volume--;
+    }
+}
+
+void AudioIcePlay()
+{
+    if(Mix_Playing(1) == 0)
+    {
+        printf("\nresetting audio");
+        Mix_PlayChannel( 1, ice, 10 );
     }
     else printf("\naudio is playing");
 }

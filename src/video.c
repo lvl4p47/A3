@@ -94,8 +94,8 @@ void HexelDraw(Display_t* d, int z, int n, Cell_t* c, int b_ui)
     if(b_ui == 1)
     {
         srcx = d->angle * 9;
-        srcy = (mod(1 + c->dx + 1 + (c->dy + 1) * 3, 11)) * 9;
-        // srcy = (mod(c->val1, 11)) * 9;
+        //srcy = (mod(1 + c->dx + 1 + (c->dy + 1) * 3, 11)) * 9;
+        srcy = (mod(c->dns, 11)) * 9;
         SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y, c->clr);
     }
     else

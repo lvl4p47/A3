@@ -11,4 +11,8 @@ void AudioFireSetVolume(int volume);
 
 void AudioFirePlay();
 
+void AudioIceSetVolume(int volume);
+
+void AudioIcePlay();
+
 #endif
