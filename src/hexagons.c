@@ -581,13 +581,13 @@ void AudioUpdate(Kvad_t* ptr, int b_pause)
     if(icevolume > 0)
     {
         AudioIcePlay();
-        log_volume = hlog(icevolume, 1.3) * volume;
+        log_volume = hlog(icevolume, 1.1) * volume;
         AudioIceSetVolume(log_volume);
     }
     if(sandvolume > 0)
     {
         AudioSandPlay();
-        log_volume = hlog(sandvolume, 1.3) * volume;
+        log_volume = hlog(sandvolume, 1.1) * volume;
         AudioSandSetVolume(log_volume);
     }
 }
