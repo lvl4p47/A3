@@ -79,6 +79,7 @@ int isinrec(int x, int y, int w, int h, int cx, int cy)
 int hlog(int a, double p)
 {
     if(p <= 0) return -1;
+    if(p == 1) return -1;
     double a_d = a;
     int log = 0;
     while(a_d > p)

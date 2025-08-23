@@ -43,7 +43,7 @@ int min_neigh, max_neigh;
 
 void InterfaceInitialize()
 {
-    cursor.lm = 11;
+    cursor.lm = 4;
     cursor.rm = 0;
     cursor.lrad = 7;
     cursor.rrad = 7;

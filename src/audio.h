@@ -15,4 +15,8 @@ void AudioIceSetVolume(int volume);
 
 void AudioIcePlay();
 
+void AudioSandSetVolume(int volume);
+
+void AudioSandPlay();
+
 #endif

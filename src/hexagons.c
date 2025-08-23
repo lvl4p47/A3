@@ -10,7 +10,7 @@ int **st8_dns_clr;
 
 int t;
 
-int firevolume, icevolume;
+int firevolume, icevolume, sandvolume;
 
 
 Rules_t *RULES;
@@ -128,12 +128,14 @@ void RulesInitialize()
     RulesChange (3, 7, 0, 1, 7, 0, 0, 0, 0, -1);
     RulesChange (3, 6, 0, 0, 2, -1, -1, -1, -1, -1);
     RulesAdd    (3, 6, 0, 11, 11, -1, -1, -1, -1);
+    RulesChange (4, 11, 0, 0, 11, 11, 11, 11, 11, -1);
     RulesChange (6, 3, 0, 0, -2, -2, -2, -2, -5, -4);
     RulesAdd    (6, 3, 0, 7, 7, 7, -1, -1, -1);
     RulesChange (7, 3, 0, 0, 2, -1, -1, -1, -1, -1);
     RulesAdd    (7, 3, 0, 3, 3, 3, 3, 3, -1);
     RulesAdd    (7, 3, 0, 11, -1, -1, -1, -1, -1);
     RulesChange (8, 11, 0, 0, 11, 11, 11, 11, -1, -1);
+    RulesChange (8, 4, 0, 0, 3, 3, 0, 0, -1, -1);
     RulesChange (9, 2, 0, 0, 2, 0, -1, -1, -1, -1);
     RulesAdd    (9, 2, 0, 11, -1, -1, -1, -1, -1);
     RulesChange (10, 2, 0, 0, 2, 0, -1, -1, -1, -1);
@@ -562,25 +564,31 @@ void AudioCount(Kvad_t* ptr, int b_pause)
     }
     
     firevolume = (firevolume * 4 + fire) / 5;
-    icevolume = (icevolume * 4 + ice) / 5;
 }
 
 void AudioUpdate(Kvad_t* ptr, int b_pause)
 {
     AudioCount(ptr, b_pause);
     int log_volume;
+    float volume = 2;
     
     if(firevolume > 0)
     {
         AudioFirePlay();
-        log_volume = hlog(firevolume, 1.07);
+        log_volume = hlog(firevolume, 1.3) * volume;
         AudioFireSetVolume(log_volume);
     }
     if(icevolume > 0)
     {
         AudioIcePlay();
-        log_volume = hlog(icevolume, 1.10);
+        log_volume = hlog(icevolume, 1.3) * volume;
         AudioIceSetVolume(log_volume);
+    }
+    if(sandvolume > 0)
+    {
+        AudioSandPlay();
+        log_volume = hlog(sandvolume, 1.3) * volume;
+        AudioSandSetVolume(log_volume);
     }
 }
 
@@ -599,6 +607,7 @@ void PhysicsUpdate(Kvad_t* ptr)
     int curmat;
     int fire = 0;
     int ice = 0;
+    int sand = 0;
     
     for(int i = 0; i < ptr->height; i++)
     {
@@ -873,8 +882,12 @@ void PhysicsUpdate(Kvad_t* ptr)
                 switch (curmat)
                 {
                 case 7:
-                    if (!(dz == gx && dn == gy)) 
+                    if (!(dz == gx && dn == gy || dz == -gx && dn == -gy)) 
                         ice++;
+                    break;
+                case 4:
+                    if (!(dz == gx && dn == gy)) 
+                        sand++;
                     break;
                 
                 default:
@@ -885,6 +898,7 @@ void PhysicsUpdate(Kvad_t* ptr)
     }
     
     icevolume = (icevolume * 4 + ice) / 5;
+    sandvolume = (sandvolume * 4 + sand) / 5;
     
     for(int i = border; i < ptr->height - border; i++)
     {
