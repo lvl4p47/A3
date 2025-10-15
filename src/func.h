@@ -79,4 +79,6 @@ void PixelToHex(Display_t* d, int *z, int *n);
 
 void HexToGrid(Display_t* d, int *z, int *n, int centz, int centn);
 
+int hdist(int az, int an, int bz, int bn);
+
 #endif

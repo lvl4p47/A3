@@ -331,3 +331,8 @@ void HexToGrid(Display_t* d, int *z, int *n, int centz, int centn)
     *z = xnew;
     *n = ynew;
 }
+
+int hdist(int az, int an, int bz, int bn)
+{
+    return hmax(abs(az - bz), hmax(abs(an - bn), abs( (az + an) - (bz + bn) )));
+}

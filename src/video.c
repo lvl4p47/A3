@@ -48,6 +48,7 @@ void VideoInitialize()
     SDL_SetWindowBordered(m_window, SDL_FALSE);
     SDL_RenderSetIntegerScale(m_renderer, SDL_TRUE);
     SDL_RenderSetLogicalSize(m_renderer, 640, 360);
+    SDL_RenderSetVSync(m_renderer, SDL_FALSE);
 
     hexel.x = 0; hexel.y = 0; hexel.w = 9; hexel.h = 9;
 
@@ -94,8 +95,11 @@ void HexelDraw(Display_t* d, int z, int n, Cell_t* c, int b_ui)
     if(b_ui == 1)
     {
         srcx = d->angle * 9;
-        //srcy = (mod(1 + c->dx + 1 + (c->dy + 1) * 3, 11)) * 9;
-        srcy = (mod(c->dns, 11)) * 9;
+        // srcy = (mod(1 + c->dx + 1 + (c->dy + 1) * 3, 11)) * 9;
+        // srcy = (mod(c->dns, 11)) * 9;
+        srcy = (mod(c->ded, 11)) * 9;
+        // srcy = (mod(c->mat, 11)) * 9;
+        // srcy = (mod(c->stress + 1, 21)) * 9;
         SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y, c->clr);
     }
     else

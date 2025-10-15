@@ -31,7 +31,7 @@ InfoBox_t info_box;
 wchar_t *s_rules_editor, *s_toolpad, *s_control_panel;
 
 int b_panning, b_pause, b_step, b_drawing, b_button, b_slider, b_grab, b_select_list;
-int max_curs;
+int max_curs, gravity;
 int b_ui, b_entity;
 
 uint64_t t_f;
@@ -43,10 +43,10 @@ int min_neigh, max_neigh;
 
 void InterfaceInitialize()
 {
-    cursor.lm = 4;
+    cursor.lm = 12;
     cursor.rm = 0;
-    cursor.lrad = 7;
-    cursor.rrad = 7;
+    cursor.lrad = 3;
+    cursor.rrad = 3;
     
     rules_editor.x = 1;
     rules_editor.y = 24;
@@ -62,7 +62,7 @@ void InterfaceInitialize()
     select_list.rectangle.y = 1;
     select_list.rectangle.w = 17;
     select_list.rectangle.h = 6;
-    select_list.s = L"0 - воздух\n1 - ткань\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень\n9 - ???\n10 - ???\n11 - магма";
+    select_list.s = L"0 - воздух\n1 - ткань\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень\n9 - салат\n10 - мясо\n11 - магма\n12 - рожа\n13 - хвост\n14 - органика";
     select_list.min = 0;
     select_list.max = mat_amount - 1;
     
@@ -92,7 +92,7 @@ void InterfaceInitialize()
     info_box.s = L"";
     info_box.shift = 0;
     
-    t_f = SDL_GetPerformanceFrequency() / 60;
+    t_f = SDL_GetPerformanceFrequency() / 30;
     t_s = SDL_GetPerformanceFrequency() / 50;
     
     ButtonListInitialize();
@@ -109,7 +109,7 @@ void InterfaceInitialize()
     b_select_list = 0;
     b_entity = 0;
     
-    
+    gravity = 1;
     max_curs    = 9;
     
     min_neigh = -mat_amount - 1;
@@ -148,7 +148,7 @@ void ButtonListInitialize()
 		buttonlist[i] = NULL;
     }
     buttonlist[0] = ButtonInitialize(toolpad.x + 9  , toolpad.y , 3, 3, 0, L" o /т\\ п ", L"\\o/ т  п ");
-    buttonlist[1] = ButtonInitialize(toolpad.x + 13 , toolpad.y , 3, 3, 1, L".........", L"---------");
+    buttonlist[1] = ButtonInitialize(toolpad.x + 13 , toolpad.y , 3, 3, 1, L" | \\|/ v ", L" л /|\\ | ");
     buttonlist[2] = ButtonInitialize(control_panel.x + 1    , control_panel.y, 3, 3, 2, L"n n‖ ‖u u", L"|\\ | >|/ ");
     buttonlist[3] = ButtonInitialize(toolpad.x + 5  , toolpad.y , 3, 3, 3, L" ‖‖nvv\\l№", L"   /mm\\l№");
     buttonlist[4] = ButtonInitialize(control_panel.x + 5    , control_panel.y, 3, 3, 4, L"\\ | >|/ |", L" \\   > / ");
@@ -285,9 +285,10 @@ void ButtonDown(Button_t* b)
             b->text = 3 - b->text;
             break;
         case 1:
-        
+            gravity = gravity * (-1);
+            SetGravity(0, gravity);
             b->act_b = 1;
-            b->text = 2;
+            b->text = 3 - b->text;
             break;
         case 2:
             b_pause = 1 - b_pause;
@@ -498,7 +499,6 @@ void ButtonUp(Button_t* b)
         case 0:
             break;
         case 1:
-            b->text = 1;
             break;
         case 2:
             break;
@@ -1017,10 +1017,10 @@ void FontRulesEditorNeighborsDraw(Font_t* f, int x, int y, int w, int h, int n, 
 {
     int other_neigh_color = inform_color;
     if(flag == 0) other_neigh_color = maybe_color;
-    if(n >= 0)  FontNumberDraw(f, x, y, w, h, n, yes_color, 1, 1);
+    if(n >= 0)  FontNumberDraw(f, x, y, w, h, n, yes_color, 0, 1);
     else if(n == -1) FontStringDraw(f, x, y, w, h, L"--", other_neigh_color);
-    else if(n == -2) FontStringDraw(f, x, y, w, h, L"-0", no_color);
-    else FontNumberDraw(f, x, y, w, h, n + 2, no_color, 1, 1);
+    else if(n == -2) FontStringDraw(f, x, y, w, h, L"00", no_color);
+    else FontNumberDraw(f, x, y, w, h, abs(n + 2), no_color, 0, 1);
     
 }
 

@@ -9,8 +9,8 @@ Entity_t* EntityInitialize(z, n)
     p_e->n = n;
     p_e->subz = 0;
     p_e->subn = 0;
-    p_e->magn = 7;
-    p_e->fuel = 40;
+    p_e->magn = 2;
+    p_e->fuel = 99;
     
     
     return p_e;
@@ -23,7 +23,7 @@ void EntityTerminate(Entity_t* p_e)
 
 void EntitySystemInitialize()
 {
-    e1 = EntityInitialize(-48, -48);
+    e1 = EntityInitialize(-24, -24);
 }
 
 void EntitySystemTerminate()

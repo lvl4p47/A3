@@ -19,4 +19,25 @@ void AudioSandSetVolume(int volume);
 
 void AudioSandPlay();
 
+void AudioWaterSetVolume(int volume);
+
+void AudioWaterPlay();
+
+void AudioMagmaSetVolume(int volume);
+
+void AudioMagmaPlay();
+
+void AudioDirtSetVolume(int volume);
+
+void AudioDirtPlay();
+
+void AudioRockSetVolume(int volume);
+
+void AudioRockPlay();
+
+void AudioFabricSetVolume(int volume);
+
+void AudioFabricPlay();
+
+
 #endif

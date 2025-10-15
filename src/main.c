@@ -6,6 +6,7 @@ Kvad_t* k1;
 Display_t* d1;
 Font_t* f1;
 Button_t* b1;
+Node_t* n1;
 
 
 int64_t delta_rend(uint64_t ft, uint64_t t_f)
@@ -45,6 +46,8 @@ void update_step(uint64_t* st, int64_t* ds)
     if(b_pause == 0 || b_step == 1)
     {
         KvadUpdate(k1);
+        
+        
         b_step = 0;
     }
 	*st = (int64_t)SDL_GetPerformanceCounter();
@@ -80,10 +83,13 @@ int main( int argc, char * argv[] )
     EntitySystemInitialize();
     
     k1 = KvadInitialize(side, side);
-     DisplayListInitialize();
-     f1 = FontInitialise();
-     InterfaceInitialize();
-
+    DisplayListInitialize();
+    f1 = FontInitialise();
+    InterfaceInitialize();
+    
+    MeatListInitialize(k1);
+    
+    // KvadSetBlob(k1, 10, 10, 10, 3);
 
     while(!b_quit)
     {
