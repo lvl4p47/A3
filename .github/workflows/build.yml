@@ -11,6 +11,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: update
+      run: sudo apt-get update
     - name: install SDL2
       run: sudo apt-get install libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev
     - name: build project
@@ -21,6 +23,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: update
+      run: sudo apt-get update
     - name: install SDL2
       run: sudo apt-get install libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev
     - name: install cunit
