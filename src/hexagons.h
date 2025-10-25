@@ -7,6 +7,26 @@ extern const int mat_amount;
 
 extern int **st8_dns_clr;
 
+enum chunk
+{
+    chunksize = 8,
+    chunkkvadsize = 256
+};
+
+enum grav
+{
+    center = 1024
+};
+
+enum size
+{
+    TINY = 64,
+    SMALL = 128,
+    MEDIUM = 256,
+    LARGE = 512,
+    HUGE = 1024
+};
+
 typedef struct
 {
     int flag;
@@ -32,7 +52,7 @@ typedef struct
 
 typedef struct
 {
-    int mat, tmp, fld, fld2, val1, val2, dx, dy, st8, dns, clr, stress, v1t, v2t, pwr, flow[6], ded;
+    int mat, tmp, fld, fld2, val1, val2, dx, dy, st8, dns, clr, stress, v1t, v2t, pwr, flow[6], ded, nrj, org;
     
 } Cell_t;
 
@@ -53,17 +73,24 @@ typedef struct
 
 typedef struct
 {
-    int commandlist[256];
-    int usagelist[256];
-    int armorlist[256];
+    int commandlist[HUGE];
+    int usagelist[HUGE];
+    int armorlist[HUGE];
+    int blueprint[MEDIUM];
     int eaten, drank;
     int inpx, inpy, delete, pull, push, retract, add, deltax, deltay, mathead, mattail, reproduce;
     int pointer;
-    int lastx, lastfullness, lifetime, energy, lenght;
+    int lastx, lastfullness, lifetime, energy, organics, lenght;
     int happy, maxhappiness, memoryage;
     int whichlimb, limbs;
     int death, airborne;
 } Brain_t;
+
+typedef struct
+{
+    int x, y, new;
+    struct Contour_t *next, *prev;
+} Contour_t;
 
 extern Rules_t *RULES;
 
@@ -87,7 +114,7 @@ void KvadTerminate(Kvad_t*);
 
 void KvadZero(Kvad_t* ptr);
 
-void KvadSetMat(Kvad_t* ptr, int z, int n, int value);
+void KvadSetMat(Kvad_t* ptr, int z, int n, int value, int new);
 
 Cell_t* KvadGetHexel(Kvad_t* ptr, int z, int n);
 
@@ -110,6 +137,8 @@ void PhysicsUpdate(Kvad_t* ptr);
 void PhysicsUpdate2(Kvad_t* ptr);
 
 void PositionsUpdate(Kvad_t* ptr);
+
+void PositionsUpdate2(Kvad_t* ptr);
 
 void KvadUpdate(Kvad_t* ptr);
 
@@ -141,6 +170,14 @@ void ForceViscous(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn);
 
 void ContourPressure(Kvad_t* ptr, int j, int i);
 
+void ContourSetUp(Kvad_t* ptr, int j0, int i0);
+
+void ContourPhysics(Kvad_t* ptr, int j0, int i0);
+
+void ContourUpdate(Kvad_t* ptr, int j0, int i0);
+
+void ContourDebug(Kvad_t* ptr, int j0, int i0);
+
 void ContourMove(Kvad_t* ptr, int j, int i);
 
 void ContourMoveSand(Kvad_t* ptr, int j, int i);
@@ -151,7 +188,7 @@ void Border(Kvad_t* ptr);
 
 void SetGravity(int x, int y);
 
-Node_t* MeatInitialize(Kvad_t* ptr, int x, int y, int size);
+Node_t* MeatInitialize(Kvad_t* ptr, int x, int y, int n);
 
 void MeatCheckUp(Kvad_t* ptr, int n, int kill);
 
@@ -165,21 +202,27 @@ void MeatMoveTail(Kvad_t* ptr, int n, int manual, int which);
 
 void MeatMoveLimb(Kvad_t* ptr, int n, Node_t* head, int manual);
 
-void MeatRetract(Kvad_t* ptr, Node_t *head);
+void MeatRetract(Kvad_t* ptr, int n, Node_t *head);
 
 void MeatAdd(Kvad_t* ptr, int n);
 
 void MeatDraw(Kvad_t* ptr, Node_t* head);
 
+int MeatCountAll(Kvad_t* ptr, Node_t* head);
+
+int MeatCountLimbs(Kvad_t* ptr, Node_t* head);
+
 void MeatSetDead(Kvad_t* ptr, Node_t* head);
 
 void MeatClear(Kvad_t* ptr, Node_t* head);
 
-void MeatFree(Kvad_t* ptr, Node_t* head);
+void MeatFree(Node_t* head);
 
 void MeatListInitialize(Kvad_t* ptr);
 
 void MeatListTerminate(Kvad_t* ptr);
+
+void MeatKillAll();
 
 void MeatListUpdate(Kvad_t* ptr);
 
@@ -196,5 +239,37 @@ void UsageFlip(Brain_t* gen);
 void ArmorZero(Brain_t* gen);
 
 void BrainRewire(Kvad_t* ptr, int n);
+
+void Populate(Kvad_t* ptr);
+
+Contour_t* ContourListInitialize();
+
+void ContourListTerminate(Contour_t* head);
+
+void ContourAdd(Kvad_t *ptr, int x, int y);
+
+void ContourDelete(int x, int y);
+
+void ContourPrint(Kvad_t *ptr);
+
+void ContourCheck(Kvad_t *ptr);
+
+void ChunkKvadZero();
+
+void ChunkKvadUpdate();
+
+void ChunkKvadPrint();
+
+void ChunkActivate(int z, int n);
+
+int GetGravX(Kvad_t *ptr, int z, int n);
+
+int GetGravY(Kvad_t *ptr, int z, int n);
+
+void KvadDownload(Kvad_t *ptr, int n);
+
+void KvadUpload(Kvad_t *ptr, int n);
+
+void KvadGenerate(Kvad_t *ptr, int n);
 
 #endif

@@ -11,9 +11,12 @@ int Yrot[6] = {1, 0, -1, -1, 0, 1};
 
 int **st8_dns_clr;
 
-int t = 0, gravtime = 300, rt = 0, rulestime = 300;
+int t = 0, gravtime = 10, rt = 0, rulestime = 10;
+int timer = 0, maxtime = 2048000;
 
 int gravx, gravy;
+
+int gravcentx = center, gravcenty = center;
 
 int firevolume, icevolume, sandvolume, watervolume, magmavolume, dirtvolume, rockvolume, fabricvolume;
 
@@ -21,15 +24,24 @@ Rules_t *RULES;
 
 Node_t **meatlist;
 Brain_t **genomelist;
+Contour_t *maincontour;
 
-int meatlistsize = 1024, brainsize = 256, usagethreshold = 5, usagearmormax = 10, maxhappiness;
+int contsize = 10;
+
+int meatlistsize = 10240, brainsize = HUGE, blueprintsize = MEDIUM, usagethreshold = 5, usagearmormax = 10, maxhappiness;
 int isarmored = 0, happinessrecord, loopsize, active, bestage = 0;
-int doprint = 0, doprintdebug = 0, border = 0;
-int maxenergy = 3000, maxlife = 10000, nonmutationchance = 256;
+int doprint = 0, doprintdebug = 0, border = 1, physics = 1, corpses = 1, rules = 1, mutations = 1, startingpopulation = 0;
+int manual = 0, radial = 1, showchunks = 0, gravfaloff= 0;
+int maxenergy = 3000, maxlife = 1000, nonmutationchance = MEDIUM, nonmutationchancebp = MEDIUM, foodenergy = 300, foodorganics = 100;
 
 FILE *file_ptr;
 
 int integer;
+char character;
+
+// const int chunkkvadsize = 32;
+// int chunksize = 32;
+int chunkkvad[chunkkvadsize][chunkkvadsize];
 
 void HexagonsInitialize()
 {
@@ -64,7 +76,7 @@ void HexagonsInitialize()
         st8_dns_clr[4][2] = 6;
         
         st8_dns_clr[5][0] = 4;
-        st8_dns_clr[5][1] = 5;
+        st8_dns_clr[5][1] = 4;
         st8_dns_clr[5][2] = 1;
         
         st8_dns_clr[6][0] = 1;
@@ -76,7 +88,7 @@ void HexagonsInitialize()
         st8_dns_clr[7][2] = 4;
         
         st8_dns_clr[8][0] = 2;
-        st8_dns_clr[8][1] = 6;
+        st8_dns_clr[8][1] = 5;
         st8_dns_clr[8][2] = 7;
         
         st8_dns_clr[9][0] = 8;
@@ -88,7 +100,7 @@ void HexagonsInitialize()
         st8_dns_clr[10][2] = 5;
         
         st8_dns_clr[11][0] = 10;
-        st8_dns_clr[11][1] = 2;
+        st8_dns_clr[11][1] = 5;
         st8_dns_clr[11][2] = 1;
         
         st8_dns_clr[12][0] = 9;
@@ -107,6 +119,8 @@ void HexagonsInitialize()
     t = 0;
 
     RulesInitialize();
+    maincontour = ContourListInitialize();
+    ChunkKvadZero();
     
     firevolume = 0;
     SetGravity(0, 1);
@@ -122,6 +136,8 @@ void HexagonsTerminate()
     free(st8_dns_clr);
 
     RulesTerminate();
+    
+    ContourListTerminate(maincontour);
 }
 
 void RulesInitialize()
@@ -152,7 +168,8 @@ void RulesInitialize()
     neighbours_required = malloc(mat_amount * sizeof(int)); 
     
     // RulesChange (0, 9, 0, 1, 9, -2, -2, -2, -2, -2);
-    RulesChange (0, 9, 0, 0, 9, 5, -1, -1, -1, -1);
+    RulesChange (0, 9, 0, 0, 9, 5, 3, -1, -1, -1);
+    // RulesAdd (0, 9, 0, 9, 9, 9, 9, -1, -1);
     RulesChange (1, 2, 0, 0, 2, 0, -1, -1, -1, -1);
     RulesAdd    (1, 2, 0, 11, -1, -1, -1, -1, -1);
     RulesChange (2, 0, 0, 0, -4, -1, -1, -1, -1, -1);
@@ -160,26 +177,35 @@ void RulesInitialize()
     RulesChange (3, 7, 0, 1, 7, 0, 0, 0, 0, -1);
     RulesChange (3, 6, 0, 0, 2, -1, -1, -1, -1, -1);
     RulesAdd    (3, 6, 0, 11, 11, -1, -1, -1, -1);
-    RulesChange (4, 11, 0, 0, 11, 11, 11, -1, -1, -1);
-    RulesChange (6, 3, 0, 0, -2, -2, -2, -2, -5, -4);
+    RulesChange (4, 11, 0, 0, 11, -1, -1, -1, -1, -1);
+    RulesChange (4, 8, 0, 0, 8, 8, 8, 8, -6, -1);
+    RulesChange (6, 3, 0, 0, -2, -2, -2, -13, -5, -4);
+    // RulesAdd    (6, 3, 0, 0, 0, 0, 0, 0, 0);
     RulesAdd    (6, 3, 0, 7, 7, 7, -1, -1, -1);
     RulesChange (7, 3, 0, 0, 2, -1, -1, -1, -1, -1);
     RulesAdd    (7, 3, 0, 3, 3, 3, 3, 3, -1);
     RulesAdd    (7, 3, 0, 11, -1, -1, -1, -1, -1);
-    RulesChange (8, 11, 0, 0, 11, 11, 11, 11, -1, -1);
-    RulesChange (8, 4, 0, 0, 3, 3, 0, 0, -1, -1);
+    RulesChange (8, 11, 0, -1, 11, 11, 11, 11, -1, -1);
+    RulesAdd    (8, 11, 0, 11, 11, 11, -10, -10, -1);
+    RulesChange (8, 4, 0, 0, 3, 3, 3, -10, -10, -10);
+    RulesAdd    (8, 4, 0, 3, 4, 4, -1, -1, -1);
     RulesChange (9, 2, 0, 0, 2, 0, -1, -1, -1, -1);
     RulesAdd    (9, 2, 0, 11, -1, -1, -1, -1, -1);
     RulesChange (10, 2, 0, 0, 2, 0, -1, -1, -1, -1);
     RulesAdd    (10, 2, 0, 11, -1, -1, -1, -1, -1);
+    // RulesChange (10, 5, 0, 0, 4, 4, -1, -1, -1, -1);
+    RulesChange (11, 8, 0, 0, 3, -1, -1, -1, -1, -1);
+    RulesAdd    (11, 8, 0, 7, 7, 7, -1, -1, -1);
+    RulesAdd    (11, 8, 0, -13, -1, -1, -1, -1, -1);
     RulesChange (12, 2, 0, 0, 2, 0, -1, -1, -1, -1);
     RulesAdd    (12, 2, 0, 11, -1, -1, -1, -1, -1);
+    // RulesChange (12, 5, 0, 0, 4, 4, -1, -1, -1, -1);
     RulesChange (13, 2, 0, 0, 2, 0, -1, -1, -1, -1);
     RulesAdd    (13, 2, 0, 11, -1, -1, -1, -1, -1);
+    // RulesChange (13, 5, 0, 0, 4, 4, -1, -1, -1, -1);
     RulesChange (14, 2, 0, 0, 2, 0, -1, -1, -1, -1);
     RulesAdd    (14, 2, 0, 11, -1, -1, -1, -1, -1);
-    RulesChange (11, 8, 0, 0, 3, 3, 3, -1, -1, -1);
-    RulesAdd    (11, 8, 0, 7, 7, 7, -1, -1, -1);
+    
 }
 
 void RulesTerminate()
@@ -297,6 +323,8 @@ void KvadZero(Kvad_t* ptr)
             ptr->arr[i][j].v2t = 0;
             ptr->arr[i][j].pwr = 0;
             ptr->arr[i][j].ded = 1;
+            ptr->arr[i][j].nrj = 0;
+            ptr->arr[i][j].org = 0;
             ptr->arr[i][j].flow[0] = 0;
             ptr->arr[i][j].flow[1] = 0;
             ptr->arr[i][j].flow[2] = 0;
@@ -309,7 +337,7 @@ void KvadZero(Kvad_t* ptr)
     }
 }
 
-void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
+void KvadSetMat(Kvad_t* ptr, int z, int n, int value, int new)
 {
     Cell_t* cptr;
     cptr = KvadGetHexel(ptr, z, n);
@@ -319,6 +347,28 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value)
     cptr->st8 = st8_dns_clr[value][0];
     cptr->dns = st8_dns_clr[value][1];
     cptr->clr = st8_dns_clr[value][2];
+    
+    if(new)
+    {
+        switch (cptr->mat)
+        {
+        case 5:
+            cptr->nrj = 0;
+            cptr->org = foodorganics;
+            break;
+        case 9:
+            cptr->nrj = foodenergy;
+            cptr->org = foodorganics;
+            break;
+        
+        default:
+            cptr->nrj = 0;
+            cptr->org = 0;
+            break;
+        }
+        
+    }
+    
 }
 
 Cell_t* KvadGetHexel(Kvad_t* ptr, int z, int n)
@@ -415,8 +465,8 @@ void KvadSetBlob(Kvad_t* ptr, int z, int n, int value, int rad)
         {
             if(meatlist[i] == NULL && KvadGetHexel(ptr, z, n)->mat == 0)
             {
-                meatlist[i] = MeatInitialize(ptr, z, n, 7);
                 genomelist[i] = BrainInitialize(mod(rad, meatlistsize));
+                meatlist[i] = MeatInitialize(ptr, z, n, i);
                 genomelist[i]->lastx = z;
                 i = meatlistsize;
             }
@@ -433,7 +483,8 @@ void KvadSetBlob(Kvad_t* ptr, int z, int n, int value, int rad)
                     if(KvadGetHexel(ptr, z + j, n + i)->mat == 0 || value == 0)
                     {
                         
-                        KvadSetMat(ptr, z + j, n + i, value);
+                        KvadSetMat(ptr, z + j, n + i, value, 1);
+                        KvadGetHexel(ptr, z + j, n + i)->tmp = KvadGetHexel(ptr, z + j, n + i)->mat;
                         KvadGetHexel(ptr, z + j, n + i)->stress = 0;
                         KvadGetHexel(ptr, z + j, n + i)->flow[0] = 0;
                         KvadGetHexel(ptr, z + j, n + i)->flow[1] = 0;
@@ -442,12 +493,16 @@ void KvadSetBlob(Kvad_t* ptr, int z, int n, int value, int rad)
                         KvadGetHexel(ptr, z + j, n + i)->flow[4] = 0;
                         KvadGetHexel(ptr, z + j, n + i)->flow[5] = 0;
                     }
+                    if(chunkkvad[mod(hdiv(z + j, chunksize), chunkkvadsize)][mod(hdiv(n + i, chunksize), chunkkvadsize)] == 0)
+                        chunkkvad[mod(hdiv(z + j, chunksize), chunkkvadsize)][mod(hdiv(n + i, chunksize), chunkkvadsize)] = 1;
+                    
                 }
+                
             }
         }
         break;
     }
-    
+    ChunkActivate(z, n);
 }
 
 void WaveUpdate(Kvad_t* ptr)
@@ -524,74 +579,96 @@ void SolidUpdate(Kvad_t* ptr)
     }
     
     int cen, flag;
-    for(int i = 0; i < ptr->height; i++)
+    for(int ci = 0; ci < chunkkvadsize; ci++)
     {
-        for(int j = 0; j < ptr->width; j++)
+        for(int cj = 0; cj < chunkkvadsize; cj++)
         {
-            KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
-            cen = KvadGetHexel(ptr, j, i)->mat;
-            for(int new = 0; new < mat_amount; new++)
+            if(chunkkvad[cj][ci] >= 2)
             {
-                for(int cond_num = 0; cond_num < RULES->frommat[cen]->tomat[new]->num; cond_num++)
+                for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
                 {
-                    if(RULES->frommat[cen]->tomat[new]->req[cond_num]->flag != -1)
+                    for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
                     {
-                        flag = RULES->frommat[cen]->tomat[new]->req[cond_num]->flag;
-                        for(int i = 0; i < mat_amount; i++)
+                        KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
+                        cen = KvadGetHexel(ptr, j, i)->mat;
+                        for(int new = 0; new < mat_amount; new++)
                         {
-                            neighbours_required[i] = 0;
-                        }
-                        int cur_neighbour_mat;
-                        for(int n = 0; n < 6; n++)
-                        {
-                            if(RULES->frommat[cen]->tomat[new]->req[cond_num]->neighbors[n] != -1)
+                            for(int cond_num = 0; cond_num < RULES->frommat[cen]->tomat[new]->num; cond_num++)
                             {
-                                cur_neighbour_mat = RULES->frommat[cen]->tomat[new]->req[cond_num]->neighbors[n];
-                                if(cur_neighbour_mat >= 0) neighbours_required[cur_neighbour_mat]++; 
-                                if(cur_neighbour_mat <= -2) neighbours_required[-(cur_neighbour_mat + 2)]--; 
+                                if(RULES->frommat[cen]->tomat[new]->req[cond_num]->flag != -1)
+                                {
+                                    flag = RULES->frommat[cen]->tomat[new]->req[cond_num]->flag;
+                                    for(int i = 0; i < mat_amount; i++)
+                                    {
+                                        neighbours_required[i] = 0;
+                                    }
+                                    int cur_neighbour_mat;
+                                    for(int n = 0; n < 6; n++)
+                                    {
+                                        if(RULES->frommat[cen]->tomat[new]->req[cond_num]->neighbors[n] != -1)
+                                        {
+                                            cur_neighbour_mat = RULES->frommat[cen]->tomat[new]->req[cond_num]->neighbors[n];
+                                            if(cur_neighbour_mat >= 0) neighbours_required[cur_neighbour_mat]++; 
+                                            if(cur_neighbour_mat <= -2) neighbours_required[-(cur_neighbour_mat + 2)]--; 
+                                        }
+                                    }
+                                    
+                                    int neighbour_amount;
+                                    for(int neighbour_mat = 0; neighbour_mat < mat_amount; neighbour_mat++)
+                                    {
+                                        neighbour_amount = NeighbourCount(ptr, j, i, neighbour_mat);
+                                        if( (flag == 0 && 
+                                            (
+                                                (neighbour_amount >= neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] >=  0 )||
+                                                (neighbour_amount < -neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] <= -1 )
+                                            )) ||
+                                            (flag == 1 &&
+                                            (
+                                                (neighbour_amount == neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] >=  1 )||
+                                                (neighbours_required[neighbour_mat] == 0) ||
+                                                (neighbour_amount != -neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] <= -1 )
+                                            ))
+                                            )
+                                        {
+                                            b_change = 1;
+                                        }
+                                        else
+                                        {
+                                            b_change = 0;
+                                            neighbour_mat = mat_amount;
+                                        }
+                                    }
+                                    if(b_change)
+                                    {
+                                        KvadGetHexel(ptr, j, i)->tmp = new;
+                                        b_change = 0;
+                                    }
+                                }
                             }
-                        }
-                        
-                        int neighbour_amount;
-                        for(int neighbour_mat = 0; neighbour_mat < mat_amount; neighbour_mat++)
-                        {
-                            neighbour_amount = NeighbourCount(ptr, j, i, neighbour_mat);
-                            if( (flag == 0 && 
-                                (
-                                    (neighbour_amount >= neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] >=  0 )||
-                                    (neighbour_amount < -neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] <= -1 )
-                                )) ||
-                                (flag == 1 &&
-                                (
-                                    (neighbour_amount == neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] >=  1 )||
-                                    (neighbours_required[neighbour_mat] == 0) ||
-                                    (neighbour_amount != -neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] <= -1 )
-                                ))
-                                )
-                            {
-                                b_change = 1;
-                            }
-                            else
-                            {
-                                b_change = 0;
-                                neighbour_mat = mat_amount;
-                            }
-                        }
-                        if(b_change)
-                        {
-                            KvadGetHexel(ptr, j, i)->tmp = new;
-                            b_change = 0;
                         }
                     }
                 }
             }
         }
     }
-    for(int i = 0; i < ptr->height; i++)
+    for(int ci = 0; ci < chunkkvadsize; ci++)
     {
-        for(int j = 0; j < ptr->width; j++)
+        for(int cj = 0; cj < chunkkvadsize; cj++)
         {
-            KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp);
+            if(chunkkvad[cj][ci] >= 2)
+            {
+                for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
+                {
+                    for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
+                    {
+                        if(KvadGetHexel(ptr, j, i)->tmp != KvadGetHexel(ptr, j, i)->mat)
+                        {
+                            KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp, 1);
+                            ChunkActivate(j, i);
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -712,238 +789,874 @@ void PhysicsUpdate(Kvad_t* ptr)
     int rock = 0;
     int fabric = 0;
     
-    for(int i = 0; i < ptr->height; i++)
-        {
-            for(int j = 0; j < ptr->width; j++)
-            {
-                KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
-                
-            }
-        }
+    int something = 0;
     
-    if(t >= gravtime)
+    if(showchunks)
     {
-        for(int i = border; i < ptr->height - border; i++)
+        for(int ci = 0; ci < chunkkvadsize; ci++)
         {
-            for(int j = border; j < ptr->width - border; j++)
+            for(int cj = 0; cj < chunkkvadsize; cj++)
             {
-                KvadGetHexel(ptr, j, i)->stress = 0;
-                
-            }
-        }
-    }
-    
-    for(int i = border; i < ptr->height - border; i++)
-    {
-        for(int j = border; j < ptr->width - border; j++)
-        {
-            KvadGetHexel(ptr, j, i)->fld2 = 0;
-            switch (KvadGetHexel(ptr, j, i)->st8)
+                if(chunkkvad[cj][ci] == 0)
                 {
-                case 6:
-                    if(t >= gravtime)
-                    {   
-                        if(NeighbourCount(ptr, j, i, KvadGetHexel(ptr, j, i)->mat) < 6
-                        && KvadGetHexel(ptr, j, i)->stress == 0)
+                    for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
+                    {
+                        for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
                         {
-                            ContourPressure(ptr, j, i);
+                            KvadGetHexel(ptr, j, i)->clr = 5;
+                            
                         }
                     }
-                    break;
-                case 9:
-                    if(KvadGetHexel(ptr, j, i)->ded)
-                    {
-                        KvadGetHexel(ptr, j, i)->fld = 0;
-                        KvadGetHexel(ptr, j, i)->stress = 0;
-                    }
-                    else
-                    {
-                    KvadGetHexel(ptr, j, i)->fld = -10;
-                    KvadGetHexel(ptr, j, i)->dx = 0;
-                    KvadGetHexel(ptr, j, i)->dy = 0;
-                    }
-                    break;
+                }
                 
+                if(chunkkvad[cj][ci] == 2)
+                {
+                    for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
+                    {
+                        for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
+                        {
+                            KvadGetHexel(ptr, j, i)->clr = 2;
+                            
+                        }
+                    }
+                }
                 
-                default:
-                    KvadGetHexel(ptr, j, i)->fld = 0;
-                    KvadGetHexel(ptr, j, i)->stress = 0;
-                    break;
+                if(chunkkvad[cj][ci] == 3)
+                {
+                    for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
+                    {
+                        for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
+                        {
+                            KvadGetHexel(ptr, j, i)->clr = 4;
+                            
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    for(int ci = 0; ci < chunkkvadsize; ci++)
+        {
+            for(int cj = 0; cj < chunkkvadsize; cj++)
+            {
+                if(chunkkvad[cj][ci] >= 2)
+                {
+                    for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
+                    {
+                        for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
+                        {
+                            KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
+                            KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->mat, 0);
+                            KvadGetHexel(ptr, j, i)->dx = 0;
+                            KvadGetHexel(ptr, j, i)->dy = 0;
+                            
+                        }
+                    }
+                }
+                
+            }
+        }
+    
+    for(int ci = 0; ci < chunkkvadsize; ci++)
+        {
+            for(int cj = 0; cj < chunkkvadsize; cj++)
+            {
+                if(chunkkvad[cj][ci] == 2)
+                {
+                    for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
+                    {
+                        for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
+                        {
+                            {
+                            KvadGetHexel(ptr, j, i)->fld2 = 0;
+                            switch (KvadGetHexel(ptr, j, i)->st8)
+                                {
+                                case 9:
+                                    if(KvadGetHexel(ptr, j, i)->ded)
+                                    {
+                                        KvadGetHexel(ptr, j, i)->fld = 0;
+                                        KvadGetHexel(ptr, j, i)->stress = 0;
+                                    }
+                                    else
+                                    {
+                                    KvadGetHexel(ptr, j, i)->fld = -10;
+                                    KvadGetHexel(ptr, j, i)->dx = 0;
+                                    KvadGetHexel(ptr, j, i)->dy = 0;
+                                    }
+                                    break;
+                                
+                                
+                                default:
+                                    KvadGetHexel(ptr, j, i)->fld = 0;
+                                    KvadGetHexel(ptr, j, i)->stress = 0;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                if(chunkkvad[cj][ci] == 3)
+                {
+                    for(int i = ci * chunksize; i < (ci + 1) * chunksize; i += chunksize - 1)
+                    {
+                        for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
+                        {
+                            {
+                            KvadGetHexel(ptr, j, i)->fld2 = 0;
+                            switch (KvadGetHexel(ptr, j, i)->st8)
+                                {
+                                case 9:
+                                    if(KvadGetHexel(ptr, j, i)->ded)
+                                    {
+                                        KvadGetHexel(ptr, j, i)->fld = 0;
+                                        KvadGetHexel(ptr, j, i)->stress = 0;
+                                    }
+                                    else
+                                    {
+                                    KvadGetHexel(ptr, j, i)->fld = -10;
+                                    KvadGetHexel(ptr, j, i)->dx = 0;
+                                    KvadGetHexel(ptr, j, i)->dy = 0;
+                                    }
+                                    break;
+                                
+                                
+                                default:
+                                    KvadGetHexel(ptr, j, i)->fld = 0;
+                                    KvadGetHexel(ptr, j, i)->stress = 0;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    for(int j = cj * chunksize; j < (cj + 1) * chunksize; j += chunksize - 1)
+                    {
+                        for(int i = ci * chunksize + 1; i < (ci + 1) * chunksize - 1; i++)
+                        {
+                            {
+                            KvadGetHexel(ptr, j, i)->fld2 = 0;
+                            switch (KvadGetHexel(ptr, j, i)->st8)
+                                {
+                                case 9:
+                                    if(KvadGetHexel(ptr, j, i)->ded)
+                                    {
+                                        KvadGetHexel(ptr, j, i)->fld = 0;
+                                        KvadGetHexel(ptr, j, i)->stress = 0;
+                                    }
+                                    else
+                                    {
+                                    KvadGetHexel(ptr, j, i)->fld = -10;
+                                    KvadGetHexel(ptr, j, i)->dx = 0;
+                                    KvadGetHexel(ptr, j, i)->dy = 0;
+                                    }
+                                    break;
+                                
+                                
+                                default:
+                                    KvadGetHexel(ptr, j, i)->fld = 0;
+                                    KvadGetHexel(ptr, j, i)->stress = 0;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    
+    for(int ci = 0; ci < chunkkvadsize; ci++)
+        {
+            for(int cj = 0; cj < chunkkvadsize; cj++)
+            {
+                if(chunkkvad[cj][ci] >= 2)
+                {
+                    for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
+                    {
+                        for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
+                        {
+                            gx = KvadGetHexel(ptr, j, i)->dx;
+                            gy = KvadGetHexel(ptr, j, i)->dy;
+                            
+                            if(t == gravtime
+                            && hdist(0, 0, gx + GetGravX(ptr, j, i), gy + GetGravY(ptr, j, i)) < 2)
+                            {
+                                switch (KvadGetHexel(ptr, j, i)->st8)
+                                {
+                                case 1:
+                                    gx -= GetGravX(ptr, j, i);
+                                    gy -= GetGravY(ptr, j, i);
+                                    break;
+                                case 9:
+                                    if(KvadGetHexel(ptr, j, i)->ded)
+                                    {
+                                        gx += GetGravX(ptr, j, i);
+                                        gy += GetGravY(ptr, j, i);
+                                    }
+                                    break;
+                                
+                                default:
+                                    gx = GetGravX(ptr, j, i);
+                                    gy = GetGravY(ptr, j, i);
+                                    break;
+                                }
+                                
+                                
+                            }
+                            
+                            RelToAbs(gx, gy, 2, &rbx, &rby);
+                            RelToAbs(gx, gy, -2, &lbx, &lby);
+
+                            RelToAbs(gx, gy, 1, &rfx, &rfy);
+                            RelToAbs(gx, gy, -1, &lfx, &lfy);
+                            priority = 0;
+                            switch (KvadGetHexel(ptr, j, i)->st8)
+                            {
+                            case 1:
+                                
+                                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                                
+                                break;
+                            case 2:
+                                
+                                ForceRock(ptr, j, i, gx, gy, &dz, &dn);
+                                
+                                break;
+                            case 3:
+                            
+                                ForceSand(ptr, j, i, gx, gy, &dz, &dn);
+                            
+                                break;
+                            case 4:
+                                
+                                ForceDirt(ptr, j, i, gx, gy, &dz, &dn);
+                                if(dz == gx && dn == gy)
+                                {
+                                    priority = 1;
+                                }
+                                
+                                break;
+                            case 5:
+                                
+                                ForceRope(ptr, j, i, gx, gy, &dz, &dn);
+                                b_up_fall = dz == -gx && dn == -gy;
+                                b_dir_fall = dz == gx && dn == gy;
+                                
+                                priority = b_dir_fall + b_up_fall * 2;
+                                
+                                break;
+                            case 6:
+                                
+                                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                                if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+                                {    
+                                    priority = 1;
+                                }
+                                if( (dz == gx && dn == gy) )
+                                {    
+                                    priority = 2;
+                                }
+                                
+                                break;
+                            case 7:
+                                
+                                ForceIce(ptr, j, i, gx, gy, &dz, &dn);
+                                b_up_fall = dz == -gx && dn == -gy;
+                                b_dir_fall = dz == gx && dn == gy;
+                                
+                                priority = b_dir_fall + b_up_fall * 2;
+                                
+                                break;
+                            case 8:
+                            
+                                ForceRope(ptr, j, i, gx, gy, &dz, &dn);
+                                if(dz == gx && dn == gy)
+                                {    
+                                    priority = 1;
+                                    
+                                }
+                                if(dz == -gx && dn == -gy)
+                                {    
+                                    priority = 2;
+                                    
+                                }
+                                
+                                break;
+                            case 9:
+                            
+                                ForceSand(ptr, j, i, gx, gy, &dz, &dn);
+                                
+                                break;
+                            case 10:
+                            
+                                ForceViscous(ptr, j, i, gx, gy, &dz, &dn);
+                                b_up_fall = dz == -gx && dn == -gy;
+                                b_dir_fall = dz == gx && dn == gy;
+                                
+                                priority = b_dir_fall + b_up_fall * 2;
+                                
+                                break;
+                            default:
+                                dz = gx, dn = gy;
+                                break;
+                            }
+                            
+                            if(KvadGetHexel(ptr, j, i)->val2 > 5)
+                            {
+                                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                                if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+                                {    
+                                    priority = 1;
+                                    
+                                }
+                                if( (dz == gx && dn == gy) )
+                                {    
+                                    priority = 2;
+                                    
+                                }
+                            }
+                            
+                            field_value = KvadGetHexel(ptr, j, i)->dns + priority;
+                                
+                            if(KvadGetHexel(ptr, j, i)->st8 != 0)
+                            {
+                                if( KvadGetHexel(ptr, j + dz, i + dn)->fld > -field_value
+                                    && KvadGetHexel(ptr, j + dz, i + dn)->fld < field_value
+                                    && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
+                                {
+                                    KvadGetHexel(ptr, j + dz, i + dn)->fld = field_value;
+                                }
+                                else if(KvadGetHexel(ptr, j + dz, i + dn)->fld == field_value)
+                                {
+                                    KvadGetHexel(ptr, j + dz, i + dn)->fld = -field_value;
+                                }
+                            }
+                        }
+                    }
                 }
         }
     }
     
-    for(int i = border; i < ptr->height - border; i++)
-    {
-        for(int j = border; j < ptr->width - border; j++)
+    for(int ci = 0; ci < chunkkvadsize; ci++)
         {
-            gx = KvadGetHexel(ptr, j, i)->dx;
-            gy = KvadGetHexel(ptr, j, i)->dy;
-            
-            if(t >= gravtime
-            && hdist(0, 0, gx + gravx, gy + gravy) < 2)
+            for(int cj = 0; cj < chunkkvadsize; cj++)
             {
-                switch (KvadGetHexel(ptr, j, i)->st8)
+                if(chunkkvad[cj][ci] >= 2)
                 {
-                case 1:
-                    gx -= gravx;
-                    gy -= gravy;
-                    break;
-                case 9:
-                    if(KvadGetHexel(ptr, j, i)->ded)
+                    something = 0;
+                    for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
                     {
-                        gx += gravx;
-                        gy += gravy;
-                    }
-                    break;
-                
-                default:
-                    gx += gravx;
-                    gy += gravy;
-                    break;
-                }
-                
-                
-            }
-            
-            RelToAbs(gx, gy, 2, &rbx, &rby);
-            RelToAbs(gx, gy, -2, &lbx, &lby);
+                        for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
+                        {
+                            gx = KvadGetHexel(ptr, j, i)->dx;
+                            gy = KvadGetHexel(ptr, j, i)->dy;
+                            
+                            if(t == gravtime
+                            && hdist(0, 0, gx + GetGravX(ptr, j, i), gy + GetGravY(ptr, j, i)) < 2)
+                            {
+                                switch (KvadGetHexel(ptr, j, i)->st8)
+                                {
+                                case 1:
+                                    gx -= GetGravX(ptr, j, i);
+                                    gy -= GetGravY(ptr, j, i);
+                                    break;
+                                case 9:
+                                    if(KvadGetHexel(ptr, j, i)->ded)
+                                    {
+                                        gx += GetGravX(ptr, j, i);
+                                        gy += GetGravY(ptr, j, i);
+                                    }
+                                    break;
+                                
+                                default:
+                                    gx = GetGravX(ptr, j, i);
+                                    gy = GetGravY(ptr, j, i);
+                                    break;
+                                }
+                            }
+                            
+                            RelToAbs(gx, gy, 2, &rbx, &rby);
+                            RelToAbs(gx, gy, -2, &lbx, &lby);
 
-            RelToAbs(gx, gy, 1, &rfx, &rfy);
-            RelToAbs(gx, gy, -1, &lfx, &lfy);
-            priority = 0;
+                            RelToAbs(gx, gy, 1, &rfx, &rfy);
+                            RelToAbs(gx, gy, -1, &lfx, &lfy);
+                            priority = 0;
+                            switch (KvadGetHexel(ptr, j, i)->st8)
+                            {
+                            case 1:
+                                
+                                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                                // Repulsion(ptr, j, i, &dz, &dn, 0);
+                                
+                                break;
+                            case 2:
+                                
+                                ForceRock(ptr, j, i, gx, gy, &dz, &dn);
+                                
+                                break;
+                            case 3:
+                                
+                                ForceSand(ptr, j, i, gx, gy, &dz, &dn);
+                                
+                                break;
+                            case 4:
+                            
+                                ForceDirt(ptr, j, i, gx, gy, &dz, &dn);
+                                if(dz == gx && dn == gy)
+                                {
+                                    priority = 1;
+                                }
+                                
+                                
+                                
+                                break;
+                            case 5:
+                                
+                                ForceRope(ptr, j, i, gx, gy, &dz, &dn);
+                                if(dz == gx && dn == gy)
+                                {    
+                                    priority = 1;
+                                    
+                                }
+                                if(dz == -gx && dn == -gy)
+                                {    
+                                    priority = 2;
+                                    
+                                }
+                                
+                                break;
+                            case 6:
+                        
+                                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                                if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+                                {    
+                                    priority = 1;
+                                    
+                                }
+                                if( (dz == gx && dn == gy) )
+                                {    
+                                    priority = 2;
+                                    
+                                }
+                                
+                                break;
+                            case 7:
+                                
+                                ForceIce(ptr, j, i, gx, gy, &dz, &dn);
+                                if(dz == gx && dn == gy)
+                                {    
+                                    priority = 1;
+                                    
+                                }
+                                if(dz == -gx && dn == -gy)
+                                {    
+                                    priority = 2;
+                                    
+                                }
+                                
+                                break;
+                            case 8:
+                            
+                                ForceRope(ptr, j, i, gx, gy, &dz, &dn);
+                                if(dz == gx && dn == gy)
+                                {    
+                                    priority = 1;
+                                    
+                                }
+                                if(dz == -gx && dn == -gy)
+                                {    
+                                    priority = 2;
+                                    
+                                }
+                                
+                                break;
+                            case 9:
+                            
+                                ForceSand(ptr, j, i, gx, gy, &dz, &dn);
+                                
+                                break;
+                            case 10:
+                            
+                                ForceViscous(ptr, j, i, gx, gy, &dz, &dn);
+                                if(dz == gx && dn == gy)
+                                {    
+                                    priority = 1;
+                                    
+                                }
+                                if(dz == -gx && dn == -gy)
+                                {    
+                                    priority = 2;
+                                    
+                                }
+                                
+                                break;
+                            default:
+                                dz = gx, dn = gy;
+                                break;
+                            }
+                            
+                            if(KvadGetHexel(ptr, j, i)->val2 > 5)
+                            {
+                                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                                if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+                                {    
+                                    priority = 1;
+                                    
+                                }
+                                if( (dz == gx && dn == gy) )
+                                {    
+                                    priority = 2;
+                                    
+                                }
+                            }
+                            
+                            field_value = KvadGetHexel(ptr, j, i)->dns + priority;
+                            if(KvadGetHexel(ptr, j + dz, i + dn)->fld == field_value &&
+                                KvadGetHexel(ptr, j, i)->st8 != 0)
+                            {
+                                if(chunkkvad[cj][ci] == 2)
+                                {
+                                    swap(&KvadGetHexel(ptr, j     , i     )->tmp,
+                                        &KvadGetHexel(ptr, j + dz, i + dn)->tmp);
+                                    swap(&KvadGetHexel(ptr, j     , i     )->nrj,
+                                        &KvadGetHexel(ptr, j + dz, i + dn)->nrj);
+                                    swap(&KvadGetHexel(ptr, j     , i     )->org,
+                                        &KvadGetHexel(ptr, j + dz, i + dn)->org);
+                                chunkkvad[mod(hdiv(j + dz, chunksize), chunkkvadsize)][mod(hdiv(i + dn, chunksize), chunkkvadsize)] = 2;
+                                something = 1;
+                                chunkkvad[mod(hdiv(j, chunksize), chunkkvadsize)][mod(hdiv(i, chunksize), chunkkvadsize)] = 2;
+                                something = 1;
+                                }
+                                    
+                                curmat = KvadGetHexel(ptr, j, i)->mat;
+                                switch (curmat)
+                                
+                                {
+                                case 1:
+                                    if (dz != 0 || dn != 0) 
+                                        fabric++;
+                                    break;
+                                case 3:
+                                    if (!(dz == gx && dn == gy || dz == -gx && dn == -gy)) 
+                                        water++;
+                                    break;
+                                case 4:
+                                    if (!(dz == gx && dn == gy)) 
+                                        sand++;
+                                    break;
+                                case 5:
+                                    if (dz != 0 || dn != 0) 
+                                        dirt++;
+                                    break;
+                                case 7:
+                                    if (dz == gx && dn == gy) 
+                                        ice++;
+                                    break;
+                                case 8:
+                                    if (!(dz == -gx && dn == -gy) && !(dz == 0 && dn == 0)) 
+                                        rock++;
+                                    break;
+                                case 11:
+                                    if (!(dz == gx && dn == gy || dz == -gx && dn == -gy)) 
+                                        magma++;
+                                    break;
+                                
+                                default:
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+        }
+    }
+    
+    icevolume = (icevolume * 4 + ice) / 5;
+    sandvolume = (sandvolume * 4 + sand) / 5;
+    fabricvolume = (fabricvolume * 4 + fabric) / 5;
+    watervolume = (watervolume * 4 + water) / 5;
+    dirtvolume = (dirtvolume * 4 + dirt) / 5;
+    rockvolume = (rockvolume * 4 + rock) / 5;
+    magmavolume = (magmavolume * 4 + magma) / 5;
+    int isgrav = 0;
+    
+    for(int ci = 0; ci < chunkkvadsize; ci++)
+        {
+            for(int cj = 0; cj < chunkkvadsize; cj++)
+            {
+                if(chunkkvad[cj][ci] >= 2)
+                {
+                    something = 0;
+                    isgrav = 1;
+                    for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
+                    {
+                        for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
+                        {
+                            if(KvadGetHexel(ptr, j, i)->tmp != KvadGetHexel(ptr, j, i)->mat)
+                            {
+                                if(chunkkvad[cj][ci] == 2)
+                                {
+                                    KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp, 0);
+                                    ChunkActivate(j, i);
+                                }
+                                something = 1;
+                            }
+                            if(GetGravX(ptr, j, i) == 0 && GetGravY(ptr, j, i) == 0)
+                            {
+                                isgrav = 0;
+                                
+                            }
+            
+                            KvadGetHexel(ptr, j, i)->val2 = KvadGetHexel(ptr, j, i)->v2t;
+                            KvadGetHexel(ptr, j, i)->v2t = 0;
+                        }
+                    }
+                    if(something == 0 && isgrav == 1 && chunkkvad[cj][ci] == 2) chunkkvad[cj][ci] = 3;
+                    else if(something == 0 && isgrav == 1 && chunkkvad[cj][ci] == 3) chunkkvad[cj][ci] = 0;
+                }
+        }
+    }
+    
+    
+
+}
+
+void PhysicsUpdate2(Kvad_t* ptr)
+{
+    int gx = 0, gy = 0;
+    int dz = 0, dn = 0;
+    
+    int priority = 0;
+    int b_dir_fall = 0;
+    int b_up_fall = 0;
+    int field_value = 0;
+    
+    int gdx = 0, gdy = 0;
+    
+    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    
+    int curmat;
+    int ice = 0;
+    int sand = 0;
+    int water = 0;
+    int magma = 0;
+    int dirt = 0;
+    int rock = 0;
+    int fabric = 0;
+    
+    Contour_t *concur = maincontour;
+    int j, i;
+    
+    while(concur != NULL)
+    {
+        j = concur->x, i = concur->y;
+        
+        KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
+        
+        concur = concur->next;
+    }
+    concur = maincontour;
+    while(concur != NULL)
+    {
+        j = concur->x, i = concur->y;
+        
+        KvadGetHexel(ptr, j, i)->fld2 = 0;
+        switch (KvadGetHexel(ptr, j, i)->st8)
+            {
+            case 9:
+                if(KvadGetHexel(ptr, j, i)->ded)
+                {
+                    KvadGetHexel(ptr, j, i)->fld = 0;
+                    KvadGetHexel(ptr, j, i)->stress = 0;
+                }
+                else
+                {
+                KvadGetHexel(ptr, j, i)->fld = -10;
+                KvadGetHexel(ptr, j, i)->dx = 0;
+                KvadGetHexel(ptr, j, i)->dy = 0;
+                }
+                break;
+            
+            
+            default:
+                KvadGetHexel(ptr, j, i)->fld = 0;
+                KvadGetHexel(ptr, j, i)->stress = 0;
+                break;
+            }
+        concur = concur->next;
+    }
+    concur = maincontour;
+    while(concur != NULL)
+    {
+        j = concur->x, i = concur->y;
+        
+        gx = KvadGetHexel(ptr, j, i)->dx;
+        gy = KvadGetHexel(ptr, j, i)->dy;
+        
+        if(t == gravtime
+        && hdist(0, 0, gx + gravx, gy + gravy) < 2)
+        {
             switch (KvadGetHexel(ptr, j, i)->st8)
             {
             case 1:
-                
-                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
-                
-                break;
-            case 2:
-                
-                ForceRock(ptr, j, i, gx, gy, &dz, &dn);
-                
-                break;
-            case 3:
-            
-                ForceSand(ptr, j, i, gx, gy, &dz, &dn);
-            
-                break;
-            case 4:
-                
-                ForceDirt(ptr, j, i, gx, gy, &dz, &dn);
-                if(dz == gx && dn == gy)
-                {
-                    priority = 1;
-                }
-                
-                break;
-            case 5:
-                
-                ForceRope(ptr, j, i, gx, gy, &dz, &dn);
-                b_up_fall = dz == -gx && dn == -gy;
-                b_dir_fall = dz == gx && dn == gy;
-                
-                priority = b_dir_fall + b_up_fall * 2;
-                
-                break;
-            case 6:
-                
-                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
-                if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
-                {    
-                    priority = 1;
-                }
-                if( (dz == gx && dn == gy) )
-                {    
-                    priority = 2;
-                }
-                
-                break;
-            case 7:
-                
-                ForceIce(ptr, j, i, gx, gy, &dz, &dn);
-                b_up_fall = dz == -gx && dn == -gy;
-                b_dir_fall = dz == gx && dn == gy;
-                
-                priority = b_dir_fall + b_up_fall * 2;
-                
-                break;
-            case 8:
-            
-                ForceRope(ptr, j, i, gx, gy, &dz, &dn);
-                if(dz == gx && dn == gy)
-                {    
-                    priority = 1;
-                    
-                }
-                if(dz == -gx && dn == -gy)
-                {    
-                    priority = 2;
-                    
-                }
-                
+                gx -= gravx;
+                gy -= gravy;
                 break;
             case 9:
-            
-                ForceSand(ptr, j, i, gx, gy, &dz, &dn);
-                
+                if(KvadGetHexel(ptr, j, i)->ded)
+                {
+                    gx += gravx;
+                    gy += gravy;
+                }
                 break;
-            case 10:
             
-                ForceViscous(ptr, j, i, gx, gy, &dz, &dn);
-                b_up_fall = dz == -gx && dn == -gy;
-                b_dir_fall = dz == gx && dn == gy;
-                
-                priority = b_dir_fall + b_up_fall * 2;
-                
-                break;
             default:
-                dz = gx, dn = gy;
+                gx += gravx;
+                gy += gravy;
                 break;
             }
             
-            if(KvadGetHexel(ptr, j, i)->val2 > 5)
+            
+        }
+        
+        RelToAbs(gx, gy, 2, &rbx, &rby);
+        RelToAbs(gx, gy, -2, &lbx, &lby);
+
+        RelToAbs(gx, gy, 1, &rfx, &rfy);
+        RelToAbs(gx, gy, -1, &lfx, &lfy);
+        priority = 0;
+        switch (KvadGetHexel(ptr, j, i)->st8)
+        {
+        case 1:
+            
+            ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+            
+            break;
+        case 2:
+            
+            ForceRock(ptr, j, i, gx, gy, &dz, &dn);
+            
+            break;
+        case 3:
+        
+            ForceSand(ptr, j, i, gx, gy, &dz, &dn);
+        
+            break;
+        case 4:
+            
+            ForceDirt(ptr, j, i, gx, gy, &dz, &dn);
+            if(dz == gx && dn == gy)
             {
-                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
-                if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
-                {    
-                    priority = 1;
-                    
-                }
-                if( (dz == gx && dn == gy) )
-                {    
-                    priority = 2;
-                    
-                }
+                priority = 1;
             }
             
-            field_value = KvadGetHexel(ptr, j, i)->dns + priority;
+            break;
+        case 5:
+            
+            ForceRope(ptr, j, i, gx, gy, &dz, &dn);
+            b_up_fall = dz == -gx && dn == -gy;
+            b_dir_fall = dz == gx && dn == gy;
+            
+            priority = b_dir_fall + b_up_fall * 2;
+            
+            break;
+        case 6:
+            
+            ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+            if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+            {    
+                priority = 1;
+            }
+            if( (dz == gx && dn == gy) )
+            {    
+                priority = 2;
+            }
+            
+            break;
+        case 7:
+            
+            ForceIce(ptr, j, i, gx, gy, &dz, &dn);
+            b_up_fall = dz == -gx && dn == -gy;
+            b_dir_fall = dz == gx && dn == gy;
+            
+            priority = b_dir_fall + b_up_fall * 2;
+            
+            break;
+        case 8:
+        
+            ForceRope(ptr, j, i, gx, gy, &dz, &dn);
+            if(dz == gx && dn == gy)
+            {    
+                priority = 1;
                 
-            if(KvadGetHexel(ptr, j, i)->st8 != 0)
-            {
-                if( KvadGetHexel(ptr, j + dz, i + dn)->fld > -field_value
-                    && KvadGetHexel(ptr, j + dz, i + dn)->fld < field_value
-                    && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
-                {
-                    KvadGetHexel(ptr, j + dz, i + dn)->fld = field_value;
-                }
-                else if(KvadGetHexel(ptr, j + dz, i + dn)->fld == field_value)
-                {
-                    KvadGetHexel(ptr, j + dz, i + dn)->fld = -field_value;
-                }
+            }
+            if(dz == -gx && dn == -gy)
+            {    
+                priority = 2;
+                
+            }
+            
+            break;
+        case 9:
+        
+            ForceSand(ptr, j, i, gx, gy, &dz, &dn);
+            
+            break;
+        case 10:
+        
+            ForceViscous(ptr, j, i, gx, gy, &dz, &dn);
+            b_up_fall = dz == -gx && dn == -gy;
+            b_dir_fall = dz == gx && dn == gy;
+            
+            priority = b_dir_fall + b_up_fall * 2;
+            
+            break;
+        default:
+            dz = gx, dn = gy;
+            break;
+        }
+        
+        if(KvadGetHexel(ptr, j, i)->val2 > 5)
+        {
+            ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+            if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+            {    
+                priority = 1;
+                
+            }
+            if( (dz == gx && dn == gy) )
+            {    
+                priority = 2;
+                
             }
         }
-    }
-    
-    for(int i = border; i < ptr->height - border; i++)
-    {
-        for(int j = border; j < ptr->width - border; j++)
+        
+        field_value = KvadGetHexel(ptr, j, i)->dns + priority;
+            
+        if(KvadGetHexel(ptr, j, i)->st8 != 0)
         {
+            if( KvadGetHexel(ptr, j + dz, i + dn)->fld > -field_value
+                && KvadGetHexel(ptr, j + dz, i + dn)->fld < field_value
+                && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
+            {
+                KvadGetHexel(ptr, j + dz, i + dn)->fld = field_value;
+            }
+            else if(KvadGetHexel(ptr, j + dz, i + dn)->fld == field_value)
+            {
+                KvadGetHexel(ptr, j + dz, i + dn)->fld = -field_value;
+            }
+        }
+        concur = concur->next;
+    }
+    concur = maincontour;
+    while(concur != NULL)
+        {
+            j = concur->x, i = concur->y;
+            
             gx = KvadGetHexel(ptr, j, i)->dx;
             gy = KvadGetHexel(ptr, j, i)->dy;
             
-            if(t >= gravtime
+            if(t == gravtime
             && hdist(0, 0, gx + gravx, gy + gravy) < 2)
             {
                 switch (KvadGetHexel(ptr, j, i)->st8)
@@ -1108,6 +1821,455 @@ void PhysicsUpdate(Kvad_t* ptr)
             {
                 swap(&KvadGetHexel(ptr, j     , i     )->tmp,
                     &KvadGetHexel(ptr, j + dz, i + dn)->tmp);
+                swap(&KvadGetHexel(ptr, j     , i     )->nrj,
+                    &KvadGetHexel(ptr, j + dz, i + dn)->nrj);
+                    
+            }
+            concur = concur->next;
+        }
+    
+    
+    
+    
+    concur = maincontour;
+    while(concur != NULL)
+        {
+            j = concur->x, i = concur->y;
+            if(concur->new == 0)
+            {
+                KvadSetBlob(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp, 0);
+                
+                KvadGetHexel(ptr, j, i)->val2 = KvadGetHexel(ptr, j, i)->v2t;
+                KvadGetHexel(ptr, j, i)->v2t = 0;
+            }
+            concur = concur->next;
+        }
+    
+    
+
+}
+
+void PhysicsUpdate3(Kvad_t* ptr)
+{
+    int gx = 0, gy = 0;
+    int dz = 0, dn = 0;
+    
+    int priority = 0;
+    int b_dir_fall = 0;
+    int b_up_fall = 0;
+    int field_value = 0;
+    
+    int gdx = 0, gdy = 0;
+    
+    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    
+    int curmat;
+    int ice = 0;
+    int sand = 0;
+    int water = 0;
+    int magma = 0;
+    int dirt = 0;
+    int rock = 0;
+    int fabric = 0;
+    
+    for(int i = 0; i < ptr->height; i++)
+        {
+            for(int j = 0; j < ptr->width; j++)
+            {
+                KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
+                
+            }
+        }
+    
+    if(t == gravtime)
+    {
+        for(int i = border; i < ptr->height - border; i++)
+        {
+            for(int j = border; j < ptr->width - border; j++)
+            {
+                KvadGetHexel(ptr, j, i)->stress = 0;
+                
+            }
+        }
+    }
+    
+    for(int i = border; i < ptr->height - border; i++)
+    {
+        for(int j = border; j < ptr->width - border; j++)
+        {
+            KvadGetHexel(ptr, j, i)->fld2 = 0;
+            switch (KvadGetHexel(ptr, j, i)->st8)
+                {
+                case 6:
+                    if(t == gravtime)
+                    {   
+                        if(NeighbourCount(ptr, j, i, KvadGetHexel(ptr, j, i)->mat) < 6
+                        && KvadGetHexel(ptr, j, i)->stress == 0)
+                        {
+                            ContourPressure(ptr, j, i);
+                        }
+                    }
+                    break;
+                case 9:
+                    if(KvadGetHexel(ptr, j, i)->ded)
+                    {
+                        KvadGetHexel(ptr, j, i)->fld = 0;
+                        KvadGetHexel(ptr, j, i)->stress = 0;
+                    }
+                    else
+                    {
+                    KvadGetHexel(ptr, j, i)->fld = -10;
+                    KvadGetHexel(ptr, j, i)->dx = 0;
+                    KvadGetHexel(ptr, j, i)->dy = 0;
+                    }
+                    break;
+                
+                
+                default:
+                    KvadGetHexel(ptr, j, i)->fld = 0;
+                    KvadGetHexel(ptr, j, i)->stress = 0;
+                    break;
+                }
+        }
+    }
+    
+    for(int i = border; i < ptr->height - border; i++)
+    {
+        for(int j = border; j < ptr->width - border; j++)
+        {
+            gx = KvadGetHexel(ptr, j, i)->dx;
+            gy = KvadGetHexel(ptr, j, i)->dy;
+            
+            if(t == gravtime
+            && hdist(0, 0, gx + gravx, gy + gravy) < 2)
+            {
+                switch (KvadGetHexel(ptr, j, i)->st8)
+                {
+                case 1:
+                    gx -= gravx;
+                    gy -= gravy;
+                    break;
+                case 9:
+                    if(KvadGetHexel(ptr, j, i)->ded)
+                    {
+                        gx += gravx;
+                        gy += gravy;
+                    }
+                    break;
+                
+                default:
+                    gx += gravx;
+                    gy += gravy;
+                    break;
+                }
+                
+                
+            }
+            
+            RelToAbs(gx, gy, 2, &rbx, &rby);
+            RelToAbs(gx, gy, -2, &lbx, &lby);
+
+            RelToAbs(gx, gy, 1, &rfx, &rfy);
+            RelToAbs(gx, gy, -1, &lfx, &lfy);
+            priority = 0;
+            switch (KvadGetHexel(ptr, j, i)->st8)
+            {
+            case 1:
+                
+                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                
+                break;
+            case 2:
+                
+                ForceRock(ptr, j, i, gx, gy, &dz, &dn);
+                
+                break;
+            case 3:
+            
+                ForceSand(ptr, j, i, gx, gy, &dz, &dn);
+            
+                break;
+            case 4:
+                
+                ForceDirt(ptr, j, i, gx, gy, &dz, &dn);
+                if(dz == gx && dn == gy)
+                {
+                    priority = 1;
+                }
+                
+                break;
+            case 5:
+                
+                ForceRope(ptr, j, i, gx, gy, &dz, &dn);
+                b_up_fall = dz == -gx && dn == -gy;
+                b_dir_fall = dz == gx && dn == gy;
+                
+                priority = b_dir_fall + b_up_fall * 2;
+                
+                break;
+            case 6:
+                
+                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+                {    
+                    priority = 1;
+                }
+                if( (dz == gx && dn == gy) )
+                {    
+                    priority = 2;
+                }
+                
+                break;
+            case 7:
+                
+                ForceIce(ptr, j, i, gx, gy, &dz, &dn);
+                b_up_fall = dz == -gx && dn == -gy;
+                b_dir_fall = dz == gx && dn == gy;
+                
+                priority = b_dir_fall + b_up_fall * 2;
+                
+                break;
+            case 8:
+            
+                ForceRope(ptr, j, i, gx, gy, &dz, &dn);
+                if(dz == gx && dn == gy)
+                {    
+                    priority = 1;
+                    
+                }
+                if(dz == -gx && dn == -gy)
+                {    
+                    priority = 2;
+                    
+                }
+                
+                break;
+            case 9:
+            
+                ForceSand(ptr, j, i, gx, gy, &dz, &dn);
+                
+                break;
+            case 10:
+            
+                ForceViscous(ptr, j, i, gx, gy, &dz, &dn);
+                b_up_fall = dz == -gx && dn == -gy;
+                b_dir_fall = dz == gx && dn == gy;
+                
+                priority = b_dir_fall + b_up_fall * 2;
+                
+                break;
+            default:
+                dz = gx, dn = gy;
+                break;
+            }
+            
+            if(KvadGetHexel(ptr, j, i)->val2 > 5)
+            {
+                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+                {    
+                    priority = 1;
+                    
+                }
+                if( (dz == gx && dn == gy) )
+                {    
+                    priority = 2;
+                    
+                }
+            }
+            
+            field_value = KvadGetHexel(ptr, j, i)->dns + priority;
+                
+            if(KvadGetHexel(ptr, j, i)->st8 != 0)
+            {
+                if( KvadGetHexel(ptr, j + dz, i + dn)->fld > -field_value
+                    && KvadGetHexel(ptr, j + dz, i + dn)->fld < field_value
+                    && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
+                {
+                    KvadGetHexel(ptr, j + dz, i + dn)->fld = field_value;
+                }
+                else if(KvadGetHexel(ptr, j + dz, i + dn)->fld == field_value)
+                {
+                    KvadGetHexel(ptr, j + dz, i + dn)->fld = -field_value;
+                }
+            }
+        }
+    }
+    
+    for(int i = border; i < ptr->height - border; i++)
+    {
+        for(int j = border; j < ptr->width - border; j++)
+        {
+            gx = KvadGetHexel(ptr, j, i)->dx;
+            gy = KvadGetHexel(ptr, j, i)->dy;
+            
+            if(t == gravtime
+            && hdist(0, 0, gx + gravx, gy + gravy) < 2)
+            {
+                switch (KvadGetHexel(ptr, j, i)->st8)
+                {
+                case 1:
+                    gx -= gravx;
+                    gy -= gravy;
+                    break;
+                case 9:
+                    if(KvadGetHexel(ptr, j, i)->ded)
+                    {
+                        gx += gravx;
+                        gy += gravy;
+                    }
+                    break;
+                
+                default:
+                    gx += gravx;
+                    gy += gravy;
+                    break;
+                }
+            }
+            
+            RelToAbs(gx, gy, 2, &rbx, &rby);
+            RelToAbs(gx, gy, -2, &lbx, &lby);
+
+            RelToAbs(gx, gy, 1, &rfx, &rfy);
+            RelToAbs(gx, gy, -1, &lfx, &lfy);
+            priority = 0;
+            switch (KvadGetHexel(ptr, j, i)->st8)
+            {
+            case 1:
+                
+                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                // Repulsion(ptr, j, i, &dz, &dn, 0);
+                
+                break;
+            case 2:
+                
+                ForceRock(ptr, j, i, gx, gy, &dz, &dn);
+                
+                break;
+            case 3:
+                
+                ForceSand(ptr, j, i, gx, gy, &dz, &dn);
+                
+                break;
+            case 4:
+            
+                ForceDirt(ptr, j, i, gx, gy, &dz, &dn);
+                if(dz == gx && dn == gy)
+                {
+                    priority = 1;
+                }
+                
+                
+                
+                break;
+            case 5:
+                
+                ForceRope(ptr, j, i, gx, gy, &dz, &dn);
+                if(dz == gx && dn == gy)
+                {    
+                    priority = 1;
+                    
+                }
+                if(dz == -gx && dn == -gy)
+                {    
+                    priority = 2;
+                    
+                }
+                
+                break;
+            case 6:
+        
+                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+                {    
+                    priority = 1;
+                    
+                }
+                if( (dz == gx && dn == gy) )
+                {    
+                    priority = 2;
+                    
+                }
+                
+                break;
+            case 7:
+                
+                ForceIce(ptr, j, i, gx, gy, &dz, &dn);
+                if(dz == gx && dn == gy)
+                {    
+                    priority = 1;
+                    
+                }
+                if(dz == -gx && dn == -gy)
+                {    
+                    priority = 2;
+                    
+                }
+                
+                break;
+            case 8:
+            
+                ForceRope(ptr, j, i, gx, gy, &dz, &dn);
+                if(dz == gx && dn == gy)
+                {    
+                    priority = 1;
+                    
+                }
+                if(dz == -gx && dn == -gy)
+                {    
+                    priority = 2;
+                    
+                }
+                
+                break;
+            case 9:
+            
+                ForceSand(ptr, j, i, gx, gy, &dz, &dn);
+                
+                break;
+            case 10:
+            
+                ForceViscous(ptr, j, i, gx, gy, &dz, &dn);
+                if(dz == gx && dn == gy)
+                {    
+                    priority = 1;
+                    
+                }
+                if(dz == -gx && dn == -gy)
+                {    
+                    priority = 2;
+                    
+                }
+                
+                break;
+            default:
+                dz = gx, dn = gy;
+                break;
+            }
+            
+            if(KvadGetHexel(ptr, j, i)->val2 > 5)
+            {
+                ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+                {    
+                    priority = 1;
+                    
+                }
+                if( (dz == gx && dn == gy) )
+                {    
+                    priority = 2;
+                    
+                }
+            }
+            
+            field_value = KvadGetHexel(ptr, j, i)->dns + priority;
+            if(KvadGetHexel(ptr, j + dz, i + dn)->fld == field_value &&
+                KvadGetHexel(ptr, j, i)->st8 != 0)
+            {
+                swap(&KvadGetHexel(ptr, j     , i     )->tmp,
+                    &KvadGetHexel(ptr, j + dz, i + dn)->tmp);
+                swap(&KvadGetHexel(ptr, j     , i     )->nrj,
+                    &KvadGetHexel(ptr, j + dz, i + dn)->nrj);
                     
                 curmat = KvadGetHexel(ptr, j, i)->mat;
                 switch (curmat)
@@ -1257,255 +2419,13 @@ void PhysicsUpdate(Kvad_t* ptr)
     {
         for(int j = border; j < ptr->width - border; j++)
         {
-            KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp);
+            KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp, 0);
             
             KvadGetHexel(ptr, j, i)->val2 = KvadGetHexel(ptr, j, i)->v2t;
             KvadGetHexel(ptr, j, i)->v2t = 0;
         }
     }
     
-    
-
-}
-
-void PhysicsUpdate2(Kvad_t* ptr)
-{
-    int gx = 0, gy = 0;
-    int dz = 0, dn = 0;
-    int border = 1;
-    int priority = 0;
-    int b_dir_fall = 0;
-    int b_up_fall = 0;
-    int field_value = 0;
-    int minstress = 1024;
-    
-    int gdx = 0, gdy = 0;
-    
-    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
-    
-    RelToAbs(gravx, gravy, 2, &rbx, &rby);
-    RelToAbs(gravx, gravy, -2, &lbx, &lby);
-
-    RelToAbs(gravx, gravy, 1, &rfx, &rfy);
-    RelToAbs(gravx, gravy, -1, &lfx, &lfy);
-    
-    int curmat;
-    
-    for(int i = border; i < ptr->height - border; i++)
-    {
-        for(int j = border; j < ptr->width - border; j++)
-        {
-            KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
-            KvadGetHexel(ptr, j, i)->v1t = KvadGetHexel(ptr, j, i)->stress;
-            
-            if(t >= gravtime)
-            {
-                switch (KvadGetHexel(ptr, j, i)->st8)
-                {
-                case 0:
-                    break;
-                
-                default:
-                    // KvadGetHexel(ptr, j, i)->flow[1] += 1;
-                    break;
-                }
-            }
-            
-            // if(t >= gravtime)
-                // KvadGetHexel(ptr, j, i)->stress = hmax(0, KvadGetHexel(ptr, j, i)->stress - 1);
-        }
-    }
-    for(int i = border; i < ptr->height - border; i++)
-    {
-        for(int j = border; j < ptr->width - border; j++)
-        {
-            switch (KvadGetHexel(ptr, j, i)->st8)
-            {
-            case 0:
-                break;
-            
-            default:
-                for(int k = 0; k < 6; k++)
-                {
-                    gx = Yrot[k];
-                    gy = Yrot[mod(k + 4, 6)];
-                    if(KvadGetHexel(ptr, j, i)->stress > KvadGetHexel(ptr, j + gx, i + gy)->stress + 1
-                    && KvadGetHexel(ptr, j + gx, i + gy)->mat == KvadGetHexel(ptr, j, i)->mat)
-                    {
-                        KvadGetHexel(ptr, j, i)->v1t--;
-                        KvadGetHexel(ptr, j + gx, i + gy)->v1t++;
-                        if(KvadGetHexel(ptr, j, i)->stress > KvadGetHexel(ptr, j + gx, i + gy)->stress + 2)
-                            KvadGetHexel(ptr, j, i)->flow[k]++;
-                    }
-                    else if(KvadGetHexel(ptr, j, i)->flow[k] > 0
-                    && KvadGetHexel(ptr, j + gx, i + gy)->mat == KvadGetHexel(ptr, j, i)->mat)
-                    {
-                        KvadGetHexel(ptr, j, i)->v1t--;
-                        KvadGetHexel(ptr, j + gx, i + gy)->v1t++;
-                        KvadGetHexel(ptr, j, i)->flow[k]--;
-                    }
-                }
-                
-                break;
-            }
-            
-        }
-    }
-    for(int i = border; i < ptr->height - border; i++)
-    {
-        for(int j = border; j < ptr->width - border; j++)
-        {
-            if(t >= gravtime)
-            {
-                switch (KvadGetHexel(ptr, j, i)->st8)
-                {
-                case 0:
-                    break;
-                case 8:
-                    break;
-                case 9:
-                    break;
-                
-                default:
-                    int threshold = 5;
-                    
-                    KvadGetHexel(ptr, j, i)->stress = KvadGetHexel(ptr, j, i)->v1t;
-                    int absol = abs(KvadGetHexel(ptr, j, i)->stress);
-                    if((KvadGetHexel(ptr, j, i)->stress <= -threshold
-                    || NeighbourCount(ptr, j, i, KvadGetHexel(ptr, j, i)->mat) == 1)
-                    && NeighbourCount(ptr, j, i, KvadGetHexel(ptr, j, i)->mat) <= 3)
-                    {
-                        KvadGetHexel(ptr, j, i)->stress += threshold;
-                        int k = 0;
-                        while(KvadGetHexel(ptr, j, i)->stress < 0)
-                        {
-                            gx = Yrot[mod(k, 6)];
-                            gy = Yrot[mod(k + 4, 6)];
-                            if(KvadGetHexel(ptr, j + gx, i + gy)->mat == KvadGetHexel(ptr, j, i)->mat
-                            && KvadGetHexel(ptr, j, i)->stress < 0)
-                            {
-                                KvadGetHexel(ptr, j + gx, i + gy)->stress--;
-                                KvadGetHexel(ptr, j, i)->stress++;
-                            }
-                            k++;
-                        }
-                        KvadGetHexel(ptr, j, i)->tmp = 0;
-                        
-                    }
-                    if(KvadGetHexel(ptr, j, i)->stress >= threshold
-                    && NeighbourCount(ptr, j, i, 0) <= 2)
-                    {
-                        // KvadGetHexel(ptr, j, i)->stress -= threshold;
-                        for(int k = 0; k < 6; k++)
-                        {
-                            gx = Yrot[k];
-                            gy = Yrot[mod(k + 4, 6)];
-                            if(KvadGetHexel(ptr, j + gx, i + gy)->tmp == 0)
-                            {
-                                KvadGetHexel(ptr, j + gx, i + gy)->tmp = KvadGetHexel(ptr, j, i)->mat;
-                                KvadGetHexel(ptr, j + gx, i + gy)->stress = 0;
-                                KvadGetHexel(ptr, j, i)->stress -= threshold;
-                            }
-                        }
-                    }
-                    break;
-                }
-                
-            }
-        }
-    }
-    for(int i = border; i < ptr->height - border; i++)
-    {
-        for(int j = border; j < ptr->width - border; j++)
-        {
-            KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp);
-        }
-    }
-    
-
-}
-
-void PhysicsUpdate3(Kvad_t* ptr)
-{
-    int gx = 0, gy = 0;
-    int dz = 0, dn = 0;
-    int border = 1;
-    int priority = 0;
-    int b_dir_fall = 0;
-    int b_up_fall = 0;
-    int field_value = 0;
-    int minstress = 1024;
-    
-    int gdx = 0, gdy = 0;
-    
-    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
-    
-    RelToAbs(gravx, gravy, 2, &rbx, &rby);
-    RelToAbs(gravx, gravy, -2, &lbx, &lby);
-
-    RelToAbs(gravx, gravy, 1, &rfx, &rfy);
-    RelToAbs(gravx, gravy, -1, &lfx, &lfy);
-    
-    int curmat;
-    
-    for(int i = border; i < ptr->height - border; i++)
-    {
-        for(int j = border; j < ptr->width - border; j++)
-        {
-            KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
-            KvadGetHexel(ptr, j, i)->v1t = KvadGetHexel(ptr, j, i)->stress;
-            
-            if(t >= gravtime)
-            {
-                switch (KvadGetHexel(ptr, j, i)->st8)
-                {
-                case 0:
-                    break;
-                
-                default:
-                }
-            }
-        }
-    }
-    for(int i = border; i < ptr->height - border; i++)
-    {
-        for(int j = border; j < ptr->width - border; j++)
-        {
-            switch (KvadGetHexel(ptr, j, i)->st8)
-            {
-            case 0:
-                break;
-            
-            default:
-                break;
-            }
-            
-        }
-    }
-    for(int i = border; i < ptr->height - border; i++)
-    {
-        for(int j = border; j < ptr->width - border; j++)
-        {
-            if(t >= gravtime)
-            {
-                switch (KvadGetHexel(ptr, j, i)->st8)
-                {
-                case 0:
-                    break;
-                default:
-                    break;
-                }
-                
-            }
-        }
-    }
-    for(int i = border; i < ptr->height - border; i++)
-    {
-        for(int j = border; j < ptr->width - border; j++)
-        {
-            
-        }
-    }
     
 
 }
@@ -1535,20 +2455,21 @@ void PositionsUpdate(Kvad_t* ptr)
     
     int watercounter = 0;
     
-    if(t >= gravtime)
+    if(t == gravtime)
     {
         for(int i = border; i < ptr->height - border; i++)
         {
             for(int j = border; j < ptr->width - border; j++)
             {
                 KvadGetHexel(ptr, j, i)->stress = 0;
+                KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
                 // KvadGetHexel(ptr, j, i)->clr = 7;
                 
             }
         }
     }
     
-    if(t >= gravtime)
+    if(t == gravtime)
     {
         for(int i = border; i < ptr->height - border; i++)
         {
@@ -1559,7 +2480,7 @@ void PositionsUpdate(Kvad_t* ptr)
                 {
                 
                 case 3:
-                    if(t >= gravtime)
+                    if(t == gravtime)
                     {
                         KvadGetHexel(ptr, j, i)->fld = -10;
                         
@@ -1572,7 +2493,7 @@ void PositionsUpdate(Kvad_t* ptr)
                     
                     break;
                 case 4:
-                    if(t >= gravtime)
+                    if(t == gravtime)
                     {
                         KvadGetHexel(ptr, j, i)->fld = -10;
                         
@@ -1585,7 +2506,7 @@ void PositionsUpdate(Kvad_t* ptr)
                     
                     break;
                 case 6:
-                    if(t >= gravtime)
+                    if(t == gravtime)
                     {
                         KvadGetHexel(ptr, j, i)->fld = -10;
                         
@@ -1598,7 +2519,7 @@ void PositionsUpdate(Kvad_t* ptr)
                     watercounter++;
                     break;
                 case 10:
-                    if(t >= gravtime)
+                    if(t == gravtime)
                     {
                         KvadGetHexel(ptr, j, i)->fld = -10;
                         
@@ -1633,7 +2554,7 @@ void PositionsUpdate(Kvad_t* ptr)
     
     
     
-    if(t >= gravtime)
+    if(t == gravtime)
     {
         for(int i = border; i < ptr->height - border; i++)
         {
@@ -1663,7 +2584,7 @@ void PositionsUpdate(Kvad_t* ptr)
                     if(NeighbourCount(ptr, j, i, KvadGetHexel(ptr, j, i)->mat) < 6
                     && KvadGetHexel(ptr, j, i)->stress >= 0)
                     {
-                        // ContourMove(ptr, j, i);
+                        ContourMove(ptr, j, i);
                     }
                     break;
                 case 10:
@@ -1683,13 +2604,13 @@ void PositionsUpdate(Kvad_t* ptr)
         }
     }
     
-    if(t >= gravtime)
+    if(t == gravtime)
     {
         for(int i = border; i < ptr->height - border; i++)
         {
             for(int j = border; j < ptr->width - border; j++)
             {
-                KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp);
+                KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp, 0);
                 
                 KvadGetHexel(ptr, j, i)->val2 = KvadGetHexel(ptr, j, i)->v2t;
                 KvadGetHexel(ptr, j, i)->v2t = 0;
@@ -1700,33 +2621,284 @@ void PositionsUpdate(Kvad_t* ptr)
 
 }
 
+void PositionsUpdate2(Kvad_t* ptr)
+{
+    int gx = 0, gy = 0;
+    int dz = 0, dn = 0;
+    int border = 1;
+    int priority = 0;
+    int b_dir_fall = 0;
+    int b_up_fall = 0;
+    int field_value = 0;
+    
+    int gdx = 0, gdy = 0;
+    
+    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    
+    int curmat;
+    int ice = 0;
+    int sand = 0;
+    int water = 0;
+    int magma = 0;
+    int dirt = 0;
+    int rock = 0;
+    int fabric = 0;
+    
+    int watercounter = 0;
+    
+    Contour_t *concur = maincontour;
+    int j, i;
+    
+    if(t == gravtime)
+    {
+        while(concur != NULL)
+        {
+            j = concur->x, i = concur->y;
+            KvadGetHexel(ptr, j, i)->stress = 0;
+            KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
+            // KvadGetHexel(ptr, j, i)->clr = 7;
+            
+            concur = concur->next;
+        }
+    }
+    concur = maincontour;
+    if(t == gravtime)
+    {
+        while(concur != NULL)
+        {
+            j = concur->x, i = concur->y;
+            
+            if(KvadGetHexel(ptr, j, i)->stress == 0)
+            {
+            
+            KvadGetHexel(ptr, j, i)->fld2 = 0;
+            switch (KvadGetHexel(ptr, j, i)->st8)
+            {
+            
+            case 3:
+                if(t == gravtime)
+                {
+                    KvadGetHexel(ptr, j, i)->fld = -10;
+                    
+                    if(NeighbourCount(ptr, j, i, KvadGetHexel(ptr, j, i)->mat) < 6
+                    && KvadGetHexel(ptr, j, i)->stress == 0)
+                    {
+                        ContourPressure(ptr, j, i);
+                    }
+                }
+                
+                break;
+            case 4:
+                if(t == gravtime)
+                {
+                    KvadGetHexel(ptr, j, i)->fld = -10;
+                    
+                    if(NeighbourCount(ptr, j, i, KvadGetHexel(ptr, j, i)->mat) < 6
+                    && KvadGetHexel(ptr, j, i)->stress == 0)
+                    {
+                        ContourPressure(ptr, j, i);
+                    }
+                }
+                
+                break;
+            case 6:
+                if(t == gravtime)
+                {
+                    KvadGetHexel(ptr, j, i)->fld = -10;
+                    
+                    if(NeighbourCount(ptr, j, i, KvadGetHexel(ptr, j, i)->mat) < 6
+                    && KvadGetHexel(ptr, j, i)->stress == 0)
+                    {
+                        ContourPressure(ptr, j, i);
+                    }
+                }
+                watercounter++;
+                break;
+            case 10:
+                if(t == gravtime)
+                {
+                    KvadGetHexel(ptr, j, i)->fld = -10;
+                    
+                    if(NeighbourCount(ptr, j, i, KvadGetHexel(ptr, j, i)->mat) < 6
+                    && KvadGetHexel(ptr, j, i)->stress == 0)
+                    {
+                        ContourPressure(ptr, j, i);
+                    }
+                }
+                break;
+            case 8:
+                KvadGetHexel(ptr, j, i)->fld = -10;
+                KvadGetHexel(ptr, j, i)->dx = 0;
+                KvadGetHexel(ptr, j, i)->dy = 0;
+                break;
+            case 9:
+                KvadGetHexel(ptr, j, i)->fld = -10;
+                KvadGetHexel(ptr, j, i)->dx = 0;
+                KvadGetHexel(ptr, j, i)->dy = 0;
+                break;
+            
+            default:
+                KvadGetHexel(ptr, j, i)->fld = 0;
+                KvadGetHexel(ptr, j, i)->stress = 0;
+                break;
+            }
+            }
+            concur = concur->next;
+        }
+        
+        if(doprint) printf("\nwater: %i\n", watercounter);
+    }
+    
+    
+    concur = maincontour;
+    if(t == gravtime)
+    {
+        while(concur != NULL)
+        {
+            j = concur->x, i = concur->y;
+            
+            if(KvadGetHexel(ptr, j, i)->stress >= 0)
+            {
+            
+            KvadGetHexel(ptr, j, i)->fld2 = 0;
+            switch (KvadGetHexel(ptr, j, i)->st8)
+            {
+            case 3:
+                
+                if(NeighbourCount(ptr, j, i, KvadGetHexel(ptr, j, i)->mat) < 6
+                && KvadGetHexel(ptr, j, i)->stress >= 0)
+                {
+                    ContourMoveSand(ptr, j, i);
+                }
+                break;
+            case 4:
+                
+                if(NeighbourCount(ptr, j, i, KvadGetHexel(ptr, j, i)->mat) < 6
+                && KvadGetHexel(ptr, j, i)->stress >= 0)
+                {
+                    ContourMoveSolid(ptr, j, i);
+                }
+                break;
+            case 6:
+                
+                if(NeighbourCount(ptr, j, i, KvadGetHexel(ptr, j, i)->mat) < 6
+                && KvadGetHexel(ptr, j, i)->stress >= 0)
+                {
+                    ContourMove(ptr, j, i);
+                }
+                break;
+            case 10:
+                
+                if(NeighbourCount(ptr, j, i, KvadGetHexel(ptr, j, i)->mat) < 6
+                && KvadGetHexel(ptr, j, i)->stress >= 0)
+                {
+                    ContourMove(ptr, j, i);
+                }
+                break;
+            
+            default:
+                
+                break;
+            }
+            }
+            concur = concur->next;
+        }
+    }
+    concur = maincontour;
+    if(t == gravtime)
+    {
+        while(concur != NULL)
+        {
+            j = concur->x, i = concur->y;
+            KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp, 0);
+            
+            KvadGetHexel(ptr, j, i)->val2 = KvadGetHexel(ptr, j, i)->v2t;
+            KvadGetHexel(ptr, j, i)->v2t = 0;
+            concur = concur->next;
+        }
+    }
+    
+
+}
+
 void KvadUpdate(Kvad_t* ptr)
 {
     if(border) Border(ptr);
-    if(rt >= rulestime)
+    if(rt == rulestime)
     {
-        SolidUpdate(ptr);
+        if(rules) SolidUpdate(ptr);
         
         rt = 0;
     }
     rt++;
     
     // PositionsUpdate(ptr);
-    // AudioUpdate(ptr, 0);
+    
     EntityCollision(ptr, e1);
     MeatListUpdate(ptr);
+    // ContourCheck(ptr);
+    // ContourPrint(ptr);
     
-    if(t >= gravtime)
+    // KvadSetBlob(ptr, gravcentx, gravcenty, 8, 0);
+    
+    // printf("%i %i\n", GetGravX(ptr, 98, 102), GetGravY(ptr, 98, 102));
+    
+    if(t == gravtime)
     {
-        PhysicsUpdate(ptr);
+        if(physics) 
+        {
+            
+            
+            ChunkKvadUpdate();
+            // ChunkKvadPrint();
+            PhysicsUpdate(ptr);
+            // AudioUpdate(ptr, 0);
+            
+        }
+        
+        // if(physics) PositionsUpdate2(ptr);
         
         t = 0;
     }
     t++;
+    
+    if(timer == maxtime)
+    {
+        timer = 0;
+    }
+    timer++;
 }
 
 void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
 {
+    int gx = 0, gy = 0;
+    
+    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    
+    gx = GetGravX(ptr, p_e->z, p_e->n);
+    gy = GetGravY(ptr, p_e->z, p_e->n);
+    
+    if(gx == 0 && gy == 0)
+    {
+        gx = Yrot[mod(p_e->angle, 6)];
+        gy = Yrot[mod(p_e->angle - 2, 6)];
+    }
+    else
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            p_e->angle = i;
+            if(Yrot[mod(i, 6)] == gx && Yrot[mod(i - 2, 6)] == gy) i = 6;
+        }
+    }
+    
+    
+    RelToAbs(gx, gy, 2, &rbx, &rby);
+    RelToAbs(gx, gy, -2, &lbx, &lby);
+
+    RelToAbs(gx, gy, 1, &rfx, &rfy);
+    RelToAbs(gx, gy, -1, &lfx, &lfy);
+
     if(meatlist[0] != NULL)
     {
         p_e->z = meatlist[0]->x;
@@ -1754,21 +2926,27 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
         int dz = 0, dn = 0;
         
         if(inpst.vy < 0 && p_e->fuel > 1)
-            dn += -1, p_e->fuel -= 2, fuelused = 1;
+        {
+            dz += -gx, dn += -gy;
+            if(t == gravtime && physics) p_e->fuel -= 2, fuelused = 1;
+        }
         if(inpst.vy > 0)
-            dn += 1;
+            dz += gx, dn += gy;
         else if(inpst.vx > 0)
         {
-            dz += 1, dn += 0;
+            dz += lfx, dn += lfy;
         }
         else if(inpst.vx < 0)
         {
-            dz += -1, dn += 1;
+            dz += rfx, dn += rfy;
         }
         
-        if(dz == 0 && dn == 0 && KvadGetHexel(ptr, oldz, oldn)->dns < 2)
+        if(!(GetGravX(ptr, p_e->z, p_e->n) == 0 && GetGravY(ptr, p_e->z, p_e->n) == 0)
+         && dz == 0 && dn == 0
+         && KvadGetHexel(ptr, oldz, oldn)->dns < 2
+         && (t == gravtime && physics))
         {
-            dn = 1;
+            dz = gx, dn = gy;
             if(inpst.vy >= 0 || 1)
                 p_e->fuel = hmin(p_e->fuel + 1, max_fuel);
         }
@@ -1797,6 +2975,8 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
         newz = p_e->z;
         newn = p_e->n;
         
+        
+        
         if(KvadGetHexel(ptr, p_e->z, p_e->n)->dns > 4)
         {
             p_e->z = oldz, p_e->n = oldn;
@@ -1816,7 +2996,7 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
         int blowpower = 3;
         
         if(inpst.delete == 1)
-            KvadSetMat(ptr, newz, newn, 0);
+            KvadSetBlob(ptr, newz, newn, 0, 0);
         if(inpst.insertB)
         {
             KvadGetHexel(ptr, newz, newn)->flow[0] = KvadGetHexel(ptr, newz, newn)->flow[0] + 1;
@@ -2273,7 +3453,7 @@ void ForceLiquid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     if(b_leftfront || b_rightfront) b_forward = 0;
     
     
-    if(b_back       )  *dz -= fx,  *dn -= fy;
+    // if(b_back       )  *dz -= fx,  *dn -= fy;
     if(b_forward    )  *dz += fx,  *dn += fy;
     if(b_rightfront )  *dz += rfx, *dn += rfy;
     if(b_leftfront  )  *dz += lfx, *dn += lfy;
@@ -2407,7 +3587,7 @@ void ForceIce(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
         )
     );
     
-    if(b_back       )  *dz -= fx,  *dn -= fy;
+    // if(b_back       )  *dz -= fx,  *dn -= fy;
     if(b_forward    )  *dz += fx,  *dn += fy;
     if(b_rightfront )  *dz += rbx, *dn += rby;
     if(b_leftfront  )  *dz += lbx, *dn += lby;
@@ -2545,7 +3725,7 @@ void ForceRock(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
         }
     }
     
-    if(b_back        )  *dz -= fx,  *dn -= fy;
+    // if(b_back        )  *dz -= fx,  *dn -= fy;
     if(b_forward     )  *dz += fx,  *dn += fy;
     if(b_rightfront  )  *dz += rfx, *dn += rfy;
     if(b_leftfront   )  *dz += lfx, *dn += lfy;
@@ -2838,6 +4018,768 @@ void ContourPressure(Kvad_t* ptr, int j, int i)
 
 }
 
+void ContourSetUp(Kvad_t* ptr, int j0, int i0)
+{
+    int curj = j0, curi = i0, curmat = KvadGetHexel(ptr, j0, i0)->mat;
+    int curdns = KvadGetHexel(ptr, j0, i0)->dns;
+    int addstr = 0;
+    
+    int gx = gravx, gy = gravy;
+    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    int grfx, grfy, glfx, glfy, grbx, grby, glbx, glby;
+    
+    int minimum = 0;
+    int counter = 0;
+    int turn;
+    int pressure;
+    
+    int gx2 = 0, gy2 = 0;
+    int dz = 0, dn = 0;
+    
+    int priority = 0;
+    int b_dir_fall = 0;
+    int b_up_fall = 0;
+    int field_value = 0;
+    
+    int gdx = 0, gdy = 0;
+    
+    int rfx2, rfy2, lfx2, lfy2, rbx2, rby2, lbx2, lby2;
+    
+    RelToAbs(gravx, gravy, 2, &grbx, &grby);
+    RelToAbs(gravx, gravy, -2, &glbx, &glby);
+    RelToAbs(gravx, gravy, 1, &grfx, &grfy);
+    RelToAbs(gravx, gravy, -1, &glfx, &glfy);
+    
+    gx2 = -gravx, gy2 = -gravy;
+    
+    RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+    RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+    RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+    RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+    
+    turn = 0;
+    if(NeighbourCount(ptr, curj, curi, curmat) < 6)
+    {
+        do
+        {
+            if(NeighbourCount(ptr, curj + lfx2, curi + lfy2, curmat) < 6
+            && KvadGetHexel(ptr, curj + lfx2, curi + lfy2)->mat == curmat)
+            {
+                curj += lfx2, curi += lfy2;
+                addstr = 0;
+                    
+                gx2 = rbx2, gy2 = rby2;
+                
+                RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+                RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+                RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+                RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+                
+                int j = curj, i = curi;
+                
+                KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
+                
+                turn = 6;
+            }
+            else
+            {
+                gx2 = lfx2, gy2 = lfy2;
+                
+                RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+                RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+                RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+                RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+                
+                turn++;
+            }
+        }
+        while(!(curj == j0 && curi == i0) || turn < 6);
+        
+        gx2 = -gravx, gy2 = -gravy;
+        
+        RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+        RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+        RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+        RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+        
+        turn = 0;
+        
+        do
+        {
+            if(NeighbourCount(ptr, curj + lfx2, curi + lfy2, curmat) < 6
+            && KvadGetHexel(ptr, curj + lfx2, curi + lfy2)->mat == curmat)
+            {
+                curj += lfx2, curi += lfy2;
+                addstr = 0;
+                    
+                gx2 = rbx2, gy2 = rby2;
+                
+                RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+                RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+                RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+                RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+                
+                int j = curj, i = curi;
+                
+                KvadGetHexel(ptr, j, i)->fld2 = 0;
+                switch (KvadGetHexel(ptr, j, i)->st8)
+                {
+                case 9:
+                    if(KvadGetHexel(ptr, j, i)->ded)
+                    {
+                        KvadGetHexel(ptr, j, i)->fld = 0;
+                        KvadGetHexel(ptr, j, i)->stress = 0;
+                    }
+                    else
+                    {
+                    KvadGetHexel(ptr, j, i)->fld = -10;
+                    KvadGetHexel(ptr, j, i)->dx = 0;
+                    KvadGetHexel(ptr, j, i)->dy = 0;
+                    }
+                    break;
+                
+                
+                default:
+                    KvadGetHexel(ptr, j, i)->fld = 0;
+                    KvadGetHexel(ptr, j, i)->stress = 0;
+                    break;
+                }
+                
+                turn = 6;
+            }
+            else
+            {
+                gx2 = lfx2, gy2 = lfy2;
+                
+                RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+                RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+                RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+                RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+                
+                turn++;
+            }
+        }
+        while(!(curj == j0 && curi == i0) || turn < 6);
+        
+        gx2 = -gravx, gy2 = -gravy;
+        
+        RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+        RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+        RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+        RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+        
+        turn = 0;
+        
+        do
+        {
+            if(NeighbourCount(ptr, curj + lfx2, curi + lfy2, curmat) < 6
+            && KvadGetHexel(ptr, curj + lfx2, curi + lfy2)->mat == curmat)
+            {
+                curj += lfx2, curi += lfy2;
+                addstr = 0;
+                    
+                gx2 = rbx2, gy2 = rby2;
+                
+                RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+                RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+                RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+                RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+                
+                {
+                int j = curj, i = curi;
+                
+                gx = KvadGetHexel(ptr, j, i)->dx;
+                gy = KvadGetHexel(ptr, j, i)->dy;
+                
+                if(t == gravtime
+                && hdist(0, 0, gx + gravx, gy + gravy) < 2)
+                {
+                    switch (KvadGetHexel(ptr, j, i)->st8)
+                    {
+                    case 1:
+                        gx -= gravx;
+                        gy -= gravy;
+                        break;
+                    case 9:
+                        if(KvadGetHexel(ptr, j, i)->ded)
+                        {
+                            gx += gravx;
+                            gy += gravy;
+                        }
+                        break;
+                    
+                    default:
+                        gx += gravx;
+                        gy += gravy;
+                        break;
+                    }
+                    
+                    
+                }
+                
+                RelToAbs(gx, gy, 2, &rbx, &rby);
+                RelToAbs(gx, gy, -2, &lbx, &lby);
+
+                RelToAbs(gx, gy, 1, &rfx, &rfy);
+                RelToAbs(gx, gy, -1, &lfx, &lfy);
+                priority = 0;
+                switch (KvadGetHexel(ptr, j, i)->st8)
+                {
+                case 1:
+                    
+                    ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                    
+                    break;
+                case 2:
+                    
+                    ForceRock(ptr, j, i, gx, gy, &dz, &dn);
+                    
+                    break;
+                case 3:
+                
+                    ForceSand(ptr, j, i, gx, gy, &dz, &dn);
+                
+                    break;
+                case 4:
+                    
+                    ForceDirt(ptr, j, i, gx, gy, &dz, &dn);
+                    if(dz == gx && dn == gy)
+                    {
+                        priority = 1;
+                    }
+                    
+                    break;
+                case 5:
+                    
+                    ForceRope(ptr, j, i, gx, gy, &dz, &dn);
+                    b_up_fall = dz == -gx && dn == -gy;
+                    b_dir_fall = dz == gx && dn == gy;
+                    
+                    priority = b_dir_fall + b_up_fall * 2;
+                    
+                    break;
+                case 6:
+                    
+                    ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                    if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+                    {    
+                        priority = 1;
+                    }
+                    if( (dz == gx && dn == gy) )
+                    {    
+                        priority = 2;
+                    }
+                    
+                    break;
+                case 7:
+                    
+                    ForceIce(ptr, j, i, gx, gy, &dz, &dn);
+                    b_up_fall = dz == -gx && dn == -gy;
+                    b_dir_fall = dz == gx && dn == gy;
+                    
+                    priority = b_dir_fall + b_up_fall * 2;
+                    
+                    break;
+                case 8:
+                
+                    ForceRope(ptr, j, i, gx, gy, &dz, &dn);
+                    if(dz == gx && dn == gy)
+                    {    
+                        priority = 1;
+                        
+                    }
+                    if(dz == -gx && dn == -gy)
+                    {    
+                        priority = 2;
+                        
+                    }
+                    
+                    break;
+                case 9:
+                
+                    ForceSand(ptr, j, i, gx, gy, &dz, &dn);
+                    
+                    break;
+                case 10:
+                
+                    ForceViscous(ptr, j, i, gx, gy, &dz, &dn);
+                    b_up_fall = dz == -gx && dn == -gy;
+                    b_dir_fall = dz == gx && dn == gy;
+                    
+                    priority = b_dir_fall + b_up_fall * 2;
+                    
+                    break;
+                default:
+                    dz = gx, dn = gy;
+                    break;
+                }
+                
+                if(KvadGetHexel(ptr, j, i)->val2 > 5)
+                {
+                    ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                    if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+                    {    
+                        priority = 1;
+                        
+                    }
+                    if( (dz == gx && dn == gy) )
+                    {    
+                        priority = 2;
+                        
+                    }
+                }
+                
+                field_value = KvadGetHexel(ptr, j, i)->dns + priority;
+                    
+                if(KvadGetHexel(ptr, j, i)->st8 != 0)
+                {
+                    if( KvadGetHexel(ptr, j + dz, i + dn)->fld > -field_value
+                        && KvadGetHexel(ptr, j + dz, i + dn)->fld < field_value
+                        && (KvadGetHexel(ptr, j + dz, i + dn)->dns < KvadGetHexel(ptr, j, i)->dns))
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = field_value;
+                    }
+                    else if(KvadGetHexel(ptr, j + dz, i + dn)->fld == field_value)
+                    {
+                        KvadGetHexel(ptr, j + dz, i + dn)->fld = -field_value;
+                    }
+                }
+                }
+                
+                turn = 6;
+            }
+            else
+            {
+                gx2 = lfx2, gy2 = lfy2;
+                
+                RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+                RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+                RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+                RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+                
+                turn++;
+            }
+        }
+        while(!(curj == j0 && curi == i0) || turn < 6);
+        
+    }
+}
+
+void ContourPhysics(Kvad_t* ptr, int j0, int i0)
+{
+    int curj = j0, curi = i0, curmat = KvadGetHexel(ptr, j0, i0)->mat;
+    int curdns = KvadGetHexel(ptr, j0, i0)->dns;
+    int addstr = 0;
+    
+    int gx = gravx, gy = gravy;
+    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    int grfx, grfy, glfx, glfy, grbx, grby, glbx, glby;
+    
+    int minimum = 0;
+    int counter = 0;
+    int turn;
+    int pressure;
+    
+    int gx2 = 0, gy2 = 0;
+    int dz = 0, dn = 0;
+    
+    int priority = 0;
+    int b_dir_fall = 0;
+    int b_up_fall = 0;
+    int field_value = 0;
+    
+    int gdx = 0, gdy = 0;
+    
+    int rfx2, rfy2, lfx2, lfy2, rbx2, rby2, lbx2, lby2;
+    
+    RelToAbs(gravx, gravy, 2, &grbx, &grby);
+    RelToAbs(gravx, gravy, -2, &glbx, &glby);
+    RelToAbs(gravx, gravy, 1, &grfx, &grfy);
+    RelToAbs(gravx, gravy, -1, &glfx, &glfy);
+    
+    gx2 = -gravx, gy2 = -gravy;
+    
+    RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+    RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+    RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+    RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+    
+    turn = 0;
+    if(NeighbourCount(ptr, curj, curi, curmat) < 6)
+    {   
+        do
+        {
+            if(NeighbourCount(ptr, curj + lfx2, curi + lfy2, curmat) < 6
+            && KvadGetHexel(ptr, curj + lfx2, curi + lfy2)->mat == curmat)
+            {
+                curj += lfx2, curi += lfy2;
+                addstr = 0;
+                    
+                gx2 = rbx2, gy2 = rby2;
+                
+                RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+                RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+                RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+                RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+                
+                {
+                int j = curj, i = curi;
+                
+                gx = KvadGetHexel(ptr, j, i)->dx;
+                gy = KvadGetHexel(ptr, j, i)->dy;
+                
+                if(t == gravtime
+                && hdist(0, 0, gx + gravx, gy + gravy) < 2)
+                {
+                    switch (KvadGetHexel(ptr, j, i)->st8)
+                    {
+                    case 1:
+                        gx -= gravx;
+                        gy -= gravy;
+                        break;
+                    case 9:
+                        if(KvadGetHexel(ptr, j, i)->ded)
+                        {
+                            gx += gravx;
+                            gy += gravy;
+                        }
+                        break;
+                    
+                    default:
+                        gx += gravx;
+                        gy += gravy;
+                        break;
+                    }
+                }
+                
+                RelToAbs(gx, gy, 2, &rbx, &rby);
+                RelToAbs(gx, gy, -2, &lbx, &lby);
+
+                RelToAbs(gx, gy, 1, &rfx, &rfy);
+                RelToAbs(gx, gy, -1, &lfx, &lfy);
+                priority = 0;
+                switch (KvadGetHexel(ptr, j, i)->st8)
+                {
+                case 1:
+                    
+                    ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                    // Repulsion(ptr, j, i, &dz, &dn, 0);
+                    
+                    break;
+                case 2:
+                    
+                    ForceRock(ptr, j, i, gx, gy, &dz, &dn);
+                    
+                    break;
+                case 3:
+                    
+                    ForceSand(ptr, j, i, gx, gy, &dz, &dn);
+                    
+                    break;
+                case 4:
+                
+                    ForceDirt(ptr, j, i, gx, gy, &dz, &dn);
+                    if(dz == gx && dn == gy)
+                    {
+                        priority = 1;
+                    }
+                    
+                    
+                    
+                    break;
+                case 5:
+                    
+                    ForceRope(ptr, j, i, gx, gy, &dz, &dn);
+                    if(dz == gx && dn == gy)
+                    {    
+                        priority = 1;
+                        
+                    }
+                    if(dz == -gx && dn == -gy)
+                    {    
+                        priority = 2;
+                        
+                    }
+                    
+                    break;
+                case 6:
+            
+                    ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                    if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+                    {    
+                        priority = 1;
+                        
+                    }
+                    if( (dz == gx && dn == gy) )
+                    {    
+                        priority = 2;
+                        
+                    }
+                    
+                    break;
+                case 7:
+                    
+                    ForceIce(ptr, j, i, gx, gy, &dz, &dn);
+                    if(dz == gx && dn == gy)
+                    {    
+                        priority = 1;
+                        
+                    }
+                    if(dz == -gx && dn == -gy)
+                    {    
+                        priority = 2;
+                        
+                    }
+                    
+                    break;
+                case 8:
+                
+                    ForceRope(ptr, j, i, gx, gy, &dz, &dn);
+                    if(dz == gx && dn == gy)
+                    {    
+                        priority = 1;
+                        
+                    }
+                    if(dz == -gx && dn == -gy)
+                    {    
+                        priority = 2;
+                        
+                    }
+                    
+                    break;
+                case 9:
+                
+                    ForceSand(ptr, j, i, gx, gy, &dz, &dn);
+                    
+                    break;
+                case 10:
+                
+                    ForceViscous(ptr, j, i, gx, gy, &dz, &dn);
+                    if(dz == gx && dn == gy)
+                    {    
+                        priority = 1;
+                        
+                    }
+                    if(dz == -gx && dn == -gy)
+                    {    
+                        priority = 2;
+                        
+                    }
+                    
+                    break;
+                default:
+                    dz = gx, dn = gy;
+                    break;
+                }
+                
+                if(KvadGetHexel(ptr, j, i)->val2 > 5)
+                {
+                    ForceLiquid(ptr, j, i, gx, gy, &dz, &dn);
+                    if( (dz == rbx && dn == rby) || (dz == lbx && dn == lby) )
+                    {    
+                        priority = 1;
+                        
+                    }
+                    if( (dz == gx && dn == gy) )
+                    {    
+                        priority = 2;
+                        
+                    }
+                }
+                
+                field_value = KvadGetHexel(ptr, j, i)->dns + priority;
+                if(KvadGetHexel(ptr, j + dz, i + dn)->fld == field_value &&
+                    KvadGetHexel(ptr, j, i)->st8 != 0)
+                {
+                    swap(&KvadGetHexel(ptr, j     , i     )->tmp,
+                        &KvadGetHexel(ptr, j + dz, i + dn)->tmp);
+                    swap(&KvadGetHexel(ptr, j     , i     )->nrj,
+                        &KvadGetHexel(ptr, j + dz, i + dn)->nrj);
+                }
+                }
+                
+                turn = 6;
+            }
+            else
+            {
+                gx2 = lfx2, gy2 = lfy2;
+                
+                RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+                RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+                RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+                RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+                
+                turn++;
+            }
+        }
+        while(!(curj == j0 && curi == i0) || turn < 6);
+    }
+}
+
+void ContourUpdate(Kvad_t* ptr, int j0, int i0)
+{
+    int curj = j0, curi = i0, curmat = KvadGetHexel(ptr, j0, i0)->mat;
+    int curdns = KvadGetHexel(ptr, j0, i0)->dns;
+    int addstr = 0;
+    
+    int gx = gravx, gy = gravy;
+    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    int grfx, grfy, glfx, glfy, grbx, grby, glbx, glby;
+    
+    int minimum = 0;
+    int counter = 0;
+    int turn;
+    int pressure;
+    
+    int gx2 = 0, gy2 = 0;
+    int dz = 0, dn = 0;
+    
+    int priority = 0;
+    int b_dir_fall = 0;
+    int b_up_fall = 0;
+    int field_value = 0;
+    
+    int gdx = 0, gdy = 0;
+    
+    int rfx2, rfy2, lfx2, lfy2, rbx2, rby2, lbx2, lby2;
+    
+    RelToAbs(gravx, gravy, 2, &grbx, &grby);
+    RelToAbs(gravx, gravy, -2, &glbx, &glby);
+    RelToAbs(gravx, gravy, 1, &grfx, &grfy);
+    RelToAbs(gravx, gravy, -1, &glfx, &glfy);
+    
+    gx2 = -gravx, gy2 = -gravy;
+    
+    RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+    RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+    RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+    RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+    
+    turn = 0;
+    if(NeighbourCount(ptr, curj, curi, curmat) < 6)
+    {
+        do
+        {
+            if(NeighbourCount(ptr, curj + lfx2, curi + lfy2, curmat) < 6
+            && KvadGetHexel(ptr, curj + lfx2, curi + lfy2)->mat == curmat)
+            {
+                curj += lfx2, curi += lfy2;
+                addstr = 0;
+                    
+                gx2 = rbx2, gy2 = rby2;
+                
+                RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+                RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+                RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+                RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+                
+                int j = curj, i = curi;
+                
+                KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp, 0);
+                
+                KvadGetHexel(ptr, j, i)->val2 = KvadGetHexel(ptr, j, i)->v2t;
+                KvadGetHexel(ptr, j, i)->v2t = 0;
+                
+                turn = 6;
+            }
+            else
+            {
+                gx2 = lfx2, gy2 = lfy2;
+                
+                RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+                RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+                RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+                RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+                
+                turn++;
+            }
+        }
+        while(!(curj == j0 && curi == i0) || turn < 6);
+    }
+}
+
+void ContourDebug(Kvad_t* ptr, int j0, int i0)
+{
+    int curj = j0, curi = i0, curmat = KvadGetHexel(ptr, j0, i0)->mat;
+    int curdns = KvadGetHexel(ptr, j0, i0)->dns;
+    int addstr = 0;
+    
+    int gx = gravx, gy = gravy;
+    int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    int grfx, grfy, glfx, glfy, grbx, grby, glbx, glby;
+    
+    int minimum = 0;
+    int counter = 0;
+    int turn;
+    int pressure;
+    
+    int gx2 = 0, gy2 = 0;
+    int dz = 0, dn = 0;
+    
+    int priority = 0;
+    int b_dir_fall = 0;
+    int b_up_fall = 0;
+    int field_value = 0;
+    
+    int gdx = 0, gdy = 0;
+    
+    int rfx2, rfy2, lfx2, lfy2, rbx2, rby2, lbx2, lby2;
+    
+    RelToAbs(gravx, gravy, 2, &grbx, &grby);
+    RelToAbs(gravx, gravy, -2, &glbx, &glby);
+    RelToAbs(gravx, gravy, 1, &grfx, &grfy);
+    RelToAbs(gravx, gravy, -1, &glfx, &glfy);
+    
+    gx2 = -gravx, gy2 = -gravy;
+    
+    RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+    RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+    RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+    RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+    
+    turn = 0;
+    if(NeighbourCount(ptr, curj, curi, curmat) < 6)
+    {
+        do
+        {
+            if(NeighbourCount(ptr, curj + lfx2, curi + lfy2, curmat) < 6
+            && KvadGetHexel(ptr, curj + lfx2, curi + lfy2)->mat == curmat)
+            {
+                curj += lfx2, curi += lfy2;
+                addstr = 0;
+                    
+                gx2 = rbx2, gy2 = rby2;
+                
+                RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+                RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+                RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+                RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+                
+                int j = curj, i = curi;
+                
+                KvadGetHexel(ptr, j, i)->clr = 5;
+                printf("%i %i\n", j, i);
+                
+                turn = 6;
+            }
+            else
+            {
+                gx2 = lfx2, gy2 = lfy2;
+                
+                RelToAbs(gx2, gy2, 2, &rbx2, &rby2);
+                RelToAbs(gx2, gy2, -2, &lbx2, &lby2);
+                RelToAbs(gx2, gy2, 1, &rfx2, &rfy2);
+                RelToAbs(gx2, gy2, -1, &lfx2, &lfy2);
+                
+                printf("%i %i\n", curj, curi);
+                
+                turn++;
+            }
+        }
+        while(!(curj == j0 && curi == i0) || turn < 6);
+    }
+}
+
 void ContourMove(Kvad_t* ptr, int j, int i)
 {
     int curj = j, curi = i, curmat = KvadGetHexel(ptr, j, i)->mat;
@@ -2872,7 +4814,7 @@ void ContourMove(Kvad_t* ptr, int j, int i)
     RelToAbs(gravx, gravy, -1, &glfx, &glfy);
     
     
-    gx = gravx, gy = gravy;
+    gx = grbx, gy = grby;
     
     RelToAbs(gx, gy, 2, &rbx, &rby);
     RelToAbs(gx, gy, -2, &lbx, &lby);
@@ -2945,14 +4887,14 @@ void ContourMove(Kvad_t* ptr, int j, int i)
     }
     while(!(curj == j && curi == i) || turn < 6);
     
-    if(doprint) printf("inverted %i\n", inverted);
+    printf("inverted %i\n", inverted);
     
-    if(doprint) printf("contour %i\n", contourcounter);
+    printf("contour %i\n", contourcounter);
     maxadd = contourcounter;
     
     if(extendbottom == 0 || bottomcounter * 4 < contourcounter || inverted)
     {
-        gx = gravx, gy = gravy;
+        gx = grbx, gy = grby;
         
         RelToAbs(gx, gy, 2, &rbx, &rby);
         RelToAbs(gx, gy, -2, &lbx, &lby);
@@ -3023,14 +4965,14 @@ void ContourMove(Kvad_t* ptr, int j, int i)
         }
         while(!(curj == j && curi == i) || turn < 6);
     }
-    if(doprint) printf("invextendtop %i\n", invextendtop);
+    printf("invextendtop %i\n", invextendtop);
     if(extendbottom == 0 && extendleftside == 0 && extendrightside == 0) extendtop = 1;
     
     // if(leftcounter > rightcounter && leftcounter > 0) extendleftside = 1, extendrightside = 0;
     // if(rightcounter > leftcounter && rightcounter > 0) extendleftside = 0, extendrightside = 1;
     // if(rightcounter == leftcounter) extendleftside = 0, extendrightside = 0;
     
-    gx = gravx, gy = gravy;
+    gx = grbx, gy = grby;
     
     RelToAbs(gx, gy, 2, &rbx, &rby);
     RelToAbs(gx, gy, -2, &lbx, &lby);
@@ -3039,7 +4981,7 @@ void ContourMove(Kvad_t* ptr, int j, int i)
     
     turn = 0;
     
-    gx = gravx, gy = gravy;
+    gx = grbx, gy = grby;
     
     RelToAbs(gx, gy, 2, &rbx, &rby);
     RelToAbs(gx, gy, -2, &lbx, &lby);
@@ -3060,43 +5002,50 @@ void ContourMove(Kvad_t* ptr, int j, int i)
         || NeighbourCount(ptr, curj, curi, curmat) == 0)
         {
             
-            if(2 * KvadGetHexel(ptr, curj, curi)->stress > maximum + minimum)
+            if(extendbottom == 1 && counter < maxadd)
             {
                 if(KvadGetHexel(ptr, curj + gravx, curi + gravy)->tmp == 0)
                 {
                     KvadGetHexel(ptr, curj + gravx, curi + gravy)->tmp = curmat;
                         counter++;
                 }
-                else
-                {
-                if(KvadGetHexel(ptr, curj + glfx, curi + glfy)->tmp == 0 
-                && !(KvadGetHexel(ptr, curj + grfx, curi + grfy)->tmp == 0)
-                )
-                {
-                    KvadGetHexel(ptr, curj + glfx, curi + glfy)->tmp = curmat;
-                    // KvadGetHexel(ptr, curj + glfx, curi + glfy)->clr = 6;
-                    // KvadGetHexel(ptr, curj, curi)->clr = 1;
-                    counter++;
-                }
-                if(KvadGetHexel(ptr, curj + grfx, curi + grfy)->tmp == 0
-                && !(KvadGetHexel(ptr, curj + glfx, curi + glfy)->tmp == 0)
-                )
-                {
-                    KvadGetHexel(ptr, curj + grfx, curi + grfy)->tmp = curmat;
-                    // KvadGetHexel(ptr, curj + grfx, curi + grfy)->clr = 6;
-                    // KvadGetHexel(ptr, curj, curi)->clr = 2;
-                    counter++;
-                }
-                }
-                // if(KvadGetHexel(ptr, curj - gravx, curi - gravy)->tmp == 0)
-                // {
-                //     KvadGetHexel(ptr, curj - gravx, curi - gravy)->tmp = curmat;
-                //     counter++;
-                // }
             }
             
             {
-                
+                if(extendleftside == 1 && counter < maxadd)
+                {
+                    if(KvadGetHexel(ptr, curj + glfx, curi + glfy)->tmp == 0 
+                    && !(KvadGetHexel(ptr, curj + grfx, curi + grfy)->tmp == 0)
+                    )
+                    {
+                        KvadGetHexel(ptr, curj + glfx, curi + glfy)->tmp = curmat;
+                        // KvadGetHexel(ptr, curj + glfx, curi + glfy)->clr = 6;
+                        // KvadGetHexel(ptr, curj, curi)->clr = 1;
+                        counter++;
+                    }
+                }
+                if(extendrightside == 1 && counter < maxadd)
+                {
+                    if(KvadGetHexel(ptr, curj + grfx, curi + grfy)->tmp == 0
+                    && !(KvadGetHexel(ptr, curj + glfx, curi + glfy)->tmp == 0)
+                    )
+                    {
+                        KvadGetHexel(ptr, curj + grfx, curi + grfy)->tmp = curmat;
+                        // KvadGetHexel(ptr, curj + grfx, curi + grfy)->clr = 6;
+                        // KvadGetHexel(ptr, curj, curi)->clr = 2;
+                        counter++;
+                    }
+                }
+                if(extendtop == 1 && counter < maxadd
+                && KvadGetHexel(ptr, curj, curi)->stress > 2)
+                {
+                    if(KvadGetHexel(ptr, curj - gravx, curi - gravy)->tmp == 0
+                    && KvadGetHexel(ptr, curj, curi)->stress == maximum)
+                    {
+                        KvadGetHexel(ptr, curj - gravx, curi - gravy)->tmp = curmat;
+                        counter++;
+                    }
+                }
             }
             
             
@@ -3132,12 +5081,12 @@ void ContourMove(Kvad_t* ptr, int j, int i)
     }
     while(!(curj == j && curi == i) || turn < 6);
     int nextmin = 0;
-    if(doprint) printf("waterloop\t%i\n", counter);
+    printf("waterloop\t%i\n", counter);
     while(counter > 0)
     {
         curj = j, curi = i;
         
-        gx = gravx, gy = gravy;
+        gx = grbx, gy = grby;
         
         RelToAbs(gx, gy, 2, &rbx, &rby);
         RelToAbs(gx, gy, -2, &lbx, &lby);
@@ -3192,16 +5141,16 @@ void ContourMove(Kvad_t* ptr, int j, int i)
         if(minimum + nextmin > maximum + 1 && counter > 0)
         {
             counter--;
-            if(doprint) printf("\033[0;30;41mERROR\n\033[0m");
+            printf("\033[0;30;41mERROR\n\033[0m");
         }
         
         nextmin++;
         
         
     }
-    if(doprint) printf("deleted--\t%i\n", deleted);
+    printf("deleted--\t%i\n", deleted);
     
-    gx = gravx, gy = gravy;
+    gx = grbx, gy = grby;
     
     RelToAbs(gx, gy, 2, &rbx, &rby);
     RelToAbs(gx, gy, -2, &lbx, &lby);
@@ -4100,13 +6049,13 @@ void Border(Kvad_t* ptr)
 {
     for(int i = 0; i < ptr->height; i++)
     {
-        KvadSetMat(ptr, 0, i, 8);
-        KvadSetMat(ptr, ptr->width - 1, i, 8);
+        KvadSetMat(ptr, 0, i, 0, 1);
+        KvadSetMat(ptr, ptr->width - 1, i, 0, 1);
     }
     for(int j = 0; j < ptr->width; j++)
     {
-        KvadSetMat(ptr, j, 0, 8);
-        KvadSetMat(ptr, j, ptr->height - 1, 8);
+        KvadSetMat(ptr, j, 0, 0, 1);
+        KvadSetMat(ptr, j, ptr->height - 1, 0, 1);
     }
 }
 
@@ -4115,105 +6064,80 @@ void SetGravity(int x, int y)
     gravx = x, gravy = y;
 }
 
-Node_t* MeatInitialize(Kvad_t* ptr, int x, int y, int size)
+Node_t* MeatInitialize(Kvad_t* ptr, int x, int y, int n)
 {
     if(doprintdebug) printf("MeatInitialize\n");
     Node_t *head = NULL;
     Node_t *tail = NULL;
     head = (Node_t*) malloc(sizeof(Node_t));
     // printf("ALLOCATED\n");
-    if(head == NULL) if(doprint) printf("\n Head error");
+    if(head == NULL) printf("\n Head error");
     head->x = x, head->y = y;
     head->next = NULL;
     head->next2 = NULL;
     head->prev = NULL;
     head->energy = 100;
     head->stored = 0;
+    int size = genomelist[n]->blueprint[0];
+    
     
     Node_t *nodecur = head;
     Node_t *nodeprev = NULL;
     
-    for(int i = 0; i < size; i++)
+    for(int i = 0; i < blueprintsize; i++)
     {
-        nodecur->next = (Node_t*) malloc(sizeof(Node_t));
-        // printf("ALLOCATED\n");
-        nodeprev = nodecur;
+        switch (genomelist[n]->blueprint[i])
+        {
+        case 0:
+            break;
+        case 1:
+            if(nodecur->next == NULL)
+            {
+                nodecur->next = (Node_t*) malloc(sizeof(Node_t));
+                nodeprev = nodecur;
+                
+                nodecur = nodecur->next;
+                
+                nodecur->x = x;
+                nodecur->y = y;
+                nodecur->next = NULL;
+                nodecur->next2 = NULL;
+                nodecur->prev = nodeprev;
+                nodecur->energy = 0;
+                nodecur->stored = 0;
+            }
+            // grow next
+            break;
+        case 2:
+            if(nodecur->next2 == NULL)
+            {
+                nodecur->next2 = (Node_t*) malloc(sizeof(Node_t));
+                nodeprev = nodecur;
+                
+                nodecur = nodecur->next2;
+                
+                nodecur->x = x;
+                nodecur->y = y;
+                nodecur->next = NULL;
+                nodecur->next2 = NULL;
+                nodecur->prev = nodeprev;
+                nodecur->energy = 0;
+                nodecur->stored = 0;
+                genomelist[n]->limbs++;
+            }
+            // grow next2
+            break;
+        case 3:
+            if(nodecur->prev != NULL)
+            {
+                nodecur = nodecur->prev;
+            }
+            // go back
+            break;
         
-        nodecur = nodecur->next;
-        
-        nodecur->x = x;
-        nodecur->y = y;
-        nodecur->next = NULL;
-        nodecur->next2 = NULL;
-        nodecur->prev = nodeprev;
-        nodecur->energy = 0;
-        nodecur->stored = 0;
-    }
-    
-    nodecur = head->next;
-    nodecur = nodecur->next;
-    nodecur = nodecur->next;
-    nodecur = nodecur->next;
-    nodecur->next2 = (Node_t*) malloc(sizeof(Node_t));
-    // printf("ALLOCATED\n");
-    nodecur = nodecur->next2;
-    nodecur->x = x, nodecur->y = y;
-    nodecur->next = NULL;
-    nodecur->next2 = NULL;
-    nodecur->prev = NULL;
-    nodecur->energy = 100;
-    nodecur->stored = 0;
-    
-    for(int i = 0; i < size; i++)
-    {
-        nodecur->next = (Node_t*) malloc(sizeof(Node_t));
-        // printf("ALLOCATED\n");
-        nodeprev = nodecur;
-        
-        nodecur = nodecur->next;
-        
-        nodecur->x = x;
-        nodecur->y = y;
-        nodecur->next = NULL;
-        nodecur->next2 = NULL;
-        nodecur->prev = nodeprev;
-        nodecur->energy = 0;
-        nodecur->stored = 0;
-    }
-    
-    nodecur = head->next;
-    nodecur = nodecur->next;
-    nodecur = nodecur->next;
-    nodecur = nodecur->next;
-    nodecur = nodecur->next2;
-    nodecur = nodecur->next;
-    nodecur = nodecur->next;
-    nodecur = nodecur->next;
-    nodecur->next2 = (Node_t*) malloc(sizeof(Node_t));
-    // printf("ALLOCATED\n");
-    nodecur = nodecur->next2;
-    nodecur->x = x, nodecur->y = y;
-    nodecur->next = NULL;
-    nodecur->next2 = NULL;
-    nodecur->prev = NULL;
-    nodecur->energy = 100;
-    nodecur->stored = 0;
-    
-    for(int i = 0; i < size; i++)
-    {
-        nodecur->next = (Node_t*) malloc(sizeof(Node_t));
-        // printf("ALLOCATED\n");
-        nodeprev = nodecur;
-        
-        nodecur = nodecur->next;
-        
-        nodecur->x = x;
-        nodecur->y = y;
-        nodecur->next = NULL;
-        nodecur->next2 = NULL;
-        nodecur->prev = nodeprev;
-        nodecur->energy = 0;
-        nodecur->stored = 0;
+        default:
+            break;
+        }
     }
     
     MeatDraw(ptr, head);
@@ -4293,7 +6217,15 @@ void MeatMoveHead(Kvad_t* ptr, int n, Node_t *head, int dx, int dy, int manual)
         genomelist[n]->mathead = KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat;
     }
     
-    if((genomelist[n]->energy < maxenergy && delete && KvadGetHexel(ptr, head->x + dx, head->y + dy)->dns < 5
+    if((delete
+     && (KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 9
+     || KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 10
+     || KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 12
+     || KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 13
+     )
+     && 
+     (((genomelist[n]->inpx != 0 || genomelist[n]->inpy != 0) && !manual)
+     || ((inpst.vx != 0 || inpst.vy != 0) && manual))
     ) || KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 0)
     {
         if(KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 0)
@@ -4324,17 +6256,12 @@ void MeatMoveHead(Kvad_t* ptr, int n, Node_t *head, int dx, int dy, int manual)
             && KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat != 12
             && KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat != 13 || 1)
             {
-                if(KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 10
-                || KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 12
-                || KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 13)
+                if(1)
                 {
-                    // printf("i eat you\n");
-                    genomelist[n]->energy = hmin(genomelist[n]->energy + 5, maxenergy);
-                }
-                if(KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 9)
-                {
-                    // printf("mm salad\n");
-                    genomelist[n]->energy = hmin(genomelist[n]->energy + 2000, maxenergy);
+                    genomelist[n]->energy += KvadGetHexel(ptr, head->x + dx, head->y + dy)->nrj;
+                    genomelist[n]->lifetime += KvadGetHexel(ptr, head->x + dx, head->y + dy)->nrj;
+                    genomelist[n]->organics += KvadGetHexel(ptr, head->x + dx, head->y + dy)->org;
+                    KvadGetHexel(ptr, head->x + dx, head->y + dy)->nrj = 0;
                 }
                 genomelist[n]->eaten++;
                 meatlist[n]->stored = 0;
@@ -4751,10 +6678,10 @@ void MeatMoveLimb(Kvad_t* ptr, int n, Node_t* head, int manual)
             displaced = 0;
         }
     }
-    if(doprint) printf("displaced %i\n", displaced);
+    // if(doprint) printf("displaced %i\n", displaced);
     
     
-    if((movehead == 1 && pull || displaced > 0 && genomelist[n]->airborne > 3) && head != tail)
+    if((movehead == 1 && pull || displaced > 0 && genomelist[n]->airborne > 1) && head != tail)
     {
         MeatMoveHead(ptr, n, meatlist[n], -dx, -dy, manual);
     }
@@ -4769,25 +6696,54 @@ void MeatMoveLimb(Kvad_t* ptr, int n, Node_t* head, int manual)
         // printf("\nDeltax: %i", genomelist[n]->deltax);
         // printf("\nDeltay: %i", genomelist[n]->deltay);
     }
-    // if(retract) MeatRetract(ptr, meatlist[n]);
+    if(retract) MeatRetract(ptr, n, meatlist[n]);
     // if(add) 
     // {
     //     MeatAdd(ptr, n);
     //     genomelist[n]->lifetime -= 20;
     // }
-    if(genomelist[n]->reproduce && genomelist[n]->energy > 1000)
+    if(genomelist[n]->reproduce
+     && genomelist[n]->energy >= 2000
+     && genomelist[n]->organics >= 2000
+      && (dx != 0 || dy != 0))
     {
         KvadSetBlob(ptr, tail->x, tail->y, 0, 0);
         KvadSetBlob(ptr, tail->x, tail->y, 12, n);
         genomelist[n]->energy -= 1000;
+        genomelist[n]->organics -= 1000;
         genomelist[n]->happy += 10;
-        genomelist[n]->lifetime += 500;
-        // MeatRetract(ptr, meatlist[n]);
+        genomelist[n]->lifetime += 0;
+        MeatRetract(ptr, n, meatlist[n]);
+        
+        char buf[32];
+        snprintf(buf, sizeof(buf), "genomes/genome_%d.txt", n);
+        
+        file_ptr = NULL;
+        file_ptr = fopen(buf, "w");
+    
+        for(int i = 0; i < brainsize; i++)
+        {
+            fprintf(file_ptr, "%i\n",genomelist[n]->commandlist[i]);
+            
+        }
+        fclose(file_ptr);
+        
+        snprintf(buf, sizeof(buf), "genomes/blueprint_%d.txt", n);
+        
+        file_ptr = NULL;
+        file_ptr = fopen(buf, "w");
+    
+        for(int i = 0; i < blueprintsize; i++)
+        {
+            fprintf(file_ptr, "%i\n",genomelist[n]->blueprint[i]);
+            
+        }
+        fclose(file_ptr);
     }
-    if(dx != 0 || dy != 0) genomelist[n]->energy -= 1;
+    genomelist[n]->energy -= MeatCountAll(ptr, meatlist[n]) / 5;
 }
 
-void MeatRetract(Kvad_t* ptr, Node_t *head)
+void MeatRetract(Kvad_t* ptr, int n, Node_t *head)
 {
     if(doprintdebug) printf("MeatRetract\n");
     Node_t *tail = head;
@@ -4806,7 +6762,7 @@ void MeatRetract(Kvad_t* ptr, Node_t *head)
     
     prevx = tail->x, prevy = tail->y;
     
-    while (nodecur->prev != head && nodecur->prev != NULL)
+    while (nodecur != head && nodecur->prev != head && nodecur->prev != NULL)
     {
         
         nodeprev = nodecur;
@@ -4815,8 +6771,12 @@ void MeatRetract(Kvad_t* ptr, Node_t *head)
         nodeprev->y = nodecur->y;
         if(nodeprev->next2 != NULL)
         {
-            MeatRetract(ptr, nodeprev->next2);
+            MeatRetract(ptr, n, nodeprev->next2);
             nodenext = nodeprev->next2;
+            MeatMoveHead(ptr, n, nodeprev->next2, 
+                nodeprev->x - nodenext->x, 
+                nodeprev->y - nodenext->y, 0);
+            
             nodenext->x = nodecur->x;
             nodenext->y = nodecur->y;
         }
@@ -4833,7 +6793,7 @@ void MeatAdd(Kvad_t* ptr, int n)
     
     while (nodecur->next != NULL)
     {
-        KvadSetMat(ptr, nodecur->x, nodecur->y, 10);
+        KvadSetMat(ptr, nodecur->x, nodecur->y, 10, 1);
         nodecur = nodecur->next;
     }
     
@@ -4862,13 +6822,15 @@ void MeatDraw(Kvad_t* ptr, Node_t* head)
     {
         if(nodecur->next == NULL)
         {
-            KvadSetMat(ptr, nodecur->x, nodecur->y, 13);
+            KvadSetMat(ptr, nodecur->x, nodecur->y, 13, 1);
             KvadGetHexel(ptr, nodecur->x, nodecur->y)->ded = 0;
+            ChunkActivate(nodecur->x, nodecur->y);
         }
         else
         {
-            KvadSetMat(ptr, nodecur->x, nodecur->y, 10);
+            KvadSetMat(ptr, nodecur->x, nodecur->y, 10, 1);
             KvadGetHexel(ptr, nodecur->x, nodecur->y)->ded = 0;
+            ChunkActivate(nodecur->x, nodecur->y);
         }
         
         if(nodecur->next2 != NULL)
@@ -4878,9 +6840,54 @@ void MeatDraw(Kvad_t* ptr, Node_t* head)
         
         nodecur = nodecur->next;
     }
-    KvadSetMat(ptr, head->x, head->y, 0);
-    KvadSetMat(ptr, head->x, head->y, 12);
+    KvadSetMat(ptr, head->x, head->y, 0, 1);
+    KvadSetMat(ptr, head->x, head->y, 12, 1);
+    ChunkActivate(head->x, head->y);
     
+}
+
+int MeatCountAll(Kvad_t* ptr, Node_t* head)
+{
+    if(doprintdebug) printf("MeatCountAll\n");
+    Node_t *tail = NULL;
+    Node_t *nodecur = head;
+    int number = 0;
+    
+    
+    while (nodecur != NULL)
+    {
+        number++;
+        
+        if(nodecur->next2 != NULL)
+        {
+            number += MeatCountAll(ptr, nodecur->next2);
+        }
+        
+        nodecur = nodecur->next;
+    }
+    return number;
+}
+
+int MeatCountLimbs(Kvad_t* ptr, Node_t* head)
+{
+    if(doprintdebug) printf("MeatCountLimbs\n");
+    Node_t *tail = NULL;
+    Node_t *nodecur = head;
+    int number = 1;
+    
+    
+    while (nodecur != NULL)
+    {
+        
+        if(nodecur->next2 != NULL)
+        {
+            number++;
+            number += MeatCountAll(ptr, nodecur->next2);
+        }
+        
+        nodecur = nodecur->next;
+    }
+    return number;
 }
 
 void MeatSetDead(Kvad_t* ptr, Node_t* head)
@@ -4889,7 +6896,6 @@ void MeatSetDead(Kvad_t* ptr, Node_t* head)
     Node_t *tail = NULL;
     Node_t *nodecur = head;
     Node_t *nodenext = NULL;
-    
     
     while (nodecur != NULL)
     {
@@ -4906,9 +6912,6 @@ void MeatSetDead(Kvad_t* ptr, Node_t* head)
         
         nodecur = nodenext;
     }
-    // KvadSetMat(ptr, head->x, head->y, 0);
-    // KvadSetMat(ptr, head->x, head->y, 12);
-    
 }
 
 void MeatClear(Kvad_t* ptr, Node_t* head)
@@ -4921,7 +6924,7 @@ void MeatClear(Kvad_t* ptr, Node_t* head)
     
     while (nodecur != NULL)
     {
-        KvadSetMat(ptr, nodecur->x, nodecur->y, 0);
+        KvadSetMat(ptr, nodecur->x, nodecur->y, 0, 1);
         
         if(nodecur->next2 != NULL)
         {
@@ -4932,22 +6935,21 @@ void MeatClear(Kvad_t* ptr, Node_t* head)
     }
 }
 
-void MeatFree(Kvad_t* ptr, Node_t* head)
+void MeatFree(Node_t* head)
 {
     if(doprintdebug) printf("MeatFree\n");
     Node_t *tail = NULL;
     Node_t *nodecur = head;
     Node_t *nodenext= NULL;
     
-    // MeatSetDead(ptr, head);
+    // MeatSetDead(head);
     
     while (nodecur != NULL)
     {
-        // KvadSetMat(ptr, nodecur->x, nodecur->y, 0);
         
         if(nodecur->next2 != NULL)
         {
-            MeatFree(ptr, nodecur->next2);
+            MeatFree(nodecur->next2);
         }
         if(nodecur->next != NULL)
             nodenext = nodecur->next;
@@ -4966,43 +6968,41 @@ void MeatCheckUp(Kvad_t* ptr, int n, int kill)
     Node_t *nodecur = meatlist[n];
     Node_t *nodeprev;
     Node_t *nodenext;
-    active = 0;
-    for(int i = 0; i < meatlistsize; i++)
-    {
-        if(meatlist[i] != NULL)
-        {
-            active++;
-        }
-    }
+    
     // /*if(doprint)*/ printf("%i\n", active);
     
     if(meatlist[n] != NULL)
     {
+        MeatSetDead(ptr, meatlist[n]);
         // MeatCheckLimb(ptr, meatlist[n], 1);
         if(meatlist[n]->next != NULL)
         {
             MeatCheckLimb(ptr, meatlist[n]->next, 1);
         }   
-        // MeatCheckLimb(ptr, meatlist[n]);
+        if(meatlist[n]->next2 != NULL)
+        {
+            MeatCheckLimb(ptr, meatlist[n]->next2, 1);
+        }   
         if((KvadGetHexel(ptr, meatlist[n]->x, meatlist[n]->y)->mat != 12
         && KvadGetHexel(ptr, meatlist[n]->x, meatlist[n]->y)->mat != 10
         && KvadGetHexel(ptr, meatlist[n]->x, meatlist[n]->y)->mat != 13) || kill)
         {
             if(doprint) printf("DEATH\n");
-            MeatSetDead(ptr, meatlist[n]);
             
-            MeatClear(ptr, meatlist[n]);
+            if(!corpses) MeatClear(ptr, meatlist[n]);
             
             int xnew = meatlist[n]->x, ynew = meatlist[n]->y;
             
-            if(kill && active < 81)
+            if(kill && active < 81 && 0)
             {
                 KvadSetBlob(ptr, xnew, ynew, 0, 0);
                 KvadSetBlob(ptr, xnew, ynew, 12, n);
                 if(doprint) printf("REBIRTH\n");
             }
             
-            MeatFree(ptr, meatlist[n]);
+            // MeatFree(meatlist[n]);
+            
+            free(meatlist[n]);
             BrainTerminate(n);
             if(doprint) printf("FREED LAST\n");
             meatlist[n] = NULL;
@@ -5029,7 +7029,7 @@ void MeatCheckLimb(Kvad_t* ptr, Node_t *head, int next)
             KvadGetHexel(ptr, nodecur->x, nodecur->y)->mat != 12 &&
             KvadGetHexel(ptr, nodecur->x, nodecur->y)->mat != 13)
         {
-            MeatSetDead(ptr, nodecur);
+            
             
             if(nodecur->prev != NULL)
             {
@@ -5045,8 +7045,9 @@ void MeatCheckLimb(Kvad_t* ptr, Node_t *head, int next)
                     if(doprint) printf("next 1\n");
                 }
             }
-            MeatClear(ptr, nodecur); 
-            MeatFree(ptr, nodecur);
+            if(!corpses) MeatClear(ptr, nodecur); 
+            MeatSetDead(ptr, nodecur);
+            MeatFree(nodecur);
             
             nodenext = NULL;
             if(doprint) printf("FREED\n");
@@ -5073,6 +7074,7 @@ void MeatListInitialize(Kvad_t* ptr)
     }
     // meatlist[0] = MeatInitialize(ptr, 50, 50, 14);
     
+    // if(startingpopulation) Populate(ptr);
 }
 
 void MeatListTerminate(Kvad_t* ptr)
@@ -5087,46 +7089,85 @@ void MeatListTerminate(Kvad_t* ptr)
         
     }
     free(meatlist);
+    free(genomelist);
+}
+
+void MeatKillAll()
+{
+    if(doprintdebug) printf("MeatKillAll\n");
+    for(int i = 0; i < meatlistsize; i++)
+    {
+        if(meatlist[i] != NULL)
+        {
+            MeatFree(meatlist[i]);
+            meatlist[i] = NULL;
+        }
+        if(genomelist[i] != NULL)
+        {
+            BrainTerminate(i);
+            genomelist[i] = NULL;
+        }
+        
+    }
 }
 
 void MeatListUpdate(Kvad_t* ptr)
 {
     if(doprintdebug) printf("MeatListUpdate\n");
     maxhappiness = 0;
-    // active = 0;
-    int manual;
+    active = 0;
+    
     for(int i = 0; i < meatlistsize; i++)
     {
         if(meatlist[i] != NULL)
         {
-            // active++;
-            if(genomelist[i] != NULL && meatlist[i] != NULL)
-            {
-                BrainExecute(ptr, i);
-            }
+            MeatCheckUp(ptr, i, genomelist[i]->death);
         }
+            
+        if(genomelist[i] != NULL && meatlist[i] != NULL)
+        {
+            MeatClear(ptr, meatlist[i]);
+            
+            MeatMoveTail(ptr, i, manual, genomelist[i]->whichlimb);
+            
+            
+            if(t == gravtime)
+            {
+                MeatMove(ptr, i, 
+                GetGravX(ptr, meatlist[i]->x, meatlist[i]->y), 
+                GetGravY(ptr, meatlist[i]->x, meatlist[i]->y), manual);
+            }
+            MeatDraw(ptr, meatlist[i]);
+            KvadGetHexel(ptr, meatlist[i]->x, meatlist[i]->y)->nrj = genomelist[i]->energy;
+            KvadGetHexel(ptr, meatlist[i]->x, meatlist[i]->y)->org = genomelist[i]->organics;
+        }
+        
+        
     }
     for(int i = 0; i < meatlistsize; i++)
     {
         if(genomelist[i] != NULL && meatlist[i] != NULL)
-            MeatCheckUp(ptr, i, genomelist[i]->death);
-        if(meatlist[i] != NULL)
         {
-            MeatClear(ptr, meatlist[i]);
-            
-            
-            if(i == 0) manual = 0;
-            else manual = 0;
-            MeatMoveTail(ptr, i, manual, genomelist[i]->whichlimb);
-            
-            
-            if(t >= gravtime)
-            {
-                MeatMove(ptr, i, gravx, gravy, manual);
-            }
-            MeatDraw(ptr, meatlist[i]);
+            genomelist[i]->limbs = MeatCountLimbs(ptr, meatlist[i]);
         }
         
+    }
+    
+    for(int i = 0; i < meatlistsize; i++)
+    {
+        if(meatlist[i] != NULL)
+        {
+            active++;
+            if(genomelist[i] != NULL && meatlist[i] != NULL)
+            {
+                if(!manual) BrainExecute(ptr, i);
+            }
+        }
+    }
+    
+    if(active == 0)
+    {
+        if(startingpopulation) Populate(ptr);
     }
 }
 
@@ -5134,9 +7175,17 @@ Brain_t* BrainInitialize(int n)
 {
     if(doprintdebug) printf("BrainInitialize\n");
     Brain_t* gen = (Brain_t*) malloc(sizeof(Brain_t));
+    
+    if(gen == NULL) printf("brain error\n");
     // printf("BRAIN ALLOCATED\n");
     
-    file_ptr = fopen("Genome.txt", "r");
+    char buf[32];
+    snprintf(buf, sizeof(buf), "genomes/genome_%d.txt", n);
+    
+    file_ptr = NULL;
+    file_ptr = fopen(buf, "r");
+    
+    if(file_ptr == NULL) printf("file error\n");
     int random, chance = nonmutationchance;
     for(int i = 0; i < brainsize; i++)
         {
@@ -5147,11 +7196,10 @@ Brain_t* BrainInitialize(int n)
         for(int i = 0; i < brainsize; i++)
         {
             random = rand() % chance / (chance - 1);
-            // printf("chance = %i\n", random);
+            if(!mutations) random = 0;
             if(random == 1)
             {
                 gen->commandlist[i] = mod(rand(), brainsize);
-                // printf("rand = %i\n", gen->commandlist[i]);
             }
             else if(genomelist[n] != NULL)
             {
@@ -5171,6 +7219,7 @@ Brain_t* BrainInitialize(int n)
             fscanf(file_ptr, "%d", &integer);
             
             random = rand() % chance / (chance - 1);
+            if(!mutations) random = 0;
             if(random == 1)
             {
                 gen->commandlist[i] = mod(rand(), brainsize);
@@ -5189,7 +7238,7 @@ Brain_t* BrainInitialize(int n)
     {
         for(int i = 0; i < brainsize; i++)
         {
-            gen->commandlist[i] = 30;//rand() % 128;
+            gen->commandlist[i] = mod(rand(), brainsize);
         }
     }
     
@@ -5216,14 +7265,95 @@ Brain_t* BrainInitialize(int n)
     gen->drank = 0;
     gen->reproduce = 0;
     gen->lifetime = maxlife;
-    gen->energy = 0;
+    gen->energy = 1000;
+    gen->organics = 1000;
     gen->lenght = 0;
     gen->whichlimb = 0;
-    gen->limbs = 3;
+    gen->limbs = 0;
     gen->lastx = NULL;
     gen->memoryage = 0;
     gen->death = 0;
     gen->airborne = 0;
+    
+    
+    snprintf(buf, sizeof(buf), "genomes/blueprint_%d.txt", n);
+    
+    file_ptr = NULL;
+    file_ptr = fopen(buf, "r");
+    chance = nonmutationchancebp;
+    
+    if(file_ptr == NULL) printf("file missing\n");
+    for(int i = 0; i < blueprintsize; i++)
+        {
+            gen->blueprint[i] = 0;
+        }
+    if(n != -1 && genomelist[n] != NULL)
+    {
+        for(int i = 0; i < blueprintsize; i++)
+        {
+            random = rand() % chance / (chance - 1);
+            if(!mutations) random = 0;
+            if(random == 1)
+            {
+                gen->blueprint[i] = mod(rand(), 4);
+            }
+            else if(genomelist[n] != NULL)
+            {
+                gen->blueprint[i] = genomelist[n]->blueprint[i];
+            }
+            else 
+            {
+                gen->blueprint[i] = 0;
+            }
+        }
+    }
+    else 
+    if (file_ptr != NULL)
+    {
+        for(int i = 0; i < blueprintsize; i++)
+        {
+            fscanf(file_ptr, "%d", &integer);
+            
+            random = rand() % chance / (chance - 1);
+            if(!mutations) random = 0;
+            if(random == 1)
+            {
+                gen->blueprint[i] = mod(rand(), 4);
+            }
+            else
+            {
+                gen->blueprint[i] = mod(integer, 4);
+            }
+            
+            
+        }
+        fclose(file_ptr);
+        file_ptr = NULL;
+    }
+    else
+    {
+        for(int i = 0; i < blueprintsize; i++)
+        {
+            gen->blueprint[i] = mod(rand(), 4);
+        }
+    }
+    
+    if (file_ptr != NULL)
+    {
+        fclose(file_ptr);
+    }
+    
+    // gen->blueprint[0] = 1;
+    // gen->blueprint[1] = 1;
+    // gen->blueprint[2] = 1;
+    // gen->blueprint[3] = 1;
+    // gen->blueprint[4] = 1;
+    // gen->blueprint[5] = 1;
+    // gen->blueprint[6] = 1;
+    // gen->blueprint[7] = 1;
+    // gen->blueprint[8] = 1;
+    // gen->blueprint[9] = 1;
+    // gen->blueprint[10] = 2;
     
     UsageZero(gen);
     ArmorZero(gen);
@@ -5328,7 +7458,7 @@ void BrainExecute(Kvad_t* ptr, int n)
     }
     else if(command == 18)
     {
-        int rad = 10, cntleft = 0, cntright = 0, cntup = 0, cntdown = 0;
+        int rad = 30, cntleft = 0, cntright = 0, cntup = 0, cntdown = 0, energy;
         shift = 1;
         
         for(int i = -rad; i <= rad; i++)
@@ -5337,16 +7467,15 @@ void BrainExecute(Kvad_t* ptr, int n)
             {
                 if( i + j >= -rad && i + j <= rad)
                 {
-                    if(KvadGetHexel(ptr, meatlist[n]->x + j, meatlist[n]->y + i)->dns <= 5 
-                    && KvadGetHexel(ptr, meatlist[n]->x + j, meatlist[n]->y + i)->mat != 0
-                    && KvadGetHexel(ptr, meatlist[n]->x + j, meatlist[n]->y + i)->ded == 1)
+                    if(KvadGetHexel(ptr, meatlist[n]->x + j, meatlist[n]->y + i)->nrj > 0)
                     {
-                        if(j < 0) cntleft++;
-                        if(j > 0) cntright++;
+                        energy = KvadGetHexel(ptr, meatlist[n]->x + j, meatlist[n]->y + i)->nrj;
+                        if(j < 0) cntleft += energy;
+                        if(j > 0) cntright += energy;
                         if(i < 0 &&
-                            j + i < 0) cntup++;
+                            j + i < 0) cntup += energy;
                         if(i > 0 &&
-                            j + i > 0) cntdown++;
+                            j + i > 0) cntdown += energy;
                     }
                 }
             }
@@ -5356,22 +7485,22 @@ void BrainExecute(Kvad_t* ptr, int n)
         if(
             cntleft > cntup &&
             cntleft > cntright &&
-            cntleft > cntdown) shift = 2;
+            cntleft > cntdown) shift = 2, KvadGetHexel(ptr, meatlist[n]->x, meatlist[n]->y)->clr = 1;
         else if(
             cntup > cntleft &&
             cntup > cntright &&
-            cntup > cntdown) shift = 3;
+            cntup > cntdown) shift = 3, KvadGetHexel(ptr, meatlist[n]->x, meatlist[n]->y)->clr = 2;
         else if(
             cntright > cntleft &&
             cntright > cntup &&
-            cntright > cntdown) shift = 4;
+            cntright > cntdown) shift = 4, KvadGetHexel(ptr, meatlist[n]->x, meatlist[n]->y)->clr = 3;
         else if(
             cntdown > cntleft &&
             cntdown > cntright &&
-            cntdown > cntup) shift = 5;
+            cntdown > cntup) shift = 5, KvadGetHexel(ptr, meatlist[n]->x, meatlist[n]->y)->clr = 4;
             
         gen->pointer = cycle(gen->pointer, 0, brainsize - 1, shift);
-        if(doprint) printf("\t%i\tlook for food", shift);
+        if(doprint) printf("\t%i\tlook for energy", shift);
     }
     else if(command == 19)
     {
@@ -5486,21 +7615,99 @@ void BrainExecute(Kvad_t* ptr, int n)
         gen->pointer = cycle(gen->pointer, 0, brainsize - 1, shift);
         if(doprint) printf("\t%i\tcheck lifetime", shift);
     }
+    else if(command == 33)
+    {
+        int rad = 10, cntleft = 0, cntright = 0, cntup = 0, cntdown = 0;
+        shift = 1;
+        
+        for(int i = -rad; i <= rad; i++)
+        {
+            for(int j = -rad; j <= rad; j++)
+            {
+                if( i + j >= -rad && i + j <= rad)
+                {
+                    if(KvadGetHexel(ptr, meatlist[n]->x + j, meatlist[n]->y + i)->ded == 0)
+                    {
+                        if(j < 0) cntleft++;
+                        if(j > 0) cntright++;
+                        if(i < 0 &&
+                            j + i < 0) cntup++;
+                        if(i > 0 &&
+                            j + i > 0) cntdown++;
+                    }
+                }
+            }
+        }
+        
+        
+        if(
+            cntleft > cntup &&
+            cntleft > cntright &&
+            cntleft > cntdown) shift = 2;
+        else if(
+            cntup > cntleft &&
+            cntup > cntright &&
+            cntup > cntdown) shift = 3;
+        else if(
+            cntright > cntleft &&
+            cntright > cntup &&
+            cntright > cntdown) shift = 4;
+        else if(
+            cntdown > cntleft &&
+            cntdown > cntright &&
+            cntdown > cntup) shift = 5;
+            
+        gen->pointer = cycle(gen->pointer, 0, brainsize - 1, shift);
+        if(doprint) printf("\t%i\tlook for life", shift);
+    }
+    else if(command == 34)
+    {
+        int rad = 1, cntleft = 0, cntright = 0, cntup = 0, cntdown = 0;
+        shift = 1;
+        
+        for(int i = -rad; i <= rad; i++)
+        {
+            for(int j = -rad; j <= rad; j++)
+            {
+                if( i + j >= -rad && i + j <= rad)
+                {
+                    if(KvadGetHexel(ptr, meatlist[n]->x + j, meatlist[n]->y + i)->mat == 0
+                    && KvadGetHexel(ptr, meatlist[n]->x + j, meatlist[n]->y + i)->mat == 13
+                    && KvadGetHexel(ptr, meatlist[n]->x + j, meatlist[n]->y + i)->mat == 12)
+                    {
+                        if(j < 0) cntleft++;
+                        if(j > 0) cntright++;
+                        if(i < 0 &&
+                            j + i < 0) cntup++;
+                        if(i > 0 &&
+                            j + i > 0) cntdown++;
+                    }
+                }
+            }
+        }
+        
+        
+        shift = 1 + cntleft + cntright + cntup + cntdown;
+            
+        gen->pointer = cycle(gen->pointer, 0, brainsize - 1, shift);
+        if(doprint) printf("\t%i\tis buried", shift);
+    }
     else
     {
         gen->pointer = cycle(gen->pointer, 0, brainsize - 1, command);
         if(doprint) printf("\t%i", command);
     }
     
-    // gen->usagelist[gen->pointer]++;
+    // gen->usagelist[gen->poi./myprog arg1 arg2nter]++;
     
-    gen->happy = gen->eaten;
+    // gen->happy = gen->eaten;
     // gen->energy = hmin(gen->energy + gen->eaten * 5, maxenergy);
-    gen->eaten = 0;
-    if(gen->energy > 1000) gen->reproduce = 1;
+    // gen->eaten = 0;
+    
+    if(gen->energy >= 2000) gen->reproduce = 1;
     gen->delete = 1;
     }
-    if(gen->lifetime <= 0)
+    if(gen->lifetime <= 0 || gen->energy <= 0)
     {
         int distance = abs(gen->lastx - meatlist[n]->x);
         if(gen->lastx == NULL) distance = 0;
@@ -5509,20 +7716,6 @@ void BrainExecute(Kvad_t* ptr, int n)
         gen->lastx = meatlist[n]->x;
         gen->lastfullness = gen->eaten + gen->drank;
         
-        
-        if(1)
-        {
-            file_ptr = NULL;
-            file_ptr = fopen("Genome.txt", "w");
-        
-            for(int i = 0; i < brainsize; i++)
-            {
-                fprintf(file_ptr, "%i\n",gen->commandlist[i]);
-                
-            }
-            fclose(file_ptr);
-            
-        }
         gen->happy = 0;
         gen->death = 1;
     }
@@ -5593,4 +7786,458 @@ void BrainRewire(Kvad_t* ptr, int n)
         }
     }
     
+}
+
+void Populate(Kvad_t* ptr)
+{
+    int counter = 0;
+    int step;
+    int random, nonchance = 20;
+    
+    KvadZero(ptr);
+    
+    step = 5;
+    for(int i = border; i < ptr->height - border; i += step)
+    {
+        for(int j = border; j < ptr->width - border; j += step)
+        {
+            
+            srand(time(NULL) + j * i * i);
+            random = rand() % nonchance / (nonchance - 1);
+            if(random)
+            {
+                // KvadSetBlob(ptr, j, i, 0, 1);
+                KvadSetBlob(ptr, j, i, 9, 3);
+            }
+        }
+    }
+    step = 32;
+    for(int i = border; i < ptr->height - border; i += step)
+    {
+        for(int j = border; j < ptr->width - border; j += step)
+        {
+            KvadSetBlob(ptr, j, i, 0, 5);
+            KvadSetBlob(ptr, j, i, 12, counter);
+            counter++;
+        }
+    }
+    
+}
+
+Contour_t* ContourListInitialize()
+{
+    if(doprintdebug) printf("ContourListInitialize\n");
+    
+    Contour_t* head;
+    head = (Contour_t*) malloc(sizeof(Contour_t));
+    
+    head->x = 1;
+    head->y = 1;
+    head->new = 1;
+    head->next = NULL;
+    head->prev = NULL;
+    
+    return head;
+}
+
+void ContourListTerminate(Contour_t* head)
+{
+    if(doprintdebug) printf("ContourListTerminate\n");
+    
+    Contour_t *concur = head;
+    Contour_t *connext;
+    
+    while (concur != NULL)
+    {
+        connext = concur->next;
+        free(concur);
+        concur = connext;
+    }
+    
+}
+
+void ContourAdd(Kvad_t *ptr, int x, int y)
+{
+    if(doprintdebug) printf("ContourAdd\n");
+    
+    Contour_t *concur = maincontour;
+    
+    int newx = mod(x, ptr->width), newy = mod(y, ptr->height);
+    
+    while(concur != NULL)
+    {
+        if((concur->x == newx && concur->y == newy)) break;
+        concur = concur->next;
+    }
+    if(concur == NULL)
+    {
+        Contour_t *con;
+        con = (Contour_t*) malloc(sizeof(Contour_t));
+        
+        con->x = newx;
+        con->y = newy;
+        con->new = 1;
+        con->next = NULL;
+        
+        concur = maincontour;
+        
+        while(concur->next != NULL)
+        {
+            concur = concur->next;
+        }
+        concur->next = con;
+        con->prev = concur;
+    }
+    
+}
+
+void ContourDelete(int x, int y)
+{
+    if(doprintdebug) printf("ContourDelete\n");
+    
+    Contour_t *conprev = NULL;
+    Contour_t *connext = NULL;
+    Contour_t *concur = maincontour;
+    
+    while(concur != NULL)
+    {
+        if((concur->x == x && concur->y == y)) break;
+        concur = concur->next;
+    }
+    if(concur != NULL)
+    {
+        
+        conprev = concur->prev;
+        connext = concur->next;
+        
+        if(conprev != NULL)
+            conprev->next = connext;
+        if(connext != NULL)
+            connext->prev = conprev;
+        free(concur);
+    }
+    
+}
+
+void ContourPrint(Kvad_t *ptr)
+{
+    if(doprintdebug) printf("ContourPrint\n");
+    
+    Contour_t *concur = maincontour;
+    
+    while(concur != NULL)
+    {
+        printf("%i\t%i\n", concur->x, concur->y);
+        KvadGetHexel(ptr, concur->x, concur->y)->clr = 5;
+        concur = concur->next;
+    }
+    
+}
+
+void ContourCheck(Kvad_t *ptr)
+{
+    if(doprintdebug) printf("ContourCheck\n");
+    
+    Contour_t *concur = maincontour->next;
+    Contour_t *connext = NULL;
+    int curmat;
+    
+    while(concur != NULL)
+    {
+        connext = concur->next;
+        curmat = KvadGetHexel(ptr, concur->x, concur->y)->mat;
+        if(concur->new == 1) concur->new = 0;
+        if(NeighbourCount(ptr, concur->x, concur->y, curmat) == 6)
+        {
+            ContourDelete(concur->x, concur->y);
+        }
+        
+        concur = connext;
+    }
+    
+}
+
+void ChunkKvadZero()
+{
+    for (int i = 0; i < chunkkvadsize; i++)
+    {
+        for (int j = 0; j < chunkkvadsize; j++)
+        {
+            chunkkvad[j][i] = 0;
+        }
+    }
+    
+}
+
+void ChunkKvadUpdate()
+{
+    for (int i = 0; i < chunkkvadsize; i++)
+    {
+        for (int j = 0; j < chunkkvadsize; j++)
+        {
+            if(chunkkvad[j][i] == 1)
+                chunkkvad[j][i] = 2;
+                
+            else if(chunkkvad[j][i] == 3)
+            {
+                int rad = 1;
+                int isthere2 = 0;
+                for(int i1 = - rad; i1 <=  + rad; i1++)
+                {
+                    for(int j1 = - rad; j1 <=  + rad; j1++)
+                    {
+                        if( i1 + j1 >=  - rad && i1 + j1 <= + rad)
+                        {
+                            if(chunkkvad[mod(j + j1, chunkkvadsize)][mod(i + i1, chunkkvadsize)] == 2
+                            || chunkkvad[mod(j + j1, chunkkvadsize)][mod(i + i1, chunkkvadsize)] == 1)
+                                isthere2 = 1;
+                            
+                        }
+                        
+                    }
+                }
+                if(isthere2 == 0)
+                    chunkkvad[j][i] = 0;
+            }
+            else if(chunkkvad[j][i] == 0)
+            {
+                int rad = 1;
+                int isthere2 = 0;
+                for(int i1 = - rad; i1 <=  + rad; i1++)
+                {
+                    for(int j1 = - rad; j1 <=  + rad; j1++)
+                    {
+                        if( i1 + j1 >=  - rad && i1 + j1 <= + rad)
+                        {
+                            if(chunkkvad[mod(j + j1, chunkkvadsize)][mod(i + i1, chunkkvadsize)] == 2
+                            || chunkkvad[mod(j + j1, chunkkvadsize)][mod(i + i1, chunkkvadsize)] == 1)
+                                isthere2 = 1;
+                            
+                        }
+                        
+                    }
+                }
+                if(isthere2 == 1)
+                    chunkkvad[j][i] = 3;
+            }
+        }
+    }
+    
+}
+
+void ChunkKvadPrint()
+{
+    printf("\n");
+    for (int i = 0; i < chunkkvadsize; i++)
+    {
+        for (int j = 0; j < chunkkvadsize; j++)
+        {
+            printf("%i", chunkkvad[j][i]);
+        }
+        printf("\n");
+    }
+    
+}
+
+void ChunkActivate(int z, int n)
+{   
+    
+    int rad = 1;
+    for(int i = - rad; i <=  + rad; i++)
+    {
+        for(int j = - rad; j <=  + rad; j++)
+        {
+            if( i + j >=  - rad && i + j <= + rad)
+            {
+                if(chunkkvad[mod(hdiv(z, chunksize) + j, chunkkvadsize)][mod(hdiv(n, chunksize) + i, chunkkvadsize)] == 0
+                || chunkkvad[mod(hdiv(z, chunksize) + j, chunkkvadsize)][mod(hdiv(n, chunksize) + i, chunkkvadsize)] == 3)
+                    chunkkvad[mod(hdiv(z, chunksize) + j, chunkkvadsize)][mod(hdiv(n, chunksize) + i, chunkkvadsize)] = 1;
+                
+            }
+            
+        }
+    }
+    // rad = 2;
+    // for(int i = - rad; i <=  + rad; i++)
+    // {
+    //     for(int j = - rad; j <=  + rad; j++)
+    //     {
+    //         if( i + j >=  - rad && i + j <= + rad)
+    //         {
+    //             if(chunkkvad[mod(hdiv(z, chunksize) + j, chunkkvadsize)][mod(hdiv(n, chunksize) + i, chunkkvadsize)] == 0)
+    //                 chunkkvad[mod(hdiv(z, chunksize) + j, chunkkvadsize)][mod(hdiv(n, chunksize) + i, chunkkvadsize)] = 3;
+                
+    //         }
+            
+    //     }
+    // }
+}
+
+int GetGravX(Kvad_t *ptr, int z, int n)
+{
+    int newx = mod(z, ptr->width) - gravcentx, newy = mod(n, ptr->height) - gravcenty;
+    int newz = newx + newy;
+    int newn = newx - newy;
+    int newk = 2*newx + newy;
+    int newl = newx + 2*newy;
+    int newm = newx + newy;
+    int dist = hdist(newx, newy, 0, 0);
+    int distunit = 16;
+    if(radial)
+    {
+        if((timer / gravtime) % (dist / distunit + 1) == 0 || gravfaloff == 0) 
+        {
+        if(newn <= 0 && newk > 0) return 0;
+        if(newn >= 0 && newk < 0) return 0;
+        if(newn > 0 && newl >= 0) return -1;
+        if(newn < 0 && newl <= 0) return 1;
+        if(newk >= 0 && newl < 0) return -1;
+        if(newk <= 0 && newl > 0) return 1;
+        }
+        return 0;
+    }
+    else
+    return gravx;
+}
+
+int GetGravY(Kvad_t *ptr, int z, int n)
+{
+    int newx = mod(z, ptr->width) - gravcentx, newy = mod(n, ptr->height) - gravcenty;
+    int newz = newx + newy;
+    int newn = newx - newy;
+    int newk = 2*newx + newy;
+    int newl = newx + 2*newy;
+    int newm = newx + newy;
+    int dist = hdist(newx, newy, 0, 0);
+    int distunit = 16;
+    if(radial)
+    {
+        if((timer / gravtime) % (dist / distunit + 1) == 0 || gravfaloff == 0) 
+        {
+        if(newn <= 0 && newk > 0) return -1;
+        if(newn >= 0 && newk < 0) return 1;
+        if(newn > 0 && newl >= 0) return 0;
+        if(newn < 0 && newl <= 0) return 0;
+        if(newk >= 0 && newl < 0) return 1;
+        if(newk <= 0 && newl > 0) return -1;
+        }
+        return 0;
+    }
+    else
+    return gravy;
+}
+
+void KvadDownload(Kvad_t *ptr, int n)
+{
+    char buf[32];
+    snprintf(buf, sizeof(buf), "kvads/kvad_%d.txt", n);
+    
+    file_ptr = NULL;
+    file_ptr = fopen(buf, "w");
+
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            fprintf(file_ptr, "% 2i", KvadGetHexel(ptr, j, i)->mat );
+        }
+        fprintf(file_ptr, "\n");
+    }
+    fclose(file_ptr);
+}
+
+void KvadUpload(Kvad_t *ptr, int n)
+{
+    char buf[32];
+    snprintf(buf, sizeof(buf), "kvads/kvad_%d.txt", n);
+    
+    file_ptr = NULL;
+    file_ptr = fopen(buf, "r");
+    if(file_ptr != NULL)
+    {
+        for(int i = 0; i < ptr->height; i++)
+        {
+            for(int j = 0; j < ptr->width; j++)
+            {
+                integer = 0;
+                fscanf(file_ptr, "%2i", &integer);
+                KvadSetMat(ptr, j, i, integer, 1);
+            }
+        }
+        fclose(file_ptr);
+    }
+    else printf("file missing");
+}
+
+void KvadGenerate(Kvad_t *ptr, int n)
+{
+    KvadZero(ptr);
+    // KvadSetBlob(ptr, center, center, 8, 30);
+    // KvadSetBlob(ptr, center, center, 5, 100);
+    int step = 5, size;
+    int random, nonchance = 10;
+    int x, y, ang;
+    int agents = 5, length = 1000;
+    int mult = 1;
+    for (int m = 0; m < 100 * mult; m++)
+    {
+        x = center, y = center, ang = 0;
+        for (int i = 0; i < 100 * mult; i++)
+        {
+            step = rand() % 1;
+            KvadSetBlob(ptr, x, y, 11, step);
+            x += Yrot[ang] * (step + 1);
+            y += Yrot[mod(ang - 2, 6)] * (step + 1);
+            ang = cycle(ang, 0, 5, rand() % 3 - 1);
+        }
+    }
+    for (int m = 0; m < 5 * mult; m++)
+    {
+        x = center, y = center, ang = 0;
+        for (int i = 0; i < 150 * mult; i++)
+        {
+            step = rand() % 1 + 1;
+            KvadSetBlob(ptr, x, y, 3, step);
+            x += Yrot[ang] * (step + 1);
+            y += Yrot[mod(ang - 2, 6)] * (step + 1);
+            ang = cycle(ang, 0, 5, rand() % 3 - 1);
+        }
+    }
+    // for (int m = 0; m < agents; m++)
+    // {
+    //     x = center, y = center, ang = 0;
+    //     for (int i = 0; i < length; i++)
+    //     {
+    //         step = rand() % 3;
+    //         KvadSetBlob(ptr, x, y, 4, step);
+    //         x += Yrot[ang] * (step + 1);
+    //         y += Yrot[mod(ang - 2, 6)] * (step + 1);
+    //         ang = cycle(ang, 0, 5, rand() % 3 - 1);
+    //     }
+    // }
+    // for (int m = 0; m < agents; m++)
+    // {
+    //     x = center, y = center, ang = 0;
+    //     for (int i = 0; i < length; i++)
+    //     {
+    //         step = rand() % 4;
+    //         KvadSetBlob(ptr, x, y, 3, step);
+    //         x += Yrot[ang] * (step + 1);
+    //         y += Yrot[mod(ang - 2, 6)] * (step + 1);
+    //         ang = cycle(ang, 0, 5, rand() % 3 - 1);
+    //     }
+    // }
+    // for (int m = 0; m < 1; m++)
+    // {
+    //     x = center, y = center, ang = 0;
+    //     for (int i = 0; i < 1000; i++)
+    //     {
+    //         step = rand() % 1;
+    //         KvadSetBlob(ptr, x, y, 0, step);
+    //         KvadSetBlob(ptr, x, y, 9, step);
+    //         x += Yrot[ang] * (step + 1);
+    //         y += Yrot[mod(ang - 2, 6)] * (step + 1);
+    //         ang = cycle(ang, 0, 5, rand() % 3 - 1);
+    //     }
+    // }
 }

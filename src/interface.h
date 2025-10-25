@@ -65,7 +65,7 @@ void InterfaceTerminate();
 
 void InterfaceDraw(Font_t* f, Display_t* d);
 
-void InterfaceUpdate();
+void InterfaceUpdate(Kvad_t* ptr);
 
 void ButtonListInitialize();
 

@@ -8,7 +8,6 @@ Font_t* f1;
 Button_t* b1;
 Node_t* n1;
 
-
 int64_t delta_rend(uint64_t ft, uint64_t t_f)
 {
 	return t_f - ft;
@@ -33,7 +32,7 @@ void update_frame(uint64_t* ft, int64_t* dr)
 
     DisplayListDraw(k1, b_ui);
     
-    InterfaceUpdate();
+    InterfaceUpdate(k1);
     InterfaceDraw(f1, displaylist[0]);
 
     ScreenRefresh();
@@ -107,6 +106,7 @@ int main( int argc, char * argv[] )
 		calculate_delta(&dr, &ds, cur_time, frame_time, step_time, t_f, t_s);
 		delay(dr, ds);
     }
+    MeatListTerminate(k1);
     EntitySystemTerminate();
     KvadTerminate(k1);
     DisplayListTerminate();

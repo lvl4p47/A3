@@ -2,7 +2,7 @@
 
 extern int pixelsize;
 
-const int displaylistsize = 2;
+const int displaylistsize = 1;
 
 Display_t** displaylist;
 
@@ -97,9 +97,9 @@ void HexelDraw(Display_t* d, int z, int n, Cell_t* c, int b_ui)
         srcx = d->angle * 9;
         // srcy = (mod(1 + c->dx + 1 + (c->dy + 1) * 3, 11)) * 9;
         // srcy = (mod(c->dns, 11)) * 9;
-        srcy = (mod(c->ded, 11)) * 9;
+        srcy = (mod(c->org + 1, 49)) * 9;
         // srcy = (mod(c->mat, 11)) * 9;
-        // srcy = (mod(c->stress + 1, 21)) * 9;
+        // srcy = (mod(c->stress + 1, 49)) * 9;
         SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y, c->clr);
     }
     else
@@ -124,7 +124,7 @@ void DotsDraw(Display_t* d, int z, int n, int amount)
     if(amount == 0) srcy = 0;
     else
     {
-        srcy = (1 + mod(amount - 1, 21)) * 9;
+        srcy = (1 + mod(amount - 1, 49)) * 9;
     }
     SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y, 7); // color_cycle[mod( (amount - 1) / 10 + 3, 6)]
 }
@@ -377,7 +377,7 @@ void DisplayListInitialize()
     }
     
     displaylist[0] = DisplayInitialize(19, 1, 43, 43, 4, 1);
-    displaylist[1] = DisplayInitialize(63, 1, 16, 22, 4, 4);
+    // displaylist[1] = DisplayInitialize(63, 1, 16, 22, 4, 4);
 }
 
 void DisplayListTerminate()

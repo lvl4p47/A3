@@ -1,6 +1,6 @@
 #include "interface.h"
 
-const int buttonlistsize = 33;
+const int buttonlistsize = 36;
 
 const int sliderlistsize = 2;
 
@@ -11,6 +11,9 @@ const int no_color = 1;
 const int maybe_color = 6;
 const int interact_color = 4;
 const int frame_color = 3;
+
+const int maxzoom = 14;
+const int minzoom = -7;
 
 extern InputState_t inpst;
 
@@ -24,15 +27,16 @@ RulesEditor_t rules_editor;
 
 Select_List_t select_list;
 
-ui_rectangle_t hex_screen, toolpad, control_panel;
+ui_rectangle_t hex_screen, toolpad, filepad, control_panel;
 
 InfoBox_t info_box;
 
-wchar_t *s_rules_editor, *s_toolpad, *s_control_panel;
+wchar_t *s_rules_editor, *s_toolpad, *s_filepad, *s_control_panel;
 
 int b_panning, b_pause, b_step, b_drawing, b_button, b_slider, b_grab, b_select_list;
 int max_curs, gravity;
 int b_ui, b_entity;
+int b_download, b_upload, b_generate;
 
 uint64_t t_f;
 uint64_t t_s;
@@ -43,10 +47,10 @@ int min_neigh, max_neigh;
 
 void InterfaceInitialize()
 {
-    cursor.lm = 12;
+    cursor.lm = 4;
     cursor.rm = 0;
-    cursor.lrad = 3;
-    cursor.rrad = 3;
+    cursor.lrad = 7;
+    cursor.rrad = 7;
     
     rules_editor.x = 1;
     rules_editor.y = 24;
@@ -62,7 +66,7 @@ void InterfaceInitialize()
     select_list.rectangle.y = 1;
     select_list.rectangle.w = 17;
     select_list.rectangle.h = 6;
-    select_list.s = L"0 - воздух\n1 - ткань\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень\n9 - салат\n10 - мясо\n11 - магма\n12 - рожа\n13 - хвост\n14 - органика";
+    select_list.s = L"0 - воздух\n1 - паутина\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень\n9 - салат\n10 - мясо\n11 - магма\n12 - рожа\n13 - хвост\n14 - органика";
     select_list.min = 0;
     select_list.max = mat_amount - 1;
     
@@ -76,6 +80,11 @@ void InterfaceInitialize()
     toolpad.w = 17;
     toolpad.h = 7;
     
+    filepad.x = 63;
+    filepad.y = 1;
+    filepad.w = 15;
+    filepad.h = 21;
+    
     control_panel.x = 1;
     control_panel.y = 16;
     control_panel.w = 16;
@@ -83,6 +92,7 @@ void InterfaceInitialize()
     
     s_rules_editor = L"  Порядок установления значений:\n1) \"ИЗ\";\n2) \"В\";\n3) \"УСЛ\";\n4) Остальное.\n\n  ФЛАГ:\n\"--\" игнорировать данный набор условий;\n\"+0\" необходимо >= зеленых соседей и < красных;\n\"+1\" необходимо точное (не)совпадение количества соседей.\n\n  Для перехода клетки из начального состояния в конечное необходимо выполнение хотя бы одного из условий в списке.";
     s_toolpad = L"  Правой / левой кнопкой мыши по списку можно задать материал курсора. Колесико мыши позволяет перемещаться по списку\n\n  Кнопки слева направо:\n* Поменять правое и левое значения курсора местами;\n* Переход в режим передвижения по массиву клеток с помощью ЛКМ.\n\n  Слайдер изменяет размер закрашивания курсором.";
+    s_filepad = L"  ";
     s_control_panel = L"  Кнопки слева направо:\n* Пауза;\n* Сделать 1 шаг клеточного автомата (во время паузы);\n* Переключить режим отображения плотности материалов;\n* Сместить выбираемые миникартой клетки.\n\n  Слайдер изменяет время шага клеточного автомата.";
        
     info_box.x = 63;
@@ -108,6 +118,10 @@ void InterfaceInitialize()
     b_grab      = 0;
     b_select_list = 0;
     b_entity = 0;
+    b_download = 0;
+    b_upload = 0;
+    b_generate = 0;
+    
     
     gravity = 1;
     max_curs    = 9;
@@ -131,12 +145,28 @@ void InterfaceDraw(Font_t* f, Display_t* d)
     inpst.mouse.scroll = 0;
 }
 
-void InterfaceUpdate()
+void InterfaceUpdate(Kvad_t* ptr)
 {
     ButtonListCheck();
     SliderListCheck();
     InfoBoxUpdate();
     SelectListUpdate();
+    
+    if(b_download) 
+    {
+        KvadDownload(ptr, 0);
+        b_download = 0;
+    }
+    if(b_upload)
+    {
+        KvadUpload(ptr, 0);
+        b_upload = 0;
+    }
+    if(b_generate)
+    {
+        KvadGenerate(ptr, 0);
+        b_generate = 0;
+    }
 }
 
 void ButtonListInitialize()
@@ -184,7 +214,11 @@ void ButtonListInitialize()
     buttonlist[30] = ButtonInitialize(rules_editor.x + 11, rules_editor.y + 8, 1, 1, 30, L"+", L"*");
     buttonlist[31] = ButtonInitialize(rules_editor.x + 11, rules_editor.y + 10, 1, 1, 31, L"-", L".");
     
-    buttonlist[32] = ButtonInitialize(control_panel.x + 13 , control_panel.y, 3, 3, 32, L"r ` > l №", L"r ` ‖ l №");
+    buttonlist[32] = ButtonInitialize(control_panel.x + 13 , control_panel.y, 3, 3, 32, L"/ \\o^o ж ", L"/ \\х^х ж ");
+    
+    buttonlist[33] = ButtonInitialize(filepad.x + 0  , filepad.y + 0 , 3, 3, 33, L"\\‖/ v ---", L" n \\‖/ v ");
+    buttonlist[34] = ButtonInitialize(filepad.x + 0  , filepad.y + 4 , 3, 3, 34, L" л /‖\\---", L"    л /‖\\");
+    buttonlist[35] = ButtonInitialize(filepad.x + 0  , filepad.y + 8 , 3, 3, 35, L"/> | | </", L"   /> | |");
     
     //buttonlist[] = ButtonInitialize(, , , , , L"", L"");
 }
@@ -478,9 +512,24 @@ void ButtonDown(Button_t* b)
             b->text = 2;
             break;
         case 32:
-            minimap_speed = 1 - minimap_speed;
+            MeatKillAll();
             b->act_b = 1;
-            b->text = 3 - b->text;
+            b->text = 2;
+            break;
+        case 33:
+            b_download = 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        case 34:
+            b_upload = 1;
+            b->act_b = 1;
+            b->text = 2;
+            break;
+        case 35:
+            b_generate = 1;
+            b->act_b = 1;
+            b->text = 2;
             break;
             
         default:
@@ -515,6 +564,7 @@ void ButtonUp(Button_t* b)
             b->text = 1;
             break;
         case 32:
+            b->text = 1;
             break;
         default:
             b->text = 1;
@@ -599,9 +649,9 @@ void DisplayPanning(Display_t* d)
         hmin(
             hmax(
                 d->scale -inpst.mouse.scroll,
-                -7
+                minzoom
             ),
-        3
+        maxzoom
         );
         
         if(d->scale == 0 || d->scale == -1)
@@ -655,6 +705,7 @@ void DisplayToEntity(Display_t* d, Entity_t* p_e)
 {
     int dz = -p_e->z - d->hshift.x;
     int dn = p_e->n + d->hshift.y;
+    int mult = 1;
     
     if(d->scale > 1)
     {
@@ -662,8 +713,15 @@ void DisplayToEntity(Display_t* d, Entity_t* p_e)
         dn = p_e->n / d->scale + d->hshift.y;
     }
     else if(d->scale < -1)
-        dz = -p_e->z - d->hshift.x / -d->scale,
-        dn = p_e->n + d->hshift.y / -d->scale;
+    {
+        
+        dz = (-p_e->z - d->hshift.x / -d->scale);
+        dn = (p_e->n + d->hshift.y / -d->scale);
+        // if(hdist(dz, dn, 0, 0) > 1) mult = hmin(hdist(dz, dn, 0, 0), -d->scale);
+        // mult = -d->scale;
+        dz *= mult;
+        dn *= mult;
+    }
     d->screen_shift.x = d->screen_shift.x +
     (dz) * hcos(d->angle) - (dn) * hcos(d->angle + 8);
     d->screen_shift.y = d->screen_shift.y +
@@ -682,10 +740,17 @@ void DisplayToEntity(Display_t* d, Entity_t* p_e)
     d->screen_shift.h = d->screen_shift.y;
     
     //
+    int angle = mod((6 - p_e->angle) * 8 + 12, 48);
     int da = 0;
-    if(d->angle < 4 || d->angle >= 28)
+    if(
+    (d->angle < angle && d->angle >= mod(angle + 24, 48)) && (angle >= mod(angle + 24, 48)) ||
+    (d->angle < angle || d->angle >= mod(angle + 24, 48)) && (angle < mod(angle + 24, 48))
+    )
         da = 1;
-    else if(d->angle > 4 && d->angle < 28)
+    else if(
+    d->angle > angle && d->angle < mod(angle + 24, 48) && (angle < mod(angle + 24, 48)) ||
+    d->angle > angle || d->angle < mod(angle + 24, 48) && (angle >= mod(angle + 24, 48))
+    )
         da = -1;
     d->angle = cycle(d->angle, 0, 47, da);
 
@@ -915,16 +980,6 @@ void FontUIDraw(Font_t* f, Display_t* d)
     
     FontRulesEditorDraw(f);
     
-    // FontStringDraw(f, 64, 28, 15, 15, 
-    // L"0 - воздух\n1 - верёвка\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень", 
-    // inform_color);
-    
-    // int mat_list_x = 75, mat_list_y = 28;
-    
-    // for(int i = 0; i < mat_amount; i++)
-    // {
-    //     HexelDrawOnUI(mat_list_x + 2 * mod(i, 2), mat_list_y + i, i, d->angle, b_ui);
-    // }
 }
 
 void FontRulesEditorDraw(Font_t* f)

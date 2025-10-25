@@ -5,7 +5,7 @@
 
 typedef struct
 {
-    int z, n, subz, subn, magn;
+    int z, n, subz, subn, magn, angle;
     int fuel;
 } Entity_t;
 
