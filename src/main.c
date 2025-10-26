@@ -1,7 +1,5 @@
 #include "interface.h"
 
-extern int side;
-
 Kvad_t* k1;
 Display_t* d1;
 Font_t* f1;

@@ -7,7 +7,6 @@
 
 
 //HEXAGONS
-int side = 2048;
 
 //VIDEO
 

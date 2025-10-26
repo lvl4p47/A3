@@ -10,13 +10,10 @@ extern int **st8_dns_clr;
 enum chunk
 {
     chunksize = 8,
-    chunkkvadsize = 256
+    chunkkvadsize = side / chunksize
 };
 
-enum grav
-{
-    center = 1024
-};
+
 
 enum size
 {

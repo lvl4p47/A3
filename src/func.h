@@ -8,7 +8,10 @@
 #include <stdlib.h>
 #include <time.h>
 
-extern int side;
+enum world
+{
+    side = 256
+};
 
 //FUNC
 
