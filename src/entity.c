@@ -24,7 +24,7 @@ void EntityTerminate(Entity_t* p_e)
 
 void EntitySystemInitialize()
 {
-    e1 = EntityInitialize(side / 2, side / 2);
+    e1 = EntityInitialize(side / 2 - 100, side / 2 - 100);
 }
 
 void EntitySystemTerminate()

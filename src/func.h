@@ -10,7 +10,7 @@
 
 enum world
 {
-    side = 256
+    side = 512
 };
 
 //FUNC

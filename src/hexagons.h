@@ -49,7 +49,7 @@ typedef struct
 
 typedef struct
 {
-    int mat, tmp, fld, fld2, val1, val2, dx, dy, st8, dns, clr, stress, v1t, v2t, pwr, flow[6], ded, nrj, org;
+    int mat, tmp, fld, fld2, val1, val2, dx, dy, st8, dns, clr, stress, v1t, v2t, pwr, flow[6], ded, nrj, org, lit;
     
 } Cell_t;
 
@@ -256,6 +256,8 @@ void ChunkKvadZero();
 void ChunkKvadUpdate();
 
 void ChunkKvadPrint();
+
+void LightSourceKvadPrint();
 
 void ChunkActivate(int z, int n);
 

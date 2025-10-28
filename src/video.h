@@ -33,7 +33,7 @@ Sprite_t* SpriteInitialize(int width, int height, const char* file);
 
 void SpriteTerminate(Sprite_t* s);
 
-void SpriteDraw(Sprite_t* s, int x1, int y1, int x2, int y2, int color);
+void SpriteDraw(Sprite_t* s, int x1, int y1, int x2, int y2, int color, int alpha);
 
 void ResizeWindow(int ps);
 

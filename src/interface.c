@@ -47,10 +47,10 @@ int min_neigh, max_neigh;
 
 void InterfaceInitialize()
 {
-    cursor.lm = 8;
+    cursor.lm = 11;
     cursor.rm = 0;
-    cursor.lrad = 7;
-    cursor.rrad = 7;
+    cursor.lrad = 0;
+    cursor.rrad = 0;
     
     rules_editor.x = 1;
     rules_editor.y = 24;

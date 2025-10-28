@@ -33,7 +33,7 @@ void FontCharDraw(Font_t* f, wchar_t c, int x, int y, int color)
     int srcy = (n / 15) * f->character_height;
     int dstx = x * f->character_width;
     int dsty = y * f->character_height;
-    SpriteDraw(f->sprite, srcx, srcy, dstx, dsty, color);
+    SpriteDraw(f->sprite, srcx, srcy, dstx, dsty, color, 255);
 
 }
 

@@ -11,7 +11,7 @@ int Yrot[6] = {1, 0, -1, -1, 0, 1};
 
 int **st8_dns_clr;
 
-int t = 0, gravtime = 1, rt = 0, rulestime = 1;
+int t = 0, gravtime = 10, rt = 0, rulestime = 10;
 int timer = 0, maxtime = 2048000;
 
 int gravx, gravy;
@@ -44,6 +44,7 @@ char character;
 // const int chunkkvadsize = 32;
 // int chunksize = 32;
 int chunkkvad[chunkkvadsize][chunkkvadsize];
+int lightsourcekvad[chunkkvadsize][chunkkvadsize];
 
 void HexagonsInitialize()
 {
@@ -189,6 +190,7 @@ void RulesInitialize()
     RulesAdd    (7, 3, 0, 11, -1, -1, -1, -1, -1);
     RulesChange (8, 11, 0, -1, 11, 11, 11, 11, -1, -1);
     RulesAdd    (8, 11, 0, 11, 11, 11, -10, -10, -10);
+    RulesAdd    (8, 11, 1, 0, 0, 0, 8, 11, 8);
     RulesChange (8, 4, 0, 0, 3, 3, 3, -10, -10, -10);
     RulesAdd    (8, 4, 0, 3, 4, 4, -1, -1, -1);
     RulesChange (9, 2, 0, 0, 2, 0, -1, -1, -1, -1);
@@ -328,6 +330,7 @@ void KvadZero(Kvad_t* ptr)
             ptr->arr[i][j].ded = 1;
             ptr->arr[i][j].nrj = 0;
             ptr->arr[i][j].org = 0;
+            ptr->arr[i][j].lit = 0;
             ptr->arr[i][j].flow[0] = 0;
             ptr->arr[i][j].flow[1] = 0;
             ptr->arr[i][j].flow[2] = 0;
@@ -351,8 +354,11 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value, int new)
     cptr->dns = st8_dns_clr[value][1];
     cptr->clr = st8_dns_clr[value][2];
     
+    
+    // cptr->lit = 0;
     if(new)
     {
+        
         switch (cptr->mat)
         {
         case 5:
@@ -1117,6 +1123,7 @@ void PhysicsUpdate(Kvad_t* ptr)
                                 
                                 priority = b_dir_fall + b_up_fall * 2;
                                 
+                                
                                 break;
                             default:
                                 dz = gx, dn = gy;
@@ -1401,46 +1408,174 @@ void PhysicsUpdate(Kvad_t* ptr)
     rockvolume = (rockvolume * 4 + rock) / 5;
     magmavolume = (magmavolume * 4 + magma) / 5;
     int isgrav = 0;
+    int islit = 0;
+
+    int dcj, dci;
+    int darken = 0;
     
     for(int ci = 0; ci < chunkkvadsize; ci++)
+    {
+        for(int cj = 0; cj < chunkkvadsize; cj++)
         {
-            for(int cj = 0; cj < chunkkvadsize; cj++)
+            if(chunkkvad[cj][ci] >= 2 || 1)
             {
-                if(chunkkvad[cj][ci] >= 2)
+                darken = 1;
+                
+                if(lightsourcekvad[cj][ci] == 2)
                 {
-                    something = 0;
-                    isgrav = 1;
-                    for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
+                    for(int i = - 1; i <=  + 1; i++)
                     {
-                        for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
+                        for(int j = - 1; j <=  + 1; j++)
                         {
-                            if(KvadGetHexel(ptr, j, i)->tmp != KvadGetHexel(ptr, j, i)->mat)
+                            if(
+                            lightsourcekvad[mod(cj + j, chunkkvadsize)][mod(ci + i, chunkkvadsize)] == 1
+                            && (chunkkvad[mod(cj + j, chunkkvadsize)][mod(ci + i, chunkkvadsize)] == 0
+                            || chunkkvad[mod(cj + j, chunkkvadsize)][mod(ci + i, chunkkvadsize)] == 1))
                             {
-                                if(chunkkvad[cj][ci] == 2)
-                                {
-                                    KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp, 0);
-                                    ChunkActivate(j, i);
-                                }
-                                something = 1;
+                                // chunkkvad[mod(cj + j, chunkkvadsize)][mod(ci + i, chunkkvadsize)] = 2;
+                                darken = 0;
                             }
-                            if(GetGravX(ptr, j, i) == 0 && GetGravY(ptr, j, i) == 0)
-                            {
-                                isgrav = 0;
-                                
-                            }
-            
-                            KvadGetHexel(ptr, j, i)->val2 = KvadGetHexel(ptr, j, i)->v2t;
-                            KvadGetHexel(ptr, j, i)->v2t = 0;
                         }
                     }
-                    if(something == 0 && isgrav == 1 && chunkkvad[cj][ci] == 2) chunkkvad[cj][ci] = 3;
-                    else if(something == 0 && isgrav == 1 && chunkkvad[cj][ci] == 3) chunkkvad[cj][ci] = 0;
+                    if(darken)
+                    {
+                        for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
+                        {
+                            for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
+                            {
+                                KvadGetHexel(ptr, j, i)->lit = 0;
+                            }
+                        }
+                    }
                 }
+                else if(lightsourcekvad[cj][ci] == 1)
+                {
+                    if(chunkkvad[cj][ci] == 2
+                    || chunkkvad[cj][ci] == 3)
+                    {
+                        for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
+                        {
+                            for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
+                            {
+                                KvadGetHexel(ptr, j, i)->lit = 0;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    for(int ci = 0; ci < chunkkvadsize; ci++)
+    {
+        for(int cj = 0; cj < chunkkvadsize; cj++)
+        {
+            if(chunkkvad[cj][ci] >= 2)
+            {
+                something = 0;
+                isgrav = 1;
+                islit = 0;
+                for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
+                {
+                    for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
+                    {
+                        switch (KvadGetHexel(ptr, j, i)->mat)
+                        {
+                        case 2:
+                            LightPropagate(ptr, j, i, 8);
+                            islit = 1;
+                            break;
+                        case 11:
+                            LightPropagate(ptr, j, i, 8);
+                            islit = 1;
+                            break;
+                        
+                        default:
+                            break;
+                        }
+                    }
+                }
+                if(islit == 1) lightsourcekvad[cj][ci] = 1;
+                else lightsourcekvad[cj][ci] = 0;
+            }
         }
     }
     
     
+    for(int ci = 0; ci < chunkkvadsize; ci++)
+    {
+        for(int cj = 0; cj < chunkkvadsize; cj++)
+        {
+            if(chunkkvad[cj][ci] >= 2)
+            {
+                something = 0;
+                isgrav = 1;
+                islit = 0;
+                for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
+                {
+                    for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
+                    {
+                        if(KvadGetHexel(ptr, j, i)->tmp != KvadGetHexel(ptr, j, i)->mat)
+                        {
+                            if(chunkkvad[cj][ci] == 2)
+                            {
+                                KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp, 0);
+                                ChunkActivate(j, i);
+                            }
+                            something = 1;
+                        }
+                        if(GetGravX(ptr, j, i) == 0 && GetGravY(ptr, j, i) == 0)
+                        {
+                            isgrav = 0;
+                            
+                        }
+                        if(KvadGetHexel(ptr, j, i)->lit > 0)
+                        {
+                            islit = 1;
+                        }
+        
+                        KvadGetHexel(ptr, j, i)->val2 = KvadGetHexel(ptr, j, i)->v2t;
+                        KvadGetHexel(ptr, j, i)->v2t = 0;
+                    }
+                }
+                if(something == 0 && isgrav == 1 && chunkkvad[cj][ci] == 2) chunkkvad[cj][ci] = 3;
+                else if(something == 0 && isgrav == 1 && islit == 0 && chunkkvad[cj][ci] == 3) chunkkvad[cj][ci] = 0;
+            }
+        }
+    }
+    
 
+}
+
+void LightPropagate(Kvad_t* ptr, int z, int n, int lit)
+{
+    
+    KvadGetHexel(ptr, z, n)->lit = hmax(KvadGetHexel(ptr, z, n)->lit, lit);
+    // KvadGetHexel(ptr, z, n)->lit = lit;
+    
+    int dz, dn;
+    // for(int i = 0; i < 6; i++)
+    // {
+    //     dz = Yrot[i];
+    //     dn = Yrot[mod(i - 2, 6)];
+        
+    //     KvadGetHexel(ptr, z + dz, n + dn)->lit = 
+    //     hmax(KvadGetHexel(ptr, z + dz, n + dn)->lit, lit - 1);
+    // }
+    
+    if(lit > 0)
+    {
+        
+        // chunkkvad[mod(hdiv(z, chunksize), chunkkvadsize)][mod(hdiv(n, chunksize), chunkkvadsize)] = 2;
+        for(int i = 0; i < 6; i++)
+        {
+            dz = Yrot[i];
+            dn = Yrot[mod(i - 2, 6)];
+            
+            if(KvadGetHexel(ptr, z + dz, n + dn)->lit < lit - 1)
+                LightPropagate(ptr, z + dz, n + dn, lit - 1);
+        }
+    }
 }
 
 void PhysicsUpdate2(Kvad_t* ptr)
@@ -2854,16 +2989,8 @@ void KvadUpdate(Kvad_t* ptr)
     }
     rt++;
     
-    // PositionsUpdate(ptr);
     
-    EntityCollision(ptr, e1);
     MeatListUpdate(ptr);
-    // ContourCheck(ptr);
-    // ContourPrint(ptr);
-    
-    // KvadSetBlob(ptr, gravcentx, gravcenty, 8, 0);
-    
-    // printf("%i %i\n", GetGravX(ptr, 98, 102), GetGravY(ptr, 98, 102));
     
     if(t == gravtime)
     {
@@ -2872,17 +2999,20 @@ void KvadUpdate(Kvad_t* ptr)
             
             
             ChunkKvadUpdate();
-            // ChunkKvadPrint();
+            if(showchunks)
+                ChunkKvadPrint();
+            // LightSourceKvadPrint();
             PhysicsUpdate(ptr);
+            
             AudioUpdate(ptr, 0);
             
         }
         
-        // if(physics) PositionsUpdate2(ptr);
-        
         t = 0;
     }
     t++;
+    
+    EntityCollision(ptr, e1);
     
     if(timer == maxtime)
     {
@@ -2999,7 +3129,7 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
         
         
         
-        if(KvadGetHexel(ptr, p_e->z, p_e->n)->dns > 4)
+        if(KvadGetHexel(ptr, p_e->z, p_e->n)->dns > 3)
         {
             p_e->z = oldz, p_e->n = oldn;
             p_e->subz = oldsubz, p_e->subn = oldsubn;
@@ -3015,6 +3145,10 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
         // if(KvadGetHexel(ptr, oldz, oldn)->dns > 4)
         //     p_e->fuel = max_fuel;
         
+        LightPropagate(ptr, newz, newn, 8);
+        lightsourcekvad[mod(hdiv(newz, chunksize), chunkkvadsize)][mod(hdiv(newn, chunksize), chunkkvadsize)] = 1;
+        ChunkActivate(newz, newn);
+                
         int blowpower = 3;
         
         if(inpst.delete == 1)
@@ -8014,6 +8148,7 @@ void ChunkKvadZero()
         for (int j = 0; j < chunkkvadsize; j++)
         {
             chunkkvad[j][i] = 0;
+            lightsourcekvad[j][i] = 0;
         }
     }
     
@@ -8036,13 +8171,9 @@ void ChunkKvadUpdate()
                 {
                     for(int j1 = - rad; j1 <=  + rad; j1++)
                     {
-                        if( i1 + j1 >=  - rad && i1 + j1 <= + rad)
-                        {
-                            if(chunkkvad[mod(j + j1, chunkkvadsize)][mod(i + i1, chunkkvadsize)] == 2
-                            || chunkkvad[mod(j + j1, chunkkvadsize)][mod(i + i1, chunkkvadsize)] == 1)
-                                isthere2 = 1;
-                            
-                        }
+                        if(chunkkvad[mod(j + j1, chunkkvadsize)][mod(i + i1, chunkkvadsize)] == 2
+                        || chunkkvad[mod(j + j1, chunkkvadsize)][mod(i + i1, chunkkvadsize)] == 1)
+                            isthere2 = 1;
                         
                     }
                 }
@@ -8057,18 +8188,49 @@ void ChunkKvadUpdate()
                 {
                     for(int j1 = - rad; j1 <=  + rad; j1++)
                     {
-                        if( i1 + j1 >=  - rad && i1 + j1 <= + rad)
-                        {
-                            if(chunkkvad[mod(j + j1, chunkkvadsize)][mod(i + i1, chunkkvadsize)] == 2
-                            || chunkkvad[mod(j + j1, chunkkvadsize)][mod(i + i1, chunkkvadsize)] == 1)
-                                isthere2 = 1;
-                            
-                        }
+                        
+                        if(chunkkvad[mod(j + j1, chunkkvadsize)][mod(i + i1, chunkkvadsize)] == 2
+                        || chunkkvad[mod(j + j1, chunkkvadsize)][mod(i + i1, chunkkvadsize)] == 1)
+                            isthere2 = 1;
                         
                     }
                 }
                 if(isthere2 == 1)
                     chunkkvad[j][i] = 3;
+            }
+            
+            
+            if(lightsourcekvad[j][i] == 0)
+            {
+                int rad = 1;
+                int isthere1 = 0;
+                for(int i1 = - rad; i1 <=  + rad; i1++)
+                {
+                    for(int j1 = - rad; j1 <=  + rad; j1++)
+                    {
+                        if(lightsourcekvad[mod(j + j1, chunkkvadsize)][mod(i + i1, chunkkvadsize)] == 1)
+                            isthere1 = 1;
+                        
+                    }
+                }
+                if(isthere1 == 1)
+                    lightsourcekvad[j][i] = 2;
+            }
+            else if(lightsourcekvad[j][i] == 2)
+            {
+                int rad = 1;
+                int isthere1 = 0;
+                for(int i1 = - rad; i1 <=  + rad; i1++)
+                {
+                    for(int j1 = - rad; j1 <=  + rad; j1++)
+                    {
+                        if(lightsourcekvad[mod(j + j1, chunkkvadsize)][mod(i + i1, chunkkvadsize)] == 1)
+                            isthere1 = 1;
+                        
+                    }
+                }
+                if(isthere1 == 0)
+                    lightsourcekvad[j][i] = 0;
             }
         }
     }
@@ -8089,6 +8251,20 @@ void ChunkKvadPrint()
     
 }
 
+void LightSourceKvadPrint()
+{
+    printf("\n");
+    for (int i = 0; i < chunkkvadsize; i++)
+    {
+        for (int j = 0; j < chunkkvadsize; j++)
+        {
+            printf("%i", lightsourcekvad[j][i]);
+        }
+        printf("\n");
+    }
+    
+}
+
 void ChunkActivate(int z, int n)
 {   
     
@@ -8097,13 +8273,9 @@ void ChunkActivate(int z, int n)
     {
         for(int j = - rad; j <=  + rad; j++)
         {
-            if( i + j >=  - rad && i + j <= + rad)
-            {
-                if(chunkkvad[mod(hdiv(z, chunksize) + j, chunkkvadsize)][mod(hdiv(n, chunksize) + i, chunkkvadsize)] == 0
-                || chunkkvad[mod(hdiv(z, chunksize) + j, chunkkvadsize)][mod(hdiv(n, chunksize) + i, chunkkvadsize)] == 3)
-                    chunkkvad[mod(hdiv(z, chunksize) + j, chunkkvadsize)][mod(hdiv(n, chunksize) + i, chunkkvadsize)] = 1;
-                
-            }
+            if(chunkkvad[mod(hdiv(z, chunksize) + j, chunkkvadsize)][mod(hdiv(n, chunksize) + i, chunkkvadsize)] == 0
+            || chunkkvad[mod(hdiv(z, chunksize) + j, chunkkvadsize)][mod(hdiv(n, chunksize) + i, chunkkvadsize)] == 3)
+                chunkkvad[mod(hdiv(z, chunksize) + j, chunkkvadsize)][mod(hdiv(n, chunksize) + i, chunkkvadsize)] = 1;
             
         }
     }
@@ -8222,13 +8394,12 @@ void KvadUpload(Kvad_t *ptr, int n)
 void KvadGenerate(Kvad_t *ptr, int n)
 {
     KvadZero(ptr);
-    // KvadSetBlob(ptr, center, center, 8, 30);
-    // KvadSetBlob(ptr, center, center, 5, 100);
+    EntityInitialize();
     int step = 5, size;
     int random, nonchance = 10;
     int x, y, ang;
     int agents = 5, length = 1000;
-    int mult = 1;
+    int mult = 10;
     if(radial)
     {
         for (int m = 0; m < 100 * mult; m++)
@@ -8238,18 +8409,6 @@ void KvadGenerate(Kvad_t *ptr, int n)
             {
                 step = rand() % 1;
                 KvadSetBlob(ptr, x, y, 11, step);
-                x += Yrot[ang] * (step + 1);
-                y += Yrot[mod(ang - 2, 6)] * (step + 1);
-                ang = cycle(ang, 0, 5, rand() % 3 - 1);
-            }
-        }
-        for (int m = 0; m < 5 * mult; m++)
-        {
-            x = center, y = center, ang = 0;
-            for (int i = 0; i < 150 * mult; i++)
-            {
-                step = rand() % 1 + 1;
-                KvadSetBlob(ptr, x, y, 3, step);
                 x += Yrot[ang] * (step + 1);
                 y += Yrot[mod(ang - 2, 6)] * (step + 1);
                 ang = cycle(ang, 0, 5, rand() % 3 - 1);
@@ -8268,41 +8427,4 @@ void KvadGenerate(Kvad_t *ptr, int n)
         }
         
     }
-    // for (int m = 0; m < agents; m++)
-    // {
-    //     x = center, y = center, ang = 0;
-    //     for (int i = 0; i < length; i++)
-    //     {
-    //         step = rand() % 3;
-    //         KvadSetBlob(ptr, x, y, 4, step);
-    //         x += Yrot[ang] * (step + 1);
-    //         y += Yrot[mod(ang - 2, 6)] * (step + 1);
-    //         ang = cycle(ang, 0, 5, rand() % 3 - 1);
-    //     }
-    // }
-    // for (int m = 0; m < agents; m++)
-    // {
-    //     x = center, y = center, ang = 0;
-    //     for (int i = 0; i < length; i++)
-    //     {
-    //         step = rand() % 4;
-    //         KvadSetBlob(ptr, x, y, 3, step);
-    //         x += Yrot[ang] * (step + 1);
-    //         y += Yrot[mod(ang - 2, 6)] * (step + 1);
-    //         ang = cycle(ang, 0, 5, rand() % 3 - 1);
-    //     }
-    // }
-    // for (int m = 0; m < 1; m++)
-    // {
-    //     x = center, y = center, ang = 0;
-    //     for (int i = 0; i < 1000; i++)
-    //     {
-    //         step = rand() % 1;
-    //         KvadSetBlob(ptr, x, y, 0, step);
-    //         KvadSetBlob(ptr, x, y, 9, step);
-    //         x += Yrot[ang] * (step + 1);
-    //         y += Yrot[mod(ang - 2, 6)] * (step + 1);
-    //         ang = cycle(ang, 0, 5, rand() % 3 - 1);
-    //     }
-    // }
 }

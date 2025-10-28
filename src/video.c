@@ -10,6 +10,8 @@ int scale_selection = 0;
 int selection_time = 0;
 int minimap_speed = 0;
 
+int lighting = 1;
+
 SDL_Window * m_window;
 SDL_Renderer * m_renderer;
 int rgb[8][3] = {
@@ -97,16 +99,19 @@ void HexelDraw(Display_t* d, int z, int n, Cell_t* c, int b_ui)
         srcx = d->angle * 9;
         // srcy = (mod(1 + c->dx + 1 + (c->dy + 1) * 3, 11)) * 9;
         // srcy = (mod(c->dns, 11)) * 9;
-        srcy = (mod(c->org + 1, 49)) * 9;
+        srcy = (mod(c->lit + 0, 49)) * 9;
         // srcy = (mod(c->mat, 11)) * 9;
         // srcy = (mod(c->stress + 1, 49)) * 9;
-        SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y, c->clr);
+        SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y, c->clr, 255);
     }
     else
     {
         srcx = d->angle * 9;
         srcy = c->mat * 9;
-        SpriteDraw(s1, srcx, srcy, hexel.x, hexel.y, c->clr);
+        if(lighting)
+            SpriteDraw(s1, srcx, srcy, hexel.x, hexel.y, c->clr, c->lit * 255 / 8);
+        else
+            SpriteDraw(s1, srcx, srcy, hexel.x, hexel.y, c->clr, 255);
     }
 }
 
@@ -126,7 +131,7 @@ void DotsDraw(Display_t* d, int z, int n, int amount)
     {
         srcy = (1 + mod(amount - 1, 49)) * 9;
     }
-    SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y, 7); // color_cycle[mod( (amount - 1) / 10 + 3, 6)]
+    SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y, 7, 255); // color_cycle[mod( (amount - 1) / 10 + 3, 6)]
 }
 
 void HexelDrawOnUI(int x, int y, int mat, int ang, int b_ui)
@@ -137,12 +142,12 @@ void HexelDrawOnUI(int x, int y, int mat, int ang, int b_ui)
     if(b_ui == 1)
     {
         srcy = mod(st8_dns_clr[mat][1], 11) * 9;
-        SpriteDraw(s2, srcx, srcy, x * 8, y * 8, st8_dns_clr[mat][2]);
+        SpriteDraw(s2, srcx, srcy, x * 8, y * 8, st8_dns_clr[mat][2], 255);
     }
     else
     {
         srcy = mat * 9;
-        SpriteDraw(s1, srcx, srcy, x * 8, y * 8, st8_dns_clr[mat][2]);
+        SpriteDraw(s1, srcx, srcy, x * 8, y * 8, st8_dns_clr[mat][2], 255);
     }
 }
 
@@ -213,11 +218,12 @@ void SpriteTerminate(Sprite_t* s)
     free(s);
 }
 
-void SpriteDraw(Sprite_t* s, int x1, int y1, int x2, int y2, int color)
+void SpriteDraw(Sprite_t* s, int x1, int y1, int x2, int y2, int color, int alpha)
 {
     s->source.x = x1;            s->source.y = y1;
     s->destination.x = x2;       s->destination.y =  y2;
     SDL_SetTextureColorMod(s->texture, rgb[color][0], rgb[color][1], rgb[color][2]);
+    SDL_SetTextureAlphaMod(s->texture, alpha);
     SDL_RenderCopy(m_renderer, s->texture, &s->source, &s->destination);
 }
 
