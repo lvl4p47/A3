@@ -61,7 +61,7 @@ void calculate_delta(int64_t* dr, int64_t* ds, uint64_t ct, uint64_t ft,
 void delay(int64_t dr, int64_t ds)
 {
 	int64_t dt = hmax(0, hmin(dr, ds)) * 1000 / SDL_GetPerformanceFrequency();
-	SDL_Delay(dt + 1);
+	SDL_Delay(dt);
 
 }
 

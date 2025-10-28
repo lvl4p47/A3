@@ -10,7 +10,7 @@ int scale_selection = 0;
 int selection_time = 0;
 int minimap_speed = 0;
 
-int lighting = 1;
+int lighting = 0;
 
 SDL_Window * m_window;
 SDL_Renderer * m_renderer;
@@ -421,6 +421,6 @@ void EntityDraw(Kvad_t* ptr, Display_t* d, Entity_t* p_e)
 
     
     
-    DotsDraw(d, z, n, 10);
+    DotsDraw(d, z, n, mod(p_e->fuel / 2, 49) + 25);
     // HexelDraw(d, z, n, KvadGetHexel(ptr, z, n), 0);
 }

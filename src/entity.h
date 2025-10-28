@@ -19,6 +19,8 @@ void EntitySystemInitialize();
 
 void EntitySystemTerminate();
 
+void EntityTeleport(Entity_t* p_e);
+
 void EntityUpdate(Entity_t* p_e);
 
 #endif

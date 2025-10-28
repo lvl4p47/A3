@@ -47,10 +47,10 @@ int min_neigh, max_neigh;
 
 void InterfaceInitialize()
 {
-    cursor.lm = 11;
+    cursor.lm = 14;
     cursor.rm = 0;
-    cursor.lrad = 0;
-    cursor.rrad = 0;
+    cursor.lrad = 4;
+    cursor.rrad = 4;
     
     rules_editor.x = 1;
     rules_editor.y = 24;
@@ -66,7 +66,7 @@ void InterfaceInitialize()
     select_list.rectangle.y = 1;
     select_list.rectangle.w = 17;
     select_list.rectangle.h = 6;
-    select_list.s = L"0 - воздух\n1 - паутина\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень\n9 - салат\n10 - мясо\n11 - магма\n12 - рожа\n13 - хвост\n14 - органика";
+    select_list.s = L"0 - воздух\n1 - паутина\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень\n9 - салат\n10 - мясо\n11 - магма\n12 - рожа\n13 - хвост\n14 - металл";
     select_list.min = 0;
     select_list.max = mat_amount - 1;
     
@@ -103,7 +103,7 @@ void InterfaceInitialize()
     info_box.shift = 0;
     
     t_f = SDL_GetPerformanceFrequency() / 30;
-    t_s = SDL_GetPerformanceFrequency() / 50;
+    t_s = SDL_GetPerformanceFrequency() / 25;
     
     ButtonListInitialize();
     SliderListInitialize();
@@ -715,12 +715,13 @@ void DisplayToEntity(Display_t* d, Entity_t* p_e)
     else if(d->scale < -1)
     {
         
-        dz = (-p_e->z - d->hshift.x / -d->scale);
-        dn = (p_e->n + d->hshift.y / -d->scale);
-        // if(hdist(dz, dn, 0, 0) > 1) mult = hmin(hdist(dz, dn, 0, 0), -d->scale);
-        // mult = -d->scale;
-        dz *= mult;
-        dn *= mult;
+        dz = (-p_e->z * -d->scale - p_e->subz * d->scale / minzoom - d->hshift.x );
+        dn = (p_e->n * -d->scale + p_e->subn * d->scale / minzoom + d->hshift.y);
+        
+        printf("%i\t%i\n", p_e->subz, p_e->subn);
+        
+        // dz = (-p_e->z - d->hshift.x / -d->scale);
+        // dn = (p_e->n + d->hshift.y / -d->scale);
     }
     d->screen_shift.x = d->screen_shift.x +
     (dz) * hcos(d->angle) - (dn) * hcos(d->angle + 8);

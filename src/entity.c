@@ -10,7 +10,7 @@ Entity_t* EntityInitialize(z, n)
     p_e->subz = 0;
     p_e->subn = 0;
     p_e->magn = 7;
-    p_e->fuel = 99;
+    p_e->fuel = 48;
     p_e->angle = 0;
     
     
@@ -32,10 +32,13 @@ void EntitySystemTerminate()
     EntityTerminate(e1);
 }
 
+void EntityTeleport(Entity_t* p_e)
+{
+    p_e->z = side / 2;
+    p_e->n = side / 2;
+}
+
 void EntityUpdate(Entity_t* p_e)
 {
-
-    
-    
     
 }
