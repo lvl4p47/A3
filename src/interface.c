@@ -4,6 +4,8 @@ const int buttonlistsize = 36;
 
 const int sliderlistsize = 2;
 
+const int sllistsize = 2;
+
 const int inform_color = 7;
 const int important_color = 5;
 const int yes_color = 2;
@@ -13,7 +15,9 @@ const int interact_color = 4;
 const int frame_color = 3;
 
 const int maxzoom = 14;
-const int minzoom = -7;
+const int minzoom = -scale;
+
+int inventory[mat_amount];
 
 extern InputState_t inpst;
 
@@ -21,13 +25,17 @@ Button_t** buttonlist;
 
 Slider_t** sliderlist;
 
+Select_List_t** sllist;
+
 Cursor_t cursor;
+
+int savefile;
 
 RulesEditor_t rules_editor;
 
-Select_List_t select_list;
+Select_List_t select_list, select_list1;
 
-ui_rectangle_t hex_screen, toolpad, filepad, control_panel;
+ui_rectangle_t hex_screen, toolpad, filepad, control_panel, HUD;
 
 InfoBox_t info_box;
 
@@ -37,6 +45,9 @@ int b_panning, b_pause, b_step, b_drawing, b_button, b_slider, b_grab, b_select_
 int max_curs, gravity;
 int b_ui, b_entity;
 int b_download, b_upload, b_generate;
+int b_escape, b_gamemode;
+
+int time_mined, cooldown;
 
 uint64_t t_f;
 uint64_t t_s;
@@ -52,6 +63,8 @@ void InterfaceInitialize()
     cursor.lrad = 4;
     cursor.rrad = 4;
     
+    savefile = 0;
+    
     rules_editor.x = 1;
     rules_editor.y = 24;
     rules_editor.w = 17;
@@ -61,14 +74,6 @@ void InterfaceInitialize()
     rules_editor.mat_from    = 2;
     rules_editor.mat_to      = 0;
     rules_editor.cond_num    = 0;
-    
-    select_list.rectangle.x = 1;
-    select_list.rectangle.y = 1;
-    select_list.rectangle.w = 17;
-    select_list.rectangle.h = 6;
-    select_list.s = L"0 - воздух\n1 - паутина\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень\n9 - салат\n10 - мясо\n11 - магма\n12 - рожа\n13 - хвост\n14 - металл";
-    select_list.min = 0;
-    select_list.max = mat_amount - 1;
     
     hex_screen.x = 19;
     hex_screen.y = 1;
@@ -90,6 +95,11 @@ void InterfaceInitialize()
     control_panel.w = 16;
     control_panel.h = 7;
     
+    HUD.x = 1;
+    HUD.y = 42;
+    HUD.w = 16;
+    HUD.h = 2;
+    
     s_rules_editor = L"  Порядок установления значений:\n1) \"ИЗ\";\n2) \"В\";\n3) \"УСЛ\";\n4) Остальное.\n\n  ФЛАГ:\n\"--\" игнорировать данный набор условий;\n\"+0\" необходимо >= зеленых соседей и < красных;\n\"+1\" необходимо точное (не)совпадение количества соседей.\n\n  Для перехода клетки из начального состояния в конечное необходимо выполнение хотя бы одного из условий в списке.";
     s_toolpad = L"  Правой / левой кнопкой мыши по списку можно задать материал курсора. Колесико мыши позволяет перемещаться по списку\n\n  Кнопки слева направо:\n* Поменять правое и левое значения курсора местами;\n* Переход в режим передвижения по массиву клеток с помощью ЛКМ.\n\n  Слайдер изменяет размер закрашивания курсором.";
     s_filepad = L"  ";
@@ -107,20 +117,23 @@ void InterfaceInitialize()
     
     ButtonListInitialize();
     SliderListInitialize();
+    SLListInitialize();
 
-    b_panning   = 0;
-    b_pause     = 0;
-    b_step      = 0;
-    b_ui        = 0;
-    b_drawing   = 0;
-    b_button    = -1;
-    b_slider    = -1;
-    b_grab      = 0;
-    b_select_list = 0;
-    b_entity = 0;
-    b_download = 0;
-    b_upload = 0;
-    b_generate = 0;
+    b_panning       = 0;
+    b_pause         = 0;
+    b_step          = 0;
+    b_ui            = 0;
+    b_drawing       = 0;
+    b_button        = -1;
+    b_slider        = -1;
+    b_grab          = 0;
+    b_select_list   = 0;
+    b_entity        = 0;
+    b_download      = 0;
+    b_upload        = 0;
+    b_generate      = 0;
+    b_escape        = 0;
+    b_gamemode      = 0;
     
     
     gravity = 1;
@@ -128,11 +141,19 @@ void InterfaceInitialize()
     
     min_neigh = -mat_amount - 1;
     max_neigh = mat_amount - 1;
+    
+    for (int i = 0; i < mat_amount; i++)
+    {
+        inventory[i] = 0;
+    }
+    
 }
 
 void InterfaceTerminate()
 {
     ButtonListTerminate();
+    SliderListTerminate();
+    SLListTerminate();
 }
 
 void InterfaceDraw(Font_t* f, Display_t* d)
@@ -141,8 +162,11 @@ void InterfaceDraw(Font_t* f, Display_t* d)
     ButtonListDraw(f);
     SliderListDraw(f);
     FontPrintToInfoBox(f);
-    SelectListDraw(f, d, &select_list);
+    SLListDraw(f, d);
+    HUDDraw(f);
     inpst.mouse.scroll = 0;
+    
+    DrawCursor(f);
 }
 
 void InterfaceUpdate(Kvad_t* ptr)
@@ -150,22 +174,81 @@ void InterfaceUpdate(Kvad_t* ptr)
     ButtonListCheck();
     SliderListCheck();
     InfoBoxUpdate();
-    SelectListUpdate();
+    SLListUpdate();
+    
+    if(inpst.escape && b_gamemode == 0) b_escape = 1 - b_escape;
     
     if(b_download) 
     {
-        KvadDownload(ptr, 0);
+        KvadDownload(ptr, savefile);
         b_download = 0;
     }
     if(b_upload)
     {
-        KvadUpload(ptr, 0);
+        KvadUpload(ptr, savefile);
         b_upload = 0;
     }
     if(b_generate)
     {
-        KvadGenerate(ptr, 0);
+        KvadGenerate(ptr, savefile);
         b_generate = 0;
+    }
+    EscapeInitialize(b_escape);
+}
+
+void EscapeInitialize(int n)
+{
+    switch (n)
+    {
+    case 0:
+        hex_screen.x = 19;
+        hex_screen.y = 1;
+        hex_screen.w = 60;
+        hex_screen.h = 43;
+        
+        displaylist[0]->screen.x = 1 * 8;
+        displaylist[0]->screen.y = 1 * 8;
+        displaylist[0]->screen.w = 78 * 8;
+        displaylist[0]->screen.h = 43 * 8;
+        
+        displaylist[0]->grid_x = 19;
+        displaylist[0]->grid_y = 1;
+        displaylist[0]->grid_w = 60;
+        displaylist[0]->grid_h = 43;
+        
+        sllist[0]->rectangle.h = 16;
+        
+        b_entity = 1;
+        
+        cursor.lrad = 0;
+        cursor.rrad = 0;
+        
+        break;
+    case 1:
+        hex_screen.x = 19;
+        hex_screen.y = 1;
+        hex_screen.w = 43;
+        hex_screen.h = 43;
+        
+        displaylist[0]->screen.x = 19 * 8;
+        displaylist[0]->screen.y = 1 * 8;
+        displaylist[0]->screen.w = 43 * 8;
+        displaylist[0]->screen.h = 43 * 8;
+        
+        displaylist[0]->grid_x = 19;
+        displaylist[0]->grid_y = 1;
+        displaylist[0]->grid_w = 43;
+        displaylist[0]->grid_h = 43;
+        
+        sllist[0]->rectangle.h = 6;
+        
+        b_entity = 0;
+        
+        
+        break;
+    
+    default:
+        break;
     }
 }
 
@@ -264,10 +347,37 @@ void ButtonListDraw(Font_t* f)
 {
     for(int i = 0; i < buttonlistsize; i++)
     {
-        ButtonDraw(buttonlist[i], f);
+        switch (b_escape)
+        {
+        case 0:
+            int dodraw = 1;
+            switch (i)
+            {
+            case 6:
+                break;
+            case 8:
+                break;
+            case 9:
+                break;
+            
+            default:
+                dodraw = 0;
+                break;
+            }
+            if (dodraw) ButtonDraw(buttonlist[i], f);
+            break;
+        case 1:
+            ButtonDraw(buttonlist[i], f);
+            FontNumberDraw(f, toolpad.x + 1, toolpad.y, 1, 1, cursor.lm, important_color, 0, 1);
+            FontNumberDraw(f, toolpad.x + 3, toolpad.y, 1, 1, cursor.rm, important_color, 0, 1);
+            break;
+        
+        default:
+            break;
+        }
+        
     }
-    FontNumberDraw(f, toolpad.x + 1, toolpad.y, 1, 1, cursor.lm, important_color, 0, 1);
-    FontNumberDraw(f, toolpad.x + 3, toolpad.y, 1, 1, cursor.rm, important_color, 0, 1);
+    
 }
 
 void ButtonListCheck()
@@ -283,10 +393,42 @@ void ButtonListCheck()
             if( (isinrec(b->x, b->y, b->w, b->h, x, y) == 1
                  && b_slider == -1 && (b_button == i || b_button == -1))
                  || (b->b_grab == 1 && b_button == i) )
-            {
-                ButtonDown(b);
-                b->b_grab = 1;
-                b_button = i;
+            {   
+                switch (b_escape)
+                {
+                case 0:
+                    int doupdate = 1;
+                    switch (i)
+                    {
+                    case 6:
+                        break;
+                    case 8:
+                        break;
+                    case 9:
+                        break;
+                    
+                    default:
+                        doupdate = 0;
+                        break;
+                    }
+                    if (doupdate)
+                    {
+                        ButtonDown(b);
+                        b->b_grab = 1;
+                        b_button = i;
+                    }
+                    break;
+                case 1:
+                    ButtonDown(b);
+                    b->b_grab = 1;
+                    b_button = i;
+                    break;
+                
+                default:
+                    break;
+                }
+                
+                
             }
             else
             {
@@ -699,6 +841,7 @@ void DisplayPanning(Display_t* d)
             
         MouseResetPrev();
     }
+    if(b_escape == 0) d->scale = -scale;
 }
 
 void DisplayToEntity(Display_t* d, Entity_t* p_e)
@@ -718,10 +861,6 @@ void DisplayToEntity(Display_t* d, Entity_t* p_e)
         dz = (-p_e->z * -d->scale - p_e->subz * d->scale / minzoom - d->hshift.x );
         dn = (p_e->n * -d->scale + p_e->subn * d->scale / minzoom + d->hshift.y);
         
-        printf("%i\t%i\n", p_e->subz, p_e->subn);
-        
-        // dz = (-p_e->z - d->hshift.x / -d->scale);
-        // dn = (p_e->n + d->hshift.y / -d->scale);
     }
     d->screen_shift.x = d->screen_shift.x +
     (dz) * hcos(d->angle) - (dn) * hcos(d->angle + 8);
@@ -773,20 +912,91 @@ void ScreenInput(Kvad_t* ptr, Display_t* d)
     MouseToGrid(&gridx, &gridy);
     int b_inrec = isinrec(hex_screen.x, hex_screen.y, hex_screen.w, hex_screen.h, gridx, gridy);
     
-    if(b_inrec && inpst.mouse.down && b_grab == 0
-    && b_entity == 0)
+    if(b_inrec && inpst.mouse.down && b_grab == 0)
         b_drawing = 1;
 
     if(inpst.mouse.pressed && b_inrec && b_drawing)
     {
         MouseToHex(d, &hexx, &hexy);
-
-        if(inpst.mouse.lmc)
-            KvadSetBlob(ptr, hexx, hexy, cursor.lm, cursor.lrad);
-        if(inpst.mouse.rmc)
+        int doplace;
+        int b_distance = hdist(hexx, hexy, e1->z, e1->n) <= 3 ? 1 : 0;
+        switch (b_escape)
         {
-            KvadSetBlob(ptr, hexx, hexy, cursor.rm, cursor.rrad);
+        case 0:
+            if(inpst.mouse.rmc)
+            {
+                if(b_distance && 
+                (inventory[cursor.rm] > 0 || cursor.rm == 0) && 
+                cooldown <= abs(timer - time_mined) && 
+                KvadGetHexel(ptr, hexx, hexy)->mat != cursor.rm)
+                {
+                    doplace = 0;
+                    if(cursor.rm == 0)
+                    {
+                        cooldown = KvadGetHexel(ptr, hexx, hexy)->dns * 10;
+                        inventory[KvadGetHexel(ptr, hexx, hexy)->mat]++;
+                        doplace = 1;
+                    }
+                    else if(KvadGetHexel(ptr, hexx, hexy)->mat == 0)
+                    {
+                        cooldown = st8_dns_clr[cursor.rm][1] * 10;
+                        inventory[cursor.rm]--;
+                        doplace = 1;
+                    }
+                    if(doplace == 1)
+                    {
+                        KvadSetBlob(ptr, hexx, hexy, cursor.rm, cursor.rrad);
+                        time_mined = timer;
+                    }
+                    
+                }
+                // else if(cursor.rm != 0) KvadSetBlob(ptr, hexx, hexy, cursor.rm, cursor.rrad);
+            }
+            if(inpst.mouse.lmc)
+            {
+                if(b_distance && 
+                (inventory[cursor.lm] > 0 || cursor.lm == 0) && 
+                cooldown <= abs(timer - time_mined) && 
+                KvadGetHexel(ptr, hexx, hexy)->mat != cursor.lm)
+                {
+                    doplace = 0;
+                    if(cursor.lm == 0)
+                    {
+                        cooldown = KvadGetHexel(ptr, hexx, hexy)->dns * 10;
+                        inventory[KvadGetHexel(ptr, hexx, hexy)->mat]++;
+                        doplace = 1;
+                    }
+                    else if(KvadGetHexel(ptr, hexx, hexy)->mat == 0)
+                    {
+                        cooldown = st8_dns_clr[cursor.lm][1] * 10;
+                        inventory[cursor.lm]--;
+                        doplace = 1;
+                    }
+                    if(doplace)
+                    {
+                        KvadSetBlob(ptr, hexx, hexy, cursor.lm, cursor.lrad);
+                        time_mined = timer;
+                    }
+                }
+                // else if(cursor.lm != 0) KvadSetBlob(ptr, hexx, hexy, cursor.lm, cursor.lrad);
+            }
+            break;
+        case 1:
+            if(inpst.mouse.rmc)
+            {
+                KvadSetBlob(ptr, hexx, hexy, cursor.rm, cursor.rrad);
+            }
+            if(inpst.mouse.lmc)
+            {
+                KvadSetBlob(ptr, hexx, hexy, cursor.lm, cursor.lrad);
+            }
+            break;
+        default:
+            break;
         }
+        
+        
+        
     }
     if(inpst.mouse.up)
     {
@@ -855,7 +1065,28 @@ void SliderListDraw(Font_t* f)
 {
     for(int i = 0; i < sliderlistsize; i++)
     {
-        SliderDraw(sliderlist[i], f);
+        switch (b_escape)
+        {
+        case 0:
+            int dodraw = 1;
+            switch (i)
+            {
+            
+            default:
+                dodraw = 0;
+                break;
+            }
+            if (dodraw) SliderDraw(sliderlist[i], f);
+            break;
+        case 1:
+            SliderDraw(sliderlist[i], f);
+            break;
+        
+        default:
+            break;
+        }
+        
+        
     }
 }
 
@@ -874,10 +1105,37 @@ void SliderListCheck()
                  && b_button == -1 && (b_slider == i || b_slider == -1))
                  || (s->b_grab == 1 && b_slider == i) )
             {
-                c = hmax( 1, hmin((x - s->x), s->w - 2));
-                SliderDown(s, c);
-                s->b_grab = 1;
-                b_slider = i;
+                switch (b_escape)
+                {
+                case 0:
+                    int doupdate = 1;
+                    switch (i)
+                    {
+                    
+                    default:
+                        doupdate = 0;
+                        break;
+                    }
+                    if (doupdate)
+                    {
+                        c = hmax( 1, hmin((x - s->x), s->w - 2));
+                        SliderDown(s, c);
+                        s->b_grab = 1;
+                        b_slider = i;
+                    }
+                    break;
+                case 1:
+                    c = hmax( 1, hmin((x - s->x), s->w - 2));
+                    SliderDown(s, c);
+                    s->b_grab = 1;
+                    b_slider = i;
+                    break;
+                
+                default:
+                    break;
+                }
+                
+                
             }
             else
             {
@@ -920,66 +1178,85 @@ void FontUIDraw(Font_t* f, Display_t* d)
     wchar_t reading[82];
 
     FILE* fl1 = NULL;
-    fl1 = fopen("../media/ui.txt", "r");
-    for(int i = 0; i < 45; i++)
+    
+    switch (b_escape)
     {
-        fgetws(reading, 82, fl1);
-        FontStringDraw(f, 0, i, 80, 1, reading, frame_color); 
+    case 1:
+        fl1 = fopen("../media/ui.txt", "r");
+        for(int i = 0; i < 45; i++)
+        {
+            fgetws(reading, 82, fl1);
+            FontStringDraw(f, 0, i, 80, 1, reading, frame_color); 
+        }
+        fclose(fl1);
+
+        int x, y;
+        MouseToGrid(&x, &y);
+        FontNumberDraw(f, 1, 0, 2, 1, x, frame_color, 0, 1);
+        FontNumberDraw(f, 4, 0, 2, 1, y, frame_color, 0, 1);
+        FontNumberDraw(f, 7, 0, 2, 1, d->angle, frame_color, 0, 1);
+        
+        // FontNumberDraw(f, 11, 0, 5, 1, d->hshift.x, frame_color, 1, 1);
+        // FontNumberDraw(f, 17, 0, 5, 1, d->hshift.y, frame_color, 1, 1);
+        
+        FontNumberDraw(f, 19, 0, 2, 1, e1->fuel, frame_color, 0, 1);
+        
+        if(b_ui)
+        {
+            int r = 16;
+            int ang = d->angle;
+
+            int zang, nang, centz, centn;
+            centz = hex_screen.x + hex_screen.w / 2 - 1;
+            centn = hex_screen.y + hex_screen.h / 2;
+
+            zang = r, nang = 0; 
+
+            HexToGrid(d, &zang, &nang, centz, centn);
+            FontNumberDraw(f, zang, nang, 3, 1, 0, inform_color, 0, 1);
+
+            zang = r, nang = -r;
+            HexToGrid(d, &zang, &nang, centz, centn);
+            FontNumberDraw(f, zang, nang, 3, 1, 90, inform_color, 0, 1);
+
+            zang = 0, nang = -r;
+            HexToGrid(d, &zang, &nang, centz, centn);
+            FontNumberDraw(f, zang, nang, 3, 1, 120, inform_color, 0, 1);
+
+            zang = -r, nang = 0;
+            HexToGrid(d, &zang, &nang, centz, centn);
+            FontNumberDraw(f, zang, nang, 3, 1, 180, inform_color, 0, 1);
+
+            zang = -r, nang = r;
+            HexToGrid(d, &zang, &nang, centz, centn);
+            FontNumberDraw(f, zang, nang, 3, 1, 240, inform_color, 0, 1);
+
+            zang = 0, nang = r;
+            HexToGrid(d, &zang, &nang, centz, centn);
+            FontNumberDraw(f, zang, nang, 3, 1, 300, inform_color, 0, 1);
+        }
+        
+        if(buttonlist[9]->act_b == 1)
+        {
+            FontStringDraw(f, 32, 22, 17, 1, L"ОКНО НЕ В ФОКУСЕ!", inform_color);
+        }
+        
+        FontRulesEditorDraw(f);
+        break;
+    case 0:
+        fl1 = fopen("../media/ui_1.txt", "r");
+        for(int i = 0; i < 45; i++)
+        {
+            fgetws(reading, 82, fl1);
+            FontStringDraw(f, 0, i, 80, 1, reading, frame_color); 
+        }
+        fclose(fl1);
+        break;
+    default:
+        break;
     }
-    fclose(fl1);
-
-    int x, y;
-    MouseToGrid(&x, &y);
-    FontNumberDraw(f, 1, 0, 2, 1, x, frame_color, 0, 1);
-    FontNumberDraw(f, 4, 0, 2, 1, y, frame_color, 0, 1);
-    FontNumberDraw(f, 7, 0, 2, 1, d->angle, frame_color, 0, 1);
     
-    // FontNumberDraw(f, 11, 0, 5, 1, d->hshift.x, frame_color, 1, 1);
-    // FontNumberDraw(f, 17, 0, 5, 1, d->hshift.y, frame_color, 1, 1);
     
-    FontNumberDraw(f, 19, 0, 2, 1, e1->fuel, frame_color, 0, 1);
-    
-    if(b_ui)
-    {
-        int r = 16;
-        int ang = d->angle;
-
-        int zang, nang, centz, centn;
-        centz = hex_screen.x + hex_screen.w / 2 - 1;
-        centn = hex_screen.y + hex_screen.h / 2;
-
-        zang = r, nang = 0; 
-
-        HexToGrid(d, &zang, &nang, centz, centn);
-        FontNumberDraw(f, zang, nang, 3, 1, 0, inform_color, 0, 1);
-
-        zang = r, nang = -r;
-        HexToGrid(d, &zang, &nang, centz, centn);
-        FontNumberDraw(f, zang, nang, 3, 1, 90, inform_color, 0, 1);
-
-        zang = 0, nang = -r;
-        HexToGrid(d, &zang, &nang, centz, centn);
-        FontNumberDraw(f, zang, nang, 3, 1, 120, inform_color, 0, 1);
-
-        zang = -r, nang = 0;
-        HexToGrid(d, &zang, &nang, centz, centn);
-        FontNumberDraw(f, zang, nang, 3, 1, 180, inform_color, 0, 1);
-
-        zang = -r, nang = r;
-        HexToGrid(d, &zang, &nang, centz, centn);
-        FontNumberDraw(f, zang, nang, 3, 1, 240, inform_color, 0, 1);
-
-        zang = 0, nang = r;
-        HexToGrid(d, &zang, &nang, centz, centn);
-        FontNumberDraw(f, zang, nang, 3, 1, 300, inform_color, 0, 1);
-    }
-    
-    if(buttonlist[9]->act_b == 1)
-    {
-        FontStringDraw(f, 32, 22, 17, 1, L"ОКНО НЕ В ФОКУСЕ!", inform_color);
-    }
-    
-    FontRulesEditorDraw(f);
     
 }
 
@@ -1111,24 +1388,37 @@ void InfoBoxUpdate()
     int x, y;
     MouseToGrid(&x, &y);
     
-    if(isinrec(rules_editor.x, rules_editor.y, rules_editor.w, rules_editor.h, x, y ))
+    switch (b_escape)
     {
-        info_box.s = s_rules_editor;
-    }
-    else if(isinrec(toolpad.x, toolpad.y, toolpad.w, toolpad.h, x, y ) ||
-            isinrec(select_list.rectangle.x, select_list.rectangle.y, 
-                select_list.rectangle.w, select_list.rectangle.h, x, y ))
-    {
-        info_box.s = s_toolpad;
-    }
-    else if(isinrec(control_panel.x, control_panel.y, control_panel.w, control_panel.h, x, y ))
-    {
-        info_box.s = s_control_panel;
-    }
-    else if(!isinrec(info_box.x, info_box.y, info_box.w, info_box.h, x, y ))
-    {
+    case 0:
         info_box.s = L"";
+        break;
+    case 1:
+        if(isinrec(rules_editor.x, rules_editor.y, rules_editor.w, rules_editor.h, x, y ))
+        {
+            info_box.s = s_rules_editor;
+        }
+        else if(isinrec(toolpad.x, toolpad.y, toolpad.w, toolpad.h, x, y ) ||
+                isinrec(select_list.rectangle.x, select_list.rectangle.y, 
+                    select_list.rectangle.w, select_list.rectangle.h, x, y ))
+        {
+            info_box.s = s_toolpad;
+        }
+        else if(isinrec(control_panel.x, control_panel.y, control_panel.w, control_panel.h, x, y ))
+        {
+            info_box.s = s_control_panel;
+        }
+        else if(!isinrec(info_box.x, info_box.y, info_box.w, info_box.h, x, y ))
+        {
+            info_box.s = L"";
+        }
+        break;
+    
+    default:
+        break;
     }
+    
+    
 }
 
 void DisplayListUpdate()
@@ -1138,8 +1428,129 @@ void DisplayListUpdate()
         DisplayToEntity(displaylist[0], e1);
 }
 
-void SelectListDraw(Font_t* f, Display_t* d, Select_List_t *p_sl)
+void SLListInitialize()
 {
+    sllist = (Select_List_t**)malloc(sllistsize * sizeof(Select_List_t*));
+
+	for (int i = 0; i < sllistsize; i++)
+	{
+		sllist[i] = SelectListInitialize(i);
+    }
+    
+}
+
+void SLListTerminate()
+{
+    for(int i = 0; i < sllistsize; i++)
+    {
+        SelectListTerminate(i);
+    }
+    free(sllist);
+}
+
+void SLListDraw(Font_t* f, Display_t* d)
+{
+    for (int i = 0; i < sllistsize; i++)
+	{
+        switch (b_escape)
+        {
+        case 0:
+            int dodraw = 1;
+            switch (i)
+            {
+            case 0:
+                break;
+            
+            default:
+                dodraw = 0;
+                break;
+            }
+            if (dodraw) SelectListDraw(f, d, i);
+            break;
+        case 1:
+            SelectListDraw(f, d, i);
+            break;
+        
+        default:
+            break;
+        }
+	    
+    }
+}
+
+void SLListUpdate()
+{
+    for (int i = 0; i < sllistsize; i++)
+	{
+        switch (b_escape)
+                {
+                case 0:
+                    int doupdate = 1;
+                    switch (i)
+                    {
+                    case 0:
+                        break;
+                    
+                    default:
+                        doupdate = 0;
+                        break;
+                    }
+                    if (doupdate)
+                    {
+                        SelectListUpdate(i);
+                    }
+                    break;
+                case 1:
+                    SelectListUpdate(i);
+                    break;
+                
+                default:
+                    break;
+                }
+	    
+    }
+}
+
+Select_List_t* SelectListInitialize(int i)
+{
+    Select_List_t* s = (Select_List_t*)malloc(sizeof(Select_List_t));
+    switch (i)
+    {
+    case 0:
+        s->rectangle.x = 1;
+        s->rectangle.y = 1;
+        s->rectangle.w = 17;
+        s->rectangle.h = 6;
+        s->s = L"0 - пустота\n1 - паутина\n2 - огонь\n3 - вода\n4 - песок\n5 - земля\n6 - пар\n7 - лёд\n8 - камень\n9 - салат\n10 - мясо\n11 - магма\n12 - рожа\n13 - хвост\n14 - металл\n15 - воздух";
+        s->min = 0;
+        s->max = mat_amount - 1;
+        s->shift = 0;
+        break;
+    case 1:
+        s->rectangle.x = 67;
+        s->rectangle.y = 1;
+        s->rectangle.w = 11;
+        s->rectangle.h = 5;
+        s->s = L"0 - файл0\n1 - файл1\n2 - файл2\n3 - файл3\n4 - файл4";
+        s->min = 0;
+        s->max = 5 - 1;
+        s->shift = 0;
+        break;
+    
+    default:
+        break;
+    }
+    return s;
+}
+
+void SelectListTerminate(int i)
+{
+    free(sllist[i]);
+}
+
+void SelectListDraw(Font_t* f, Display_t* d, int i)
+{
+    Select_List_t *p_sl = sllist[i];
     int lines;
     int x, y;
     MouseToGrid(&x, &y);
@@ -1159,47 +1570,87 @@ void SelectListDraw(Font_t* f, Display_t* d, Select_List_t *p_sl)
             0
         ), lines - p_sl->rectangle.h
     );
-    FontStringShiftDraw(f, p_sl->rectangle.x + 5, p_sl->rectangle.y, p_sl->rectangle.w - 5, p_sl->rectangle.h, p_sl->s, inform_color, p_sl->shift); 
+    FontStringShiftDraw(f, p_sl->rectangle.x + 1, p_sl->rectangle.y, p_sl->rectangle.w - 1, p_sl->rectangle.h, p_sl->s, inform_color, p_sl->shift); 
     
-    for(int i = p_sl->shift; i < p_sl->rectangle.h + p_sl->shift; i++)
+    switch (i)
     {
-        HexelDrawOnUI(p_sl->rectangle.x + 2 * mod(i, 2), 
-            p_sl->rectangle.y + i - p_sl->shift, i, d->angle, b_ui);
+    case 0:
+        for(int i = p_sl->shift; i < p_sl->rectangle.h + p_sl->shift; i++)
+        {
+            HexelDrawOnUI(p_sl->rectangle.x + p_sl->rectangle.w - 2 * mod(i, 2) - 1, 
+                p_sl->rectangle.y + i - p_sl->shift, i, d->angle, b_ui);
+            FontNumberDraw(f, p_sl->rectangle.x + p_sl->rectangle.w - 5, 
+                p_sl->rectangle.y + i - p_sl->shift, 2, 1, inventory[i], important_color, 0, 1);
+        }
+        int lm_arrow, rm_arrow;
+        lm_arrow = cursor.lm - p_sl->shift;
+        rm_arrow = cursor.rm - p_sl->shift;
+        
+        if(lm_arrow == rm_arrow && lm_arrow >= 0 && lm_arrow < p_sl->rectangle.h)
+        {
+            FontStringDraw(f, p_sl->rectangle.x, p_sl->rectangle.y + lm_arrow, 
+                1, 1, L"А", inform_color);
+        }
+            
+        else
+        {
+            if(lm_arrow >= 0 && lm_arrow < p_sl->rectangle.h)
+                FontStringDraw(f, p_sl->rectangle.x, p_sl->rectangle.y + lm_arrow, 
+                    1, 1, L"Л", inform_color);
+            if(rm_arrow >= 0 && rm_arrow < p_sl->rectangle.h)
+                FontStringDraw(f, p_sl->rectangle.x, p_sl->rectangle.y + rm_arrow, 
+                    1, 1, L"П", inform_color);
+        }
+        break;
+    case 1:
+        int arrow;
+        arrow = savefile - p_sl->shift;
+        
+        if(arrow >= 0 && arrow < p_sl->rectangle.h)
+                FontStringDraw(f, p_sl->rectangle.x, p_sl->rectangle.y + arrow, 
+                    1, 1, L">", inform_color);
+        break;
+    
+    default:
+        break;
     }
     
-    int lm_arrow, rm_arrow;
-    lm_arrow = cursor.lm - p_sl->shift;
-    rm_arrow = cursor.rm - p_sl->shift;
     
-    if(lm_arrow == rm_arrow && lm_arrow >= 0 && lm_arrow < p_sl->rectangle.h)
-        FontStringDraw(f, p_sl->rectangle.x + 4, p_sl->rectangle.y + lm_arrow, 
-            1, 1, L"А", inform_color);
-    else
-    {
-        if(lm_arrow >= 0 && lm_arrow < p_sl->rectangle.h)
-            FontStringDraw(f, p_sl->rectangle.x + 4, p_sl->rectangle.y + lm_arrow, 
-                1, 1, L"Л", inform_color);
-        if(rm_arrow >= 0 && rm_arrow < p_sl->rectangle.h)
-            FontStringDraw(f, p_sl->rectangle.x + 4, p_sl->rectangle.y + rm_arrow, 
-                1, 1, L"П", inform_color);
-    }
+    
 }
 
-void SelectListUpdate()
+void SelectListUpdate(int i)
 {
-    Select_List_t *s = &select_list;
+    Select_List_t *s = sllist[i];
     int x, y, c;
     MouseToGrid(&x, &y);
+    
+    
     if(inpst.mouse.pressed && b_panning == 0 && b_drawing == 0)
     {
+        
         if( (isinrec(s->rectangle.x, s->rectangle.y, s->rectangle.w, s->rectangle.h, x, y) == 1
                 && b_button == -1 && b_slider == -1) )
         {
             c = hmax(y - s->rectangle.y + s->shift, 0);
-            if(inpst.mouse.lmc)
-                cursor.lm = c;
-            if(inpst.mouse.rmc)
-                cursor.rm = c;
+            switch (i)
+            {
+            case 0:
+                if(inpst.mouse.lmc)
+                    cursor.lm = c;
+                if(inpst.mouse.rmc)
+                    cursor.rm = c;
+                break;
+            case 1:
+                if(inpst.mouse.lmc || inpst.mouse.rmc)
+                    savefile = c;
+                break;
+            
+            default:
+                break;
+            }
+            
+                
             b_select_list = 1;
         }
     }
@@ -1207,4 +1658,33 @@ void SelectListUpdate()
     {
         b_select_list = 0;
     }
+}
+
+void DrawCursor(Font_t* f)
+{
+    SDL_GetMouseState(&inpst.mouse.x, &inpst.mouse.y);
+    int x, y;
+    x = inpst.mouse.x / pixelsize;
+    y = inpst.mouse.y / pixelsize;
+    
+    point(x, y, 255, 0, 255);
+    
+    int number = 0;
+    if(cooldown != 0)
+        number = hmin(abs(timer - time_mined) * 100 / cooldown, 99);
+    
+    FontNumberDraw(f, x / 8 + 1, y / 8 + 1, 2, 1, number, important_color, 0, 1); 
+}
+
+void HUDDraw(Font_t* f)
+{
+    FontNumberDraw(f, HUD.x, HUD.y, 3, 1, e1->health, important_color, 0, 1);
+    BarDraw(f, HUD.x + 3, HUD.y, HUD.w, 1, e1->health, no_color, 'v');
+    FontNumberDraw(f, HUD.x, HUD.y + 1, 3, 1, e1->oxygen, important_color, 0, 1);
+    BarDraw(f, HUD.x + 3, HUD.y + 1, HUD.w, 1, e1->oxygen, frame_color, 'o');
+}
+
+void BarDraw(Font_t* f, int x, int y, int w, int h, int perc, int color, wchar_t fill)
+{
+    FontCharFill(f, fill, x, y, perc * w / 100, h, color);
 }

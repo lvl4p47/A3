@@ -28,27 +28,29 @@ void InputInitialize()
     inpst.vx = 0;
     inpst.vy = 0;
     inpst.shift = 0;
+    inpst.escape = 0;
 }
 
 void InputRegister()
 {
     inpst.mouse.down = 0;
     inpst.mouse.up   = 0;
+    inpst.escape     = 0;
     while( SDL_PollEvent( &event ) )
     {   
         switch( event.type ){
         case SDL_KEYDOWN:
             switch( event.key.keysym.sym ){
-                case SDLK_LEFT:
+                case SDLK_a:
                     inpst.left = 1;
                     break;
-                case SDLK_RIGHT:
+                case SDLK_d:
                     inpst.right = 1;
                     break;
-                case SDLK_UP:
+                case SDLK_w:
                     inpst.up = 1;
                     break;
-                case SDLK_DOWN:
+                case SDLK_s:
                     inpst.down = 1;
                     break;
                 case SDLK_LSHIFT:
@@ -73,16 +75,16 @@ void InputRegister()
 
         case SDL_KEYUP:
             switch( event.key.keysym.sym ){
-                case SDLK_LEFT:
+                case SDLK_a:
                     inpst.left = 0;
                     break;
-                case SDLK_RIGHT:
+                case SDLK_d:
                     inpst.right = 0;
                     break;
-                case SDLK_UP:
+                case SDLK_w:
                     inpst.up = 0;
                     break;
-                case SDLK_DOWN:
+                case SDLK_s:
                     inpst.down = 0;
                     break;
                 case SDLK_LSHIFT:
@@ -99,6 +101,9 @@ void InputRegister()
                     break;
                 case SDLK_SPACE:
                     inpst.jump = 0;
+                    break;
+                case SDLK_ESCAPE:
+                    inpst.escape = 1;
                     break;
                 default:
                     break;
@@ -169,9 +174,6 @@ void InputUpdate()
     {
         SDL_GetMouseState(&inpst.mouse.x, &inpst.mouse.y);
     }
-    
-    
-    
     
 }
 

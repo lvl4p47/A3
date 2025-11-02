@@ -10,19 +10,17 @@ int scale_selection = 0;
 int selection_time = 0;
 int minimap_speed = 0;
 
-int lighting = 0;
-
 SDL_Window * m_window;
 SDL_Renderer * m_renderer;
 int rgb[8][3] = {
-                {0, 0, 0}, // Black
-                {255, 0, 0}, // Red
-                {0, 255, 0}, // Green
-                {0, 0, 255}, // Blue
-                {0, 255, 255}, // Cyan
-                {255, 0, 255}, // Magenta
-                {255, 255, 0},  // Yellow
-                {255, 255, 255}  // White
+                {0  ,    0  ,   0},     // Black
+                {255,    0  ,   0},     // Red
+                {0  ,    255,   0},     // Green
+                {0  ,    0  ,   255},   // Blue
+                {0  ,    255,   255},   // Cyan
+                {255,    0  ,   255},   // Magenta
+                {255,    255,   0},     // Yellow
+                {255,    255,   255}    // White
                 };
 int color_cycle[6] = {1, 6, 2, 4, 3, 5};
 SDL_Rect hexel;
@@ -51,6 +49,7 @@ void VideoInitialize()
     SDL_RenderSetIntegerScale(m_renderer, SDL_TRUE);
     SDL_RenderSetLogicalSize(m_renderer, 640, 360);
     SDL_RenderSetVSync(m_renderer, SDL_FALSE);
+    SDL_ShowCursor(SDL_DISABLE);
 
     hexel.x = 0; hexel.y = 0; hexel.w = 9; hexel.h = 9;
 
@@ -99,7 +98,7 @@ void HexelDraw(Display_t* d, int z, int n, Cell_t* c, int b_ui)
         srcx = d->angle * 9;
         // srcy = (mod(1 + c->dx + 1 + (c->dy + 1) * 3, 11)) * 9;
         // srcy = (mod(c->dns, 11)) * 9;
-        srcy = (mod(c->lit + 0, 49)) * 9;
+        srcy = (mod(c->dns + 0, 49)) * 9;
         // srcy = (mod(c->mat, 11)) * 9;
         // srcy = (mod(c->stress + 1, 49)) * 9;
         SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y, c->clr, 255);
@@ -108,14 +107,11 @@ void HexelDraw(Display_t* d, int z, int n, Cell_t* c, int b_ui)
     {
         srcx = d->angle * 9;
         srcy = c->mat * 9;
-        if(lighting)
-            SpriteDraw(s1, srcx, srcy, hexel.x, hexel.y, c->clr, c->lit * 255 / 8);
-        else
-            SpriteDraw(s1, srcx, srcy, hexel.x, hexel.y, c->clr, 255);
+        SpriteDraw(s1, srcx, srcy, hexel.x, hexel.y, c->clr, c->lit * 255 / maxlit);
     }
 }
 
-void DotsDraw(Display_t* d, int z, int n, int amount)
+void DotsDraw(Display_t* d, int z, int n, int amount, int alpha)
 {
     hexel.x = d->screen.x + d->screen.w / 2 + d->hshift.w * 1 +
     (z + d->hshift.x) * hcos(d->angle) + (n + d->hshift.y) * hcos(d->angle + 8);
@@ -131,7 +127,7 @@ void DotsDraw(Display_t* d, int z, int n, int amount)
     {
         srcy = (1 + mod(amount - 1, 49)) * 9;
     }
-    SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y, 7, 255); // color_cycle[mod( (amount - 1) / 10 + 3, 6)]
+    SpriteDraw(s2, srcx, srcy, hexel.x, hexel.y, 7, alpha * 255 / maxlit); // color_cycle[mod( (amount - 1) / 10 + 3, 6)]
 }
 
 void HexelDrawOnUI(int x, int y, int mat, int ang, int b_ui)
@@ -280,7 +276,7 @@ void DisplayScan(Kvad_t* ptr, Display_t* d, int b_ui, int scale_selection)
     }
 
 	int y0, y1, y2, y3;
-	int sclz, scln, quantity;
+	int sclz, scln, quantity, alpha;
 
 	for (int j = zmin; j <= zmax; j++) {
         if(corner_z[0] == corner_z[3]) y0 = hmin(corner_n[0], corner_n[3]);
@@ -332,7 +328,7 @@ void DisplayScan(Kvad_t* ptr, Display_t* d, int b_ui, int scale_selection)
                 HexelDraw(d, j, i, KvadGetHexel(ptr, sclz, scln), b_ui);
             else
             {
-                quantity = 0;
+                quantity = 0, alpha = 0;
                 sclz = (j) * d->scale;
                 scln = (i) * d->scale;
                 sclz += mod((scale_selection), d->scale);
@@ -344,10 +340,13 @@ void DisplayScan(Kvad_t* ptr, Display_t* d, int b_ui, int scale_selection)
                         if(KvadGetHexel(ptr, sclz + c, scln + v)->mat != 0)
                         {
                             quantity++;
+                            alpha += KvadGetHexel(ptr, sclz + c, scln + v)->lit;
                         }
                     }
                 }
-                DotsDraw(d, j, i, quantity);
+                if(quantity != 0)
+                    alpha /= quantity;
+                DotsDraw(d, j, i, quantity, alpha);
             }
 		}
 	}
@@ -395,7 +394,6 @@ void DisplayListTerminate()
     free(displaylist);
 }
 
-
 void EntityDraw(Kvad_t* ptr, Display_t* d, Entity_t* p_e)
 {
     int z, n;
@@ -421,6 +419,6 @@ void EntityDraw(Kvad_t* ptr, Display_t* d, Entity_t* p_e)
 
     
     
-    DotsDraw(d, z, n, mod(p_e->fuel / 2, 49) + 25);
+    DotsDraw(d, z, n, mod(p_e->fuel / 2, 49) + 25, 255);
     // HexelDraw(d, z, n, KvadGetHexel(ptr, z, n), 0);
 }

@@ -121,8 +121,26 @@ void InfoBoxUpdate();
 
 void DisplayListUpdate();
 
-void SelectListDraw(Font_t* f, Display_t* d, Select_List_t *p_sl);
+void SLListInitialize();
 
-void SelectListUpdate();
+void SLListTerminate();
+
+void SLListDraw(Font_t* f, Display_t* d);
+
+void SLListUpdate();
+
+Select_List_t* SelectListInitialize(int i);
+
+void SelectListTerminate(int i);
+
+void SelectListDraw(Font_t* f, Display_t* d, int i);
+
+void SelectListUpdate(int i);
+
+void DrawCursor(Font_t* f);
+
+void HUDDraw(Font_t* f);
+
+void BarDraw(Font_t* f, int x, int y, int w, int h, int perc, int color, wchar_t fill);
 
 #endif

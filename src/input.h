@@ -14,7 +14,7 @@ typedef struct
     int left, right, up, down;
     int vx, vy, delete, insertA, insertB;
     int jump;
-    int shift;
+    int shift, escape;
 } InputState_t;
 
 extern int b_quit;

@@ -46,7 +46,7 @@ void AudioFirePlay()
 {
     if(Mix_Playing(0) == 0)
     {
-        printf("\nresetting audio");
+        // printf("\nresetting audio");
         Mix_PlayChannel( 0, fire, 10 );
     }
 }
@@ -69,7 +69,7 @@ void AudioIcePlay()
 {
     if(Mix_Playing(1) == 0)
     {
-        printf("\nresetting audio");
+        // printf("\nresetting audio");
         Mix_PlayChannel( 1, ice, 10 );
     }
 }
@@ -91,7 +91,7 @@ void AudioSandPlay()
 {
     if(Mix_Playing(2) == 0)
     {
-        printf("\nresetting audio");
+        // printf("\nresetting audio");
         Mix_PlayChannel( 2, sand, 10 );
     }
 }
@@ -113,7 +113,7 @@ void AudioWaterPlay()
 {
     if(Mix_Playing(3) == 0)
     {
-        printf("\nresetting audio");
+        // printf("\nresetting audio");
         Mix_PlayChannel( 3, water, 10 );
     }
 }
@@ -135,7 +135,7 @@ void AudioMagmaPlay()
 {
     if(Mix_Playing(4) == 0)
     {
-        printf("\nresetting audio");
+        // printf("\nresetting audio");
         Mix_PlayChannel( 4, magma, 10 );
     }
 }
@@ -157,7 +157,7 @@ void AudioDirtPlay()
 {
     if(Mix_Playing(5) == 0)
     {
-        printf("\nresetting audio");
+        // printf("\nresetting audio");
         Mix_PlayChannel( 5, dirt, 10 );
     }
 }
@@ -179,7 +179,7 @@ void AudioRockPlay()
 {
     if(Mix_Playing(6) == 0)
     {
-        printf("\nresetting audio");
+        // printf("\nresetting audio");
         Mix_PlayChannel( 6, rock, 10 );
     }
 }
@@ -201,7 +201,7 @@ void AudioFabricPlay()
 {
     if(Mix_Playing(7) == 0)
     {
-        printf("\nresetting audio");
+        // printf("\nresetting audio");
         Mix_PlayChannel( 7, fabric, 10 );
     }
 }

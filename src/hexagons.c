@@ -3,7 +3,7 @@
 #include "time.h"
 #include "stdlib.h"
 
-const int mat_amount = 15;
+// const int mat_amount = 16;
 int ***p_rules;
 int *neighbours_required;
 
@@ -11,7 +11,7 @@ int Yrot[6] = {1, 0, -1, -1, 0, 1};
 
 int **st8_dns_clr;
 
-int t = 0, gravtime = 10, rt = 0, rulestime = 10;
+int t = 0, gravtime = scale, rt = 0, rulestime = scale;
 int timer = 0, maxtime = 2048000;
 
 int gravx, gravy;
@@ -30,11 +30,12 @@ Contour_t *maincontour;
 
 int contsize = 10;
 
-int meatlistsize = 10240, brainsize = HUGE, blueprintsize = MEDIUM, usagethreshold = 5, usagearmormax = 10, maxhappiness;
+int meatlistsize = 10240, brainsize = MEDIUM, blueprintsize = MEDIUM, usagethreshold = 5, usagearmormax = 10, maxhappiness;
 int isarmored = 0, happinessrecord, loopsize, active, bestage = 0;
-int doprint = 0, doprintdebug = 0, border = 0, physics = 1, corpses = 1, rules = 1, mutations = 1, startingpopulation = 0;
-int manual = 0, radial = 0, showchunks = 0, gravfaloff= 0, lightblocking = 0;
-int maxenergy = 3000, maxlife = 1000, nonmutationchance = MEDIUM, nonmutationchancebp = MEDIUM, foodenergy = 300, foodorganics = 100;
+int doprint = 0, doprintdebug = 0, border = 0, physics = 1, corpses = 0, rules = 1, mutations = 1, startingpopulation = 0;
+int manual = 0, radial = 1, showchunks = 0, gravfaloff= 0, lightblocking = 1;
+int maxenergy = 3000, maxlife = 1000, nonmutationchance = HUGE, nonmutationchancebp = MEDIUM, foodenergy = 1000, foodorganics = 1000;
+int maxlit = 16, lighting = 1, worminator = 1;
 
 FILE *file_ptr;
 
@@ -52,71 +53,92 @@ void HexagonsInitialize()
     st8_dns_clr = (int**)malloc(mat_amount * sizeof(int*));
     for (int i = 0; i < mat_amount; i++)
 	{
-		st8_dns_clr[i] = (int*)malloc(3 * sizeof(int));
+		st8_dns_clr[i] = (int*)malloc(4 * sizeof(int));
         st8_dns_clr[i][0] = 2;
         st8_dns_clr[i][1] = 6;
         st8_dns_clr[i][2] = 7;
+        st8_dns_clr[i][3] = 0;
     }
     {
         st8_dns_clr[0][0] = 0;
         st8_dns_clr[0][1] = 0;
-        st8_dns_clr[0][2] = 7;
+        st8_dns_clr[0][2] = 0;
+        st8_dns_clr[0][3] = 0;
         
         st8_dns_clr[1][0] = 5;
         st8_dns_clr[1][1] = 3;
         st8_dns_clr[1][2] = 7;
+        st8_dns_clr[1][3] = 1;
         
-        st8_dns_clr[2][0] = 1;
+        st8_dns_clr[2][0] = 6;
         st8_dns_clr[2][1] = 1;
         st8_dns_clr[2][2] = 1;
+        st8_dns_clr[2][3] = 0;
         
         st8_dns_clr[3][0] = 6;
-        st8_dns_clr[3][1] = 2;
+        st8_dns_clr[3][1] = 3;
         st8_dns_clr[3][2] = 3;
+        st8_dns_clr[3][3] = 1;
         
         st8_dns_clr[4][0] = 3;
         st8_dns_clr[4][1] = 4;
         st8_dns_clr[4][2] = 6;
+        st8_dns_clr[4][3] = 2;
         
         st8_dns_clr[5][0] = 4;
         st8_dns_clr[5][1] = 4;
         st8_dns_clr[5][2] = 1;
+        st8_dns_clr[5][3] = 3;
         
-        st8_dns_clr[6][0] = 1;
+        st8_dns_clr[6][0] = 6;
         st8_dns_clr[6][1] = 1;
         st8_dns_clr[6][2] = 7;
+        st8_dns_clr[6][3] = 1;
         
         st8_dns_clr[7][0] = 7;
-        st8_dns_clr[7][1] = 2;
+        st8_dns_clr[7][1] = 3;
         st8_dns_clr[7][2] = 4;
+        st8_dns_clr[7][3] = 1;
         
         st8_dns_clr[8][0] = 2;
         st8_dns_clr[8][1] = 4;
         st8_dns_clr[8][2] = 7;
+        st8_dns_clr[8][3] = 4;
         
         st8_dns_clr[9][0] = 8;
         st8_dns_clr[9][1] = 4;
         st8_dns_clr[9][2] = 2;
+        st8_dns_clr[9][3] = 2;
         
         st8_dns_clr[10][0] = 9;
         st8_dns_clr[10][1] = 4;
         st8_dns_clr[10][2] = 5;
+        st8_dns_clr[10][3] = 2;
         
         st8_dns_clr[11][0] = 10;
         st8_dns_clr[11][1] = 4;
         st8_dns_clr[11][2] = 1;
+        st8_dns_clr[11][3] = 3;
         
         st8_dns_clr[12][0] = 9;
         st8_dns_clr[12][1] = 4;
         st8_dns_clr[12][2] = 5;
+        st8_dns_clr[12][3] = 2;
         
         st8_dns_clr[13][0] = 9;
         st8_dns_clr[13][1] = 4;
         st8_dns_clr[13][2] = 5;
+        st8_dns_clr[13][3] = 2;
         
         st8_dns_clr[14][0] = 11;
         st8_dns_clr[14][1] = 4;
         st8_dns_clr[14][2] = 4;
+        st8_dns_clr[14][3] = maxlit;
+        
+        st8_dns_clr[15][0] = 6;
+        st8_dns_clr[15][1] = 2;
+        st8_dns_clr[15][2] = 7;
+        st8_dns_clr[15][3] = 0;
     }
     
     t = 0;
@@ -125,7 +147,6 @@ void HexagonsInitialize()
     maincontour = ContourListInitialize();
     ChunkKvadZero();
     
-    firevolume = 0;
     SetGravity(0, 1);
 }
 
@@ -173,40 +194,45 @@ void RulesInitialize()
     // RulesChange (0, 9, 0, 1, 9, -2, -2, -2, -2, -2);
     RulesChange (0, 9, 0, 0, 9, 5, 3, -1, -1, -1);
     // RulesAdd (0, 9, 0, 9, 9, 9, 9, -1, -1);
-    RulesChange (1, 2, 0, 0, 2, 0, -1, -1, -1, -1);
+    RulesChange (1, 2, 0, 0, 2, 15, -1, -1, -1, -1);
     RulesAdd    (1, 2, 0, 11, -1, -1, -1, -1, -1);
-    RulesChange (2, 0, 0, 0, -4, -1, -1, -1, -1, -1);
+    RulesChange (2, 0, 0, 0, -17, -1, -1, -1, -1, -1);
     RulesAdd    (2, 0, 0, -2, -1, -1, -1, -1, -1);
-    RulesChange (3, 7, 0, 1, 7, 0, 0, 0, 0, -1);
+    RulesChange (3, 7, 0, 1, 7, 7, 7, 7, 7, 7);
+    RulesAdd    (3, 7, 0, 0, 0, 0, 0, 0, 0);
     RulesChange (3, 6, 0, 0, 2, -1, -1, -1, -1, -1);
-    RulesAdd    (3, 6, 0, 11, 11, -1, -1, -1, -1);
+    RulesAdd    (3, 6, 0, 11, -1, -1, -1, -1, -1);
     RulesChange (4, 11, 0, 0, 11, -1, -1, -1, -1, -1);
     RulesChange (4, 8, 0, 0, 8, 8, 8, 8, -6, -1);
-    RulesChange (6, 3, 0, 0, -2, -2, -2, -13, -5, -4);
+    RulesChange (6, 3, 0, 0, -17, -17, -17, -13, -5, -4);
     // RulesAdd    (6, 3, 0, 0, 0, 0, 0, 0, 0);
-    RulesAdd    (6, 3, 0, 7, 7, 7, -1, -1, -1);
+    RulesAdd    (6, 3, 0, 7, -1, -1, -1, -1, -1);
     RulesChange (7, 3, 0, 0, 2, -1, -1, -1, -1, -1);
     RulesAdd    (7, 3, 0, 3, 3, 3, 3, 3, -1);
     RulesAdd    (7, 3, 0, 11, -1, -1, -1, -1, -1);
+    RulesAdd    (7, 3, 0, 6, -1, -1, -1, -1, -1);
     RulesChange (8, 11, 0, -1, 11, 11, 11, 11, -1, -1);
     RulesAdd    (8, 11, 0, 11, 11, 11, -10, -10, -10);
-    RulesAdd    (8, 11, 1, 0, 0, 0, 8, 11, 8);
+    RulesAdd    (8, 11, 1, -1, -1, -1, 8, 11, 8);
     RulesChange (8, 4, 0, 0, 3, 3, 3, -10, -10, -10);
     RulesAdd    (8, 4, 0, 3, 4, 4, -1, -1, -1);
-    RulesChange (9, 2, 0, 0, 2, 0, -1, -1, -1, -1);
+    RulesChange (9, 2, 0, 0, 2, 15, -1, -1, -1, -1);
     RulesAdd    (9, 2, 0, 11, -1, -1, -1, -1, -1);
-    RulesChange (10, 2, 0, 0, 2, 0, -1, -1, -1, -1);
+    RulesChange (10, 2, 0, 0, 2, 15, -1, -1, -1, -1);
     RulesAdd    (10, 2, 0, 11, -1, -1, -1, -1, -1);
+    RulesChange (10, 5, 0, 0, 4, -1, -1, -1, -1, -1);
     // RulesChange (10, 5, 0, 0, 4, 4, -1, -1, -1, -1);
-    RulesChange (11, 8, 0, 0, 3, 3, 3, -1, -1, -1);
+    RulesChange (11, 8, 0, 0, 3, 3, -1, -1, -1, -1);
     RulesAdd    (11, 8, 0, 7, 7, 7, -1, -1, -1);
     RulesAdd    (11, 8, 0, -13, -1, -1, -1, -1, -1);
-    RulesAdd    (11, 8, 1, 11, 11, 11, 8, -1, -1);
-    RulesChange (12, 2, 0, 0, 2, 0, -1, -1, -1, -1);
+    RulesAdd    (11, 8, 0, 11, 11, 11, 8, 8, -1);
+    RulesChange (12, 2, 0, 0, 2, 15, -1, -1, -1, -1);
     RulesAdd    (12, 2, 0, 11, -1, -1, -1, -1, -1);
+    RulesChange (12, 5, 0, 0, 4, -1, -1, -1, -1, -1);
     // RulesChange (12, 5, 0, 0, 4, 4, -1, -1, -1, -1);
-    RulesChange (13, 2, 0, 0, 2, 0, -1, -1, -1, -1);
+    RulesChange (13, 2, 0, 0, 2, 15, -1, -1, -1, -1);
     RulesAdd    (13, 2, 0, 11, -1, -1, -1, -1, -1);
+    RulesChange (13, 5, 0, 0, 4, -1, -1, -1, -1, -1);
     // RulesChange (13, 5, 0, 0, 4, 4, -1, -1, -1, -1);
     // RulesChange (14, 2, 0, 0, 2, 0, -1, -1, -1, -1);
     // RulesAdd    (14, 2, 0, 11, -1, -1, -1, -1, -1);
@@ -293,6 +319,7 @@ Kvad_t* KvadInitialize(int width, int height)
     
     
     KvadZero(ptr);
+    KvadGenerate(ptr, 0);
     return ptr;
 }
 
@@ -322,6 +349,7 @@ void KvadZero(Kvad_t* ptr)
             ptr->arr[i][j].dy = 0;
             ptr->arr[i][j].st8 = 0;
             ptr->arr[i][j].dns = 0;
+            ptr->arr[i][j].opaque = 0;
             ptr->arr[i][j].stress = 0;
             ptr->arr[i][j].clr = 7;
             ptr->arr[i][j].v1t = 0;
@@ -353,9 +381,10 @@ void KvadSetMat(Kvad_t* ptr, int z, int n, int value, int new)
     cptr->st8 = st8_dns_clr[value][0];
     cptr->dns = st8_dns_clr[value][1];
     cptr->clr = st8_dns_clr[value][2];
+    cptr->opaque = st8_dns_clr[value][3];
     
-    
-    // cptr->lit = 0;
+    if(lighting == 0)
+        cptr->lit = maxlit;
     if(new)
     {
         
@@ -468,15 +497,18 @@ void KvadSetBlob(Kvad_t* ptr, int z, int n, int value, int rad)
     switch (value)
     {
     case 12:
+        
         srand(time(NULL) + z * n * rad);
         
         for(int i = 0; i < meatlistsize; i++)
         {
             if(meatlist[i] == NULL && KvadGetHexel(ptr, z, n)->mat == 0)
             {
+                
                 genomelist[i] = BrainInitialize(mod(rad, meatlistsize));
                 meatlist[i] = MeatInitialize(ptr, z, n, i);
                 genomelist[i]->lastx = z;
+                genomelist[i]->lasty = n;
                 i = meatlistsize;
             }
         }
@@ -600,57 +632,60 @@ void SolidUpdate(Kvad_t* ptr)
                     {
                         KvadGetHexel(ptr, j, i)->tmp = KvadGetHexel(ptr, j, i)->mat;
                         cen = KvadGetHexel(ptr, j, i)->mat;
-                        for(int new = 0; new < mat_amount; new++)
+                        if(KvadGetHexel(ptr, j, i)->ded == 1)
                         {
-                            for(int cond_num = 0; cond_num < RULES->frommat[cen]->tomat[new]->num; cond_num++)
+                            for(int new = 0; new < mat_amount; new++)
                             {
-                                if(RULES->frommat[cen]->tomat[new]->req[cond_num]->flag != -1)
+                                for(int cond_num = 0; cond_num < RULES->frommat[cen]->tomat[new]->num; cond_num++)
                                 {
-                                    flag = RULES->frommat[cen]->tomat[new]->req[cond_num]->flag;
-                                    for(int i = 0; i < mat_amount; i++)
+                                    if(RULES->frommat[cen]->tomat[new]->req[cond_num]->flag != -1)
                                     {
-                                        neighbours_required[i] = 0;
-                                    }
-                                    int cur_neighbour_mat;
-                                    for(int n = 0; n < 6; n++)
-                                    {
-                                        if(RULES->frommat[cen]->tomat[new]->req[cond_num]->neighbors[n] != -1)
+                                        flag = RULES->frommat[cen]->tomat[new]->req[cond_num]->flag;
+                                        for(int i = 0; i < mat_amount; i++)
                                         {
-                                            cur_neighbour_mat = RULES->frommat[cen]->tomat[new]->req[cond_num]->neighbors[n];
-                                            if(cur_neighbour_mat >= 0) neighbours_required[cur_neighbour_mat]++; 
-                                            if(cur_neighbour_mat <= -2) neighbours_required[-(cur_neighbour_mat + 2)]--; 
+                                            neighbours_required[i] = 0;
                                         }
-                                    }
-                                    
-                                    int neighbour_amount;
-                                    for(int neighbour_mat = 0; neighbour_mat < mat_amount; neighbour_mat++)
-                                    {
-                                        neighbour_amount = NeighbourCount(ptr, j, i, neighbour_mat);
-                                        if( (flag == 0 && 
-                                            (
-                                                (neighbour_amount >= neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] >=  0 )||
-                                                (neighbour_amount < -neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] <= -1 )
-                                            )) ||
-                                            (flag == 1 &&
-                                            (
-                                                (neighbour_amount == neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] >=  1 )||
-                                                (neighbours_required[neighbour_mat] == 0) ||
-                                                (neighbour_amount != -neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] <= -1 )
-                                            ))
-                                            )
+                                        int cur_neighbour_mat;
+                                        for(int n = 0; n < 6; n++)
                                         {
-                                            b_change = 1;
+                                            if(RULES->frommat[cen]->tomat[new]->req[cond_num]->neighbors[n] != -1)
+                                            {
+                                                cur_neighbour_mat = RULES->frommat[cen]->tomat[new]->req[cond_num]->neighbors[n];
+                                                if(cur_neighbour_mat >= 0) neighbours_required[cur_neighbour_mat]++; 
+                                                if(cur_neighbour_mat <= -2) neighbours_required[-(cur_neighbour_mat + 2)]--; 
+                                            }
                                         }
-                                        else
+                                        
+                                        int neighbour_amount;
+                                        for(int neighbour_mat = 0; neighbour_mat < mat_amount; neighbour_mat++)
                                         {
+                                            neighbour_amount = NeighbourCount(ptr, j, i, neighbour_mat);
+                                            if( (flag == 0 && 
+                                                (
+                                                    (neighbour_amount >= neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] >=  0 )||
+                                                    (neighbour_amount < -neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] <= -1 )
+                                                )) ||
+                                                (flag == 1 &&
+                                                (
+                                                    (neighbour_amount == neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] >=  1 )||
+                                                    (neighbours_required[neighbour_mat] == 0) ||
+                                                    (neighbour_amount != -neighbours_required[neighbour_mat] && neighbours_required[neighbour_mat] <= -1 )
+                                                ))
+                                                )
+                                            {
+                                                b_change = 1;
+                                            }
+                                            else
+                                            {
+                                                b_change = 0;
+                                                neighbour_mat = mat_amount;
+                                            }
+                                        }
+                                        if(b_change)
+                                        {
+                                            KvadGetHexel(ptr, j, i)->tmp = new;
                                             b_change = 0;
-                                            neighbour_mat = mat_amount;
                                         }
-                                    }
-                                    if(b_change)
-                                    {
-                                        KvadGetHexel(ptr, j, i)->tmp = new;
-                                        b_change = 0;
                                     }
                                 }
                             }
@@ -1011,10 +1046,6 @@ void PhysicsUpdate(Kvad_t* ptr)
                             {
                                 switch (KvadGetHexel(ptr, j, i)->st8)
                                 {
-                                case 1:
-                                    gx -= GetGravX(ptr, j, i);
-                                    gy -= GetGravY(ptr, j, i);
-                                    break;
                                 case 9:
                                     if(KvadGetHexel(ptr, j, i)->ded)
                                     {
@@ -1201,10 +1232,6 @@ void PhysicsUpdate(Kvad_t* ptr)
                             {
                                 switch (KvadGetHexel(ptr, j, i)->st8)
                                 {
-                                case 1:
-                                    gx -= GetGravX(ptr, j, i);
-                                    gy -= GetGravY(ptr, j, i);
-                                    break;
                                 case 9:
                                     if(KvadGetHexel(ptr, j, i)->ded)
                                     {
@@ -1427,6 +1454,11 @@ void PhysicsUpdate(Kvad_t* ptr)
                                     break;
                                 }
                             }
+                            else if((dz != 0 || dn != 0)
+                            && KvadGetHexel(ptr, j, i)->dns > 0)
+                            {
+                                KvadGetHexel(ptr, j, i)->stress++;
+                            }
                         }
                     }
                 }
@@ -1443,6 +1475,60 @@ void PhysicsUpdate(Kvad_t* ptr)
     int isgrav = 0;
     int islit = 0;
 
+    int dcj, dci;
+    
+    
+    for(int ci = 0; ci < chunkkvadsize; ci++)
+    {
+        for(int cj = 0; cj < chunkkvadsize; cj++)
+        {
+            if(chunkkvad[cj][ci] >= 2)
+            {
+                something = 0;
+                isgrav = 1;
+                islit = 0;
+                for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
+                {
+                    for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
+                    {
+                        if(KvadGetHexel(ptr, j, i)->tmp != KvadGetHexel(ptr, j, i)->mat)
+                        {
+                            if(chunkkvad[cj][ci] == 2)
+                            {
+                                KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp, 0);
+                                ChunkActivate(j, i);
+                            }
+                            something = 1;
+                        }
+                        if(GetGravX(ptr, j, i) == 0 && GetGravY(ptr, j, i) == 0)
+                        {
+                            isgrav = 0;
+                            
+                        }
+                        if(KvadGetHexel(ptr, j, i)->lit > 0)
+                        {
+                            islit = 1;
+                        }
+                        
+        
+                        KvadGetHexel(ptr, j, i)->val2 = KvadGetHexel(ptr, j, i)->v2t;
+                        KvadGetHexel(ptr, j, i)->v2t = 0;
+                    }
+                }
+                if(something == 0 && isgrav == 1 && chunkkvad[cj][ci] == 2) chunkkvad[cj][ci] = 3;
+                else if(something == 0 && isgrav == 1 && islit == 0 && chunkkvad[cj][ci] == 3) chunkkvad[cj][ci] = 0;
+            }
+        }
+    }
+    
+
+}
+
+void LightingUpdate(Kvad_t* ptr)
+{
+    int something = 0;
+    
+    int islit;
     int dcj, dci;
     int darken = 0;
     
@@ -1505,7 +1591,6 @@ void PhysicsUpdate(Kvad_t* ptr)
             if(chunkkvad[cj][ci] >= 2)
             {
                 something = 0;
-                isgrav = 1;
                 islit = 0;
                 for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
                 {
@@ -1514,11 +1599,11 @@ void PhysicsUpdate(Kvad_t* ptr)
                         switch (KvadGetHexel(ptr, j, i)->mat)
                         {
                         case 2:
-                            LightPropagate(ptr, j, i, 8);
+                            LightPropagate(ptr, j, i, maxlit);
                             islit = 1;
                             break;
                         case 11:
-                            LightPropagate(ptr, j, i, 8);
+                            LightPropagate(ptr, j, i, maxlit);
                             islit = 1;
                             break;
                         
@@ -1532,51 +1617,6 @@ void PhysicsUpdate(Kvad_t* ptr)
             }
         }
     }
-    
-    
-    for(int ci = 0; ci < chunkkvadsize; ci++)
-    {
-        for(int cj = 0; cj < chunkkvadsize; cj++)
-        {
-            if(chunkkvad[cj][ci] >= 2)
-            {
-                something = 0;
-                isgrav = 1;
-                islit = 0;
-                for(int i = ci * chunksize; i < (ci + 1) * chunksize; i++)
-                {
-                    for(int j = cj * chunksize; j < (cj + 1) * chunksize; j++)
-                    {
-                        if(KvadGetHexel(ptr, j, i)->tmp != KvadGetHexel(ptr, j, i)->mat)
-                        {
-                            if(chunkkvad[cj][ci] == 2)
-                            {
-                                KvadSetMat(ptr, j, i, KvadGetHexel(ptr, j, i)->tmp, 0);
-                                ChunkActivate(j, i);
-                            }
-                            something = 1;
-                        }
-                        if(GetGravX(ptr, j, i) == 0 && GetGravY(ptr, j, i) == 0)
-                        {
-                            isgrav = 0;
-                            
-                        }
-                        if(KvadGetHexel(ptr, j, i)->lit > 0)
-                        {
-                            islit = 1;
-                        }
-        
-                        KvadGetHexel(ptr, j, i)->val2 = KvadGetHexel(ptr, j, i)->v2t;
-                        KvadGetHexel(ptr, j, i)->v2t = 0;
-                    }
-                }
-                if(something == 0 && isgrav == 1 && chunkkvad[cj][ci] == 2) chunkkvad[cj][ci] = 3;
-                else if(something == 0 && isgrav == 1 && islit == 0 && chunkkvad[cj][ci] == 3) chunkkvad[cj][ci] = 0;
-            }
-        }
-    }
-    
-
 }
 
 void LightPropagate(Kvad_t* ptr, int z, int n, int lit)
@@ -1593,14 +1633,21 @@ void LightPropagate(Kvad_t* ptr, int z, int n, int lit)
             dz = Yrot[i];
             dn = Yrot[mod(i - 2, 6)];
             
+            
             if(KvadGetHexel(ptr, z + dz, n + dn)->lit < lit - 1)
             {
-                if((lightblocking == 0
-                || KvadGetHexel(ptr, z + dz, n + dn)->mat == 0))
+                if(lightblocking == 0)
+                {
                     LightPropagate(ptr, z + dz, n + dn, lit - 1);
+                }
                 else
+                {
+                    LightPropagate(ptr, z + dz, n + dn, lit - 1 -
+                    KvadGetHexel(ptr, z + dz, n + dn)->opaque);
+                    
                     KvadGetHexel(ptr, z + dz, n + dn)->lit = hmax(
                     KvadGetHexel(ptr, z + dz, n + dn)->lit, lit - 1);
+                }
             }
         }
     }
@@ -3017,20 +3064,23 @@ void KvadUpdate(Kvad_t* ptr)
     }
     rt++;
     
-    
-    MeatListUpdate(ptr);
-    
     if(t == gravtime)
     {
+        ChunkKvadUpdate();
+        if(lighting == 1)
+            LightingUpdate(ptr);
         if(physics) 
         {
             
             
-            ChunkKvadUpdate();
+            
             if(showchunks)
+            {
                 ChunkKvadPrint();
-            // LightSourceKvadPrint();
+                LightSourceKvadPrint();
+            }
             PhysicsUpdate(ptr);
+            
             
             AudioUpdate(ptr, 0);
             
@@ -3040,7 +3090,10 @@ void KvadUpdate(Kvad_t* ptr)
     }
     t++;
     
+    MeatListUpdate(ptr);
     EntityCollision(ptr, e1);
+    
+    
     
     if(timer == maxtime)
     {
@@ -3078,8 +3131,11 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
 
     RelToAbs(gx, gy, 1, &rfx, &rfy);
     RelToAbs(gx, gy, -1, &lfx, &lfy);
+    
+    LightPropagate(ptr, p_e->z, p_e->n, maxlit);
+    LightSourceActivate(p_e->z, p_e->n);
 
-    if(meatlist[0] != NULL)
+    if(meatlist[0] != NULL && 0)
     {
         p_e->z = meatlist[0]->x;
         p_e->n = meatlist[0]->y;
@@ -3123,12 +3179,12 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
         
         if(!(GetGravX(ptr, p_e->z, p_e->n) == 0 && GetGravY(ptr, p_e->z, p_e->n) == 0)
          && dz == 0 && dn == 0
-         && KvadGetHexel(ptr, oldz, oldn)->dns < 2
+         && KvadGetHexel(ptr, oldz, oldn)->dns < 3
          && (t == gravtime && physics || 1))
         {
             dz = gx, dn = gy;
-            if(inpst.vy >= 0)
-                p_e->fuel = hmin(p_e->fuel + 1, max_fuel);
+            // if(inpst.vy >= 0)
+                // p_e->fuel = hmin(p_e->fuel + 1, max_fuel);
         }
             
         p_e->subz += dz, p_e->subn += dn;
@@ -3170,17 +3226,36 @@ void EntityCollision(Kvad_t* ptr, Entity_t* p_e)
             p_e->fuel = hmin(p_e->fuel + 3, max_fuel);//+1
         }
         
-        // if(KvadGetHexel(ptr, oldz, oldn)->dns > 4)
-        //     p_e->fuel = max_fuel;
+        switch (KvadGetHexel(ptr, newz, newn)->mat)
+        {
+        case 11:
+            p_e->health = hmax(p_e->health - 1, 0);
+            break;
         
-        LightPropagate(ptr, oldz, oldn, 8);
-        lightsourcekvad[mod(hdiv(oldz, chunksize), chunkkvadsize)][mod(hdiv(oldn, chunksize), chunkkvadsize)] = 1;
-        ChunkActivate(oldz, oldn);
-                
+        default:
+            break;
+        }
+        switch (KvadGetHexel(ptr, oldz, oldn)->mat)
+        {
+        case 15:
+            p_e->oxygen = hmin(p_e->oxygen + 100, 100);
+            break;
+        
+        default:
+            p_e->oxygen = hmax(p_e->oxygen - 1, 0);
+            break;
+        }
+        
+        if(p_e->oxygen == 0)
+            p_e->health = hmax(p_e->health - 1, 0);
+        
+        if(p_e->health == 0)
+            EntitySpawn(ptr, p_e);
+        
         int blowpower = 3;
         
-        if(inpst.delete == 1)
-            KvadSetBlob(ptr, newz, newn, 0, 0);
+        // if(inpst.delete == 1)
+        //     KvadSetBlob(ptr, newz, newn, 0, 0);
         if(inpst.insertB)
         {
             KvadGetHexel(ptr, newz, newn)->flow[0] = KvadGetHexel(ptr, newz, newn)->flow[0] + 1;
@@ -3238,7 +3313,9 @@ int NeighbourCount(Kvad_t* ptr, int z, int n, int val)
         {
             if( i - j != 0)
                 
-                N += (KvadGetHexel(ptr, z + j, n + i)->mat == val) ? 1 : 0;
+                if(KvadGetHexel(ptr, z + j, n + i)->mat == val &&
+                    KvadGetHexel(ptr, z + j, n + i)->ded == 1)
+                    N++;
         }
     }
     return N;
@@ -3866,6 +3943,7 @@ void ForceRock(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     int right_sum = 0, left_sum = 0;
     
     int state = KvadGetHexel(ptr, z, n)->st8;
+    int density = KvadGetHexel(ptr, z, n)->dns;
 
     RelToAbs(fx, fy, 2, &rbx, &rby);
     RelToAbs(fx, fy, -2, &lbx, &lby);
@@ -3875,13 +3953,13 @@ void ForceRock(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
 
     right_sum =
     (
-        (KvadGetHexel(ptr, z + rfx, n + rfy)->st8 == state) + 
-        (KvadGetHexel(ptr, z + rbx, n + rby)->st8 == state)
+        (KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= density) + 
+        (KvadGetHexel(ptr, z + rbx, n + rby)->dns >= density)
     );
     left_sum =
     (
-        (KvadGetHexel(ptr, z + lfx, n + lfy)->st8 == state) + 
-        (KvadGetHexel(ptr, z + lbx, n + lby)->st8 == state)
+        (KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= density) + 
+        (KvadGetHexel(ptr, z + lbx, n + lby)->dns >= density)
     );
     b_forward =
     (
@@ -3961,46 +4039,21 @@ void ForceRigid(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     RelToAbs(fx, fy, 1, &rfx, &rfy);
     RelToAbs(fx, fy, -1, &lfx, &lfy);
     
+    
     b_forward =
     (
         (
             
             (
             (
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8   != state ||
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8   != state
-            ) &&
-            (
-            (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8     != state &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8   == state &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8   != state &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8   != state
-            ) ||
-            (
             KvadGetHexel(ptr, z + fx, n + fy)->st8     != state &&
             KvadGetHexel(ptr, z + rfx, n + rfy)->st8   != state &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8   == state &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8   != state
+            KvadGetHexel(ptr, z + lfx, n + lfy)->st8   != state
             )
-             ) ||
-            (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8     != state &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8   == state &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8   == state
-            ) ||
-            (
-            KvadGetHexel(ptr, z + fx, n + fy)->st8     != state &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->st8   != state &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->st8   != state &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->st8   != state &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->st8   != state
-            ) 
             )
         )
         
     );
-    
     
     if(b_forward     )  *dz += fx,  *dn += fy;
 }
@@ -4010,6 +4063,8 @@ void ForceViscous(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     *dz = 0, *dn = 0;
 
     int rfx, rfy, lfx, lfy, rbx, rby, lbx, lby;
+    
+    int state = KvadGetHexel(ptr, z, n)->st8;
     
     int b_forward = 0, b_back = 0,
     b_rightfront = 0, b_leftfront = 0,
@@ -4024,24 +4079,24 @@ void ForceViscous(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     b_back =
     (
         (
-            KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z - fx, n - fy)->st8 != state &&
+            KvadGetHexel(ptr, z + fx, n + fy)->st8 == state &&
             (
                 (
                     (
-                        (KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns) ==
-                        (KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns)
+                        (KvadGetHexel(ptr, z + rfx, n + rfy)->st8 == state) ==
+                        (KvadGetHexel(ptr, z + lfx, n + lfy)->st8 == state)
                     ) &&
                     (
-                        KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
-                        KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
+                        KvadGetHexel(ptr, z + rbx, n + rby)->st8 != state &&
+                        KvadGetHexel(ptr, z + lbx, n + lby)->st8 != state
                     )
                 ) ||
                 (
-                    KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-                    KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-                    KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-                    KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns
+                    KvadGetHexel(ptr, z + rfx, n + rfy)->st8 == state &&
+                    KvadGetHexel(ptr, z + lfx, n + lfy)->st8 == state &&
+                    KvadGetHexel(ptr, z + rbx, n + rby)->st8 == state &&
+                    KvadGetHexel(ptr, z + lbx, n + lby)->st8 == state
                 )
             )
         )
@@ -4049,40 +4104,40 @@ void ForceViscous(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     b_forward =
     (
         (
-            KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + fx, n + fy)->st8 != state &&
             (
                 (
                     (
-                        KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns ||
-                        KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns
+                        KvadGetHexel(ptr, z + rfx, n + rfy)->st8 != state ||
+                        KvadGetHexel(ptr, z + lfx, n + lfy)->st8 != state
                     ) &&
                     (
-                        KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
-                        KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
+                        KvadGetHexel(ptr, z + rbx, n + rby)->st8 != state &&
+                        KvadGetHexel(ptr, z + lbx, n + lby)->st8 != state
                     )
                     
                 ) ||
                 (
-                    KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-                    KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns
+                    KvadGetHexel(ptr, z + rfx, n + rfy)->st8 != state &&
+                    KvadGetHexel(ptr, z + lfx, n + lfy)->st8 != state
                 )
             )
         ) ||
         (
-            KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + fx, n + fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z - fx, n - fy)->st8 != state &&
+            KvadGetHexel(ptr, z + fx, n + fy)->st8 != state &&
             (
                 (
-                    KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-                    KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-                    KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-                    KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
+                    KvadGetHexel(ptr, z + rfx, n + rfy)->st8 == state &&
+                    KvadGetHexel(ptr, z + lfx, n + lfy)->st8 != state &&
+                    KvadGetHexel(ptr, z + rbx, n + rby)->st8 == state &&
+                    KvadGetHexel(ptr, z + lbx, n + lby)->st8 != state
                 ) ||
                 (
-                    KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-                    KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-                    KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
-                    KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns
+                    KvadGetHexel(ptr, z + rfx, n + rfy)->st8 != state &&
+                    KvadGetHexel(ptr, z + lfx, n + lfy)->st8 == state &&
+                    KvadGetHexel(ptr, z + rbx, n + rby)->st8 != state &&
+                    KvadGetHexel(ptr, z + lbx, n + lby)->st8 == state
                 )
             )
         )
@@ -4090,43 +4145,43 @@ void ForceViscous(Kvad_t* ptr, int z, int n, int fx, int fy, int* dz, int* dn)
     b_rightfront = 
     (
         (
-            KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns && 0
+            KvadGetHexel(ptr, z - fx, n - fy)->st8 != state &&
+            KvadGetHexel(ptr, z + fx, n + fy)->st8 == state &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->st8 != state &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->st8 == state &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->st8 != state &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->st8 != state && 0
         )
     );
     b_leftfront =
     (
         (
-            KvadGetHexel(ptr, z - fx, n - fy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lfx, n + lfy)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns && 0
+            KvadGetHexel(ptr, z - fx, n - fy)->st8 != state &&
+            KvadGetHexel(ptr, z + fx, n + fy)->st8 == state &&
+            KvadGetHexel(ptr, z + rfx, n + rfy)->st8 == state &&
+            KvadGetHexel(ptr, z + lfx, n + lfy)->st8 != state &&
+            KvadGetHexel(ptr, z + rbx, n + rby)->st8 != state &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->st8 != state && 0
         )
     );
     b_rightback =
     (
         (
-            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + fx, n + fy)->st8 == state &&
             // KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
             // KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->dns < KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->dns >= KvadGetHexel(ptr, z, n)->dns
+            KvadGetHexel(ptr, z + rbx, n + rby)->st8 != state &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->st8 == state
         )
     );
     b_leftback =
     (
         (
-            KvadGetHexel(ptr, z + fx, n + fy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
+            KvadGetHexel(ptr, z + fx, n + fy)->st8 == state &&
             // KvadGetHexel(ptr, z + rfx, n + rfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
             // KvadGetHexel(ptr, z + lfx, n + lfy)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + rbx, n + rby)->dns >= KvadGetHexel(ptr, z, n)->dns &&
-            KvadGetHexel(ptr, z + lbx, n + lby)->dns < KvadGetHexel(ptr, z, n)->dns
+            KvadGetHexel(ptr, z + rbx, n + rby)->st8 == state &&
+            KvadGetHexel(ptr, z + lbx, n + lby)->st8 != state
         )
     );
     
@@ -6290,17 +6345,18 @@ void ContourMoveSolid(Kvad_t* ptr, int j, int i)
 
 void Border(Kvad_t* ptr)
 {
+    int mat = 8;
     for(int i = 0; i < ptr->height; i++)
     {
-        // KvadSetMat(ptr, 0, i, 0, 1);
-        // KvadSetMat(ptr, ptr->width - 1, i, 0, 1);
+        // KvadSetMat(ptr, 0, i, mat, 1);
+        // KvadSetMat(ptr, ptr->width - 1, i, mat, 1);
         KvadGetHexel(ptr, 0, i)->fld = - 100;
         KvadGetHexel(ptr, ptr->width - 1, i)->fld = - 100;
     }
     for(int j = 0; j < ptr->width; j++)
     {
-        // KvadSetMat(ptr, j, 0, 0, 1);
-        // KvadSetMat(ptr, j, ptr->height - 1, 0, 1);
+        // KvadSetMat(ptr, j, 0, mat, 1);
+        // KvadSetMat(ptr, j, ptr->height - 1, mat, 1);
         KvadGetHexel(ptr, j, 0)->fld = - 100;
         KvadGetHexel(ptr, j, ptr->height - 1)->fld = - 100;
     }
@@ -6465,23 +6521,13 @@ void MeatMoveHead(Kvad_t* ptr, int n, Node_t *head, int dx, int dy, int manual)
     }
     
     if((delete
-     && (KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 9
-     || KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 10
-     || KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 12
-     || KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 13
-     )
-     && 
+     && genomelist[n]->cooldown <= abs(timer - genomelist[n]->time_mined) && 
      (((genomelist[n]->inpx != 0 || genomelist[n]->inpy != 0) && !manual)
      || ((inpst.vx != 0 || inpst.vy != 0) && manual))
     ) || KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 0)
     {
         if(KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat == 0)
         {
-            // t = KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat;
-            //     KvadSetMat(ptr, head->x + dx, head->y + dy,
-            //      KvadGetHexel(ptr, head->x, head->y)->mat);
-            //     KvadSetMat(ptr, head->x, head->y, t);
-            
             head->x += dx;
             head->y += dy;
             
@@ -6498,10 +6544,9 @@ void MeatMoveHead(Kvad_t* ptr, int n, Node_t *head, int dx, int dy, int manual)
         
         else if(meatlist[n]->stored == 0) 
         {
-            
-            if(KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat != 10
-            && KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat != 12
-            && KvadGetHexel(ptr, head->x + dx, head->y + dy)->mat != 13 || 1)
+            genomelist[n]->cooldown = KvadGetHexel(ptr, head->x + dx, head->y + dy)->dns * 10;
+            genomelist[n]->time_mined = timer;
+            if(1)
             {
                 if(1)
                 {
@@ -7071,13 +7116,11 @@ void MeatDraw(Kvad_t* ptr, Node_t* head)
         {
             KvadSetMat(ptr, nodecur->x, nodecur->y, 13, 1);
             KvadGetHexel(ptr, nodecur->x, nodecur->y)->ded = 0;
-            ChunkActivate(nodecur->x, nodecur->y);
         }
         else
         {
             KvadSetMat(ptr, nodecur->x, nodecur->y, 10, 1);
             KvadGetHexel(ptr, nodecur->x, nodecur->y)->ded = 0;
-            ChunkActivate(nodecur->x, nodecur->y);
         }
         
         if(nodecur->next2 != NULL)
@@ -7089,7 +7132,6 @@ void MeatDraw(Kvad_t* ptr, Node_t* head)
     }
     KvadSetMat(ptr, head->x, head->y, 0, 1);
     KvadSetMat(ptr, head->x, head->y, 12, 1);
-    ChunkActivate(head->x, head->y);
     
 }
 
@@ -7378,7 +7420,7 @@ void MeatListUpdate(Kvad_t* ptr)
             MeatMoveTail(ptr, i, manual, genomelist[i]->whichlimb);
             
             
-            if(t == gravtime)
+            if(t == gravtime && (physics == 1 || 0))
             {
                 MeatMove(ptr, i, 
                 GetGravX(ptr, meatlist[i]->x, meatlist[i]->y), 
@@ -7407,14 +7449,19 @@ void MeatListUpdate(Kvad_t* ptr)
             active++;
             if(genomelist[i] != NULL && meatlist[i] != NULL)
             {
-                if(!manual) BrainExecute(ptr, i);
+                if(!manual) 
+                {
+                    for(int k = 0; k < 1; k++)
+                        BrainExecute(ptr, i);
+                }
             }
         }
     }
     
-    if(active == 0)
+    if(worminator && meatlist[0] == NULL)
     {
-        if(startingpopulation) Populate(ptr);
+        KvadSetBlob(ptr, center, center, 0, 0);
+        KvadSetBlob(ptr, center, center, 12, 0);
     }
 }
 
@@ -7430,7 +7477,8 @@ Brain_t* BrainInitialize(int n)
     snprintf(buf, sizeof(buf), "genomes/genome_%d.txt", n);
     
     file_ptr = NULL;
-    file_ptr = fopen(buf, "r");
+    // file_ptr = fopen(buf, "r");
+    file_ptr = fopen("Genome.txt", "r");
     
     if(file_ptr == NULL) printf("file error\n");
     int random, chance = nonmutationchance;
@@ -7518,9 +7566,15 @@ Brain_t* BrainInitialize(int n)
     gen->whichlimb = 0;
     gen->limbs = 0;
     gen->lastx = NULL;
+    gen->lasty = NULL;
     gen->memoryage = 0;
     gen->death = 0;
     gen->airborne = 0;
+    gen->destx = side / 2;
+    gen->desty = side / 2;
+    gen->usageth = 5;
+    gen->cooldown = 0;
+    gen->time_mined = 0;
     
     
     snprintf(buf, sizeof(buf), "genomes/blueprint_%d.txt", n);
@@ -7732,19 +7786,36 @@ void BrainExecute(Kvad_t* ptr, int n)
         if(
             cntleft > cntup &&
             cntleft > cntright &&
-            cntleft > cntdown) shift = 2, KvadGetHexel(ptr, meatlist[n]->x, meatlist[n]->y)->clr = 1;
+            cntleft > cntdown)
+        {
+            shift = 2, KvadGetHexel(ptr, meatlist[n]->x, meatlist[n]->y)->clr = 1;
+            // printf("\033[41m%i\n\033[0m", shift);
+        }
         else if(
             cntup > cntleft &&
             cntup > cntright &&
-            cntup > cntdown) shift = 3, KvadGetHexel(ptr, meatlist[n]->x, meatlist[n]->y)->clr = 2;
+            cntup > cntdown)
+        {
+            shift = 3, KvadGetHexel(ptr, meatlist[n]->x, meatlist[n]->y)->clr = 2;
+            // printf("\033[42m%i\n\033[0m", shift);
+        }
         else if(
             cntright > cntleft &&
             cntright > cntup &&
-            cntright > cntdown) shift = 4, KvadGetHexel(ptr, meatlist[n]->x, meatlist[n]->y)->clr = 3;
+            cntright > cntdown)
+        {
+            shift = 4, KvadGetHexel(ptr, meatlist[n]->x, meatlist[n]->y)->clr = 3;
+            // printf("\033[44m%i\n\033[0m", shift);
+        }
         else if(
             cntdown > cntleft &&
             cntdown > cntright &&
-            cntdown > cntup) shift = 5, KvadGetHexel(ptr, meatlist[n]->x, meatlist[n]->y)->clr = 4;
+            cntdown > cntup)
+        {
+            shift = 5, KvadGetHexel(ptr, meatlist[n]->x, meatlist[n]->y)->clr = 4;
+            // printf("\033[43m%i\n\033[0m", shift);
+        }
+        // else printf("%i\n", shift);
             
         gen->pointer = cycle(gen->pointer, 0, brainsize - 1, shift);
         if(doprint) printf("\t%i\tlook for energy", shift);
@@ -7939,33 +8010,147 @@ void BrainExecute(Kvad_t* ptr, int n)
         gen->pointer = cycle(gen->pointer, 0, brainsize - 1, shift);
         if(doprint) printf("\t%i\tis buried", shift);
     }
+    else if(command == 35)
+    {
+        int rad = 30, cntleft = 0, cntright = 0, cntup = 0, cntdown = 0;
+        shift = 1;
+        
+        int j = gen->destx - meatlist[n]->x;
+        int i = gen->desty - meatlist[n]->y;
+        
+        if(j < 0) cntleft += 1;
+        if(j > 0) cntright += 1;
+        if(i < 0 &&
+            j + i < 0) cntup += 1;
+        if(i > 0 &&
+            j + i > 0) cntdown += 1;
+                    
+        
+        
+        if(
+            cntleft > cntup &&
+            cntleft > cntright &&
+            cntleft > cntdown)
+        {
+            shift = 2;
+        }
+        else if(
+            cntup > cntleft &&
+            cntup > cntright &&
+            cntup > cntdown)
+        {
+            shift = 3;
+        }
+        else if(
+            cntright > cntleft &&
+            cntright > cntup &&
+            cntright > cntdown)
+        {
+            shift = 4;
+        }
+        else if(
+            cntdown > cntleft &&
+            cntdown > cntright &&
+            cntdown > cntup)
+        {
+            shift = 5;
+        }
+        
+        
+        LightPropagate(ptr, meatlist[n]->x, meatlist[n]->y, maxlit);
+        LightSourceActivate(meatlist[n]->x, meatlist[n]->y);
+            
+        gen->pointer = cycle(gen->pointer, 0, brainsize - 1, shift);
+        if(doprint) printf("\t%i\tlook for destination", shift);
+    }
     else
     {
         gen->pointer = cycle(gen->pointer, 0, brainsize - 1, command);
         if(doprint) printf("\t%i", command);
     }
     
-    // gen->usagelist[gen->poi./myprog arg1 arg2nter]++;
+    gen->usagelist[gen->pointer]++;
+    if(gen->usagelist[gen->pointer] >= gen->usageth)
+    {
+        gen->usageth = 4;
+        int distance = hdist(gen->destx, gen->desty, meatlist[n]->x, meatlist[n]->y);
+        int lastdistance = gen->lastx;
+        // printf("%i\n", distance);
+        int excreted = (gen->lastfullness - gen->eaten - gen->drank);
+        gen->happy = lastdistance - distance + excreted;
+        gen->lastx = distance;
+        gen->destx = mod(e1->z, side);
+        gen->desty = mod(e1->n, side);
+        gen->lastfullness = gen->eaten + gen->drank;
+        
+        
+        if(gen->happy <= 1 && distance > 0)
+        {
+            // printf("\033[1;37;41m\nbad :(\033[0m");
+            BrainRewire(ptr, n);
+            UsageZero(gen);
+            // printf("\033[1;37;41m\tmax happiness: %i\033[0m", gen->maxhappiness);
+            gen->maxhappiness = hmax(gen->maxhappiness - 1, 5);
+            gen->pointer = 0;
+        }
+        else
+        {
+            // printf("\033[1;30;42m\ngood :)\033[0m");
+            UsageFlip(gen);
+            ArmorApply(gen);
+            gen->maxhappiness = gen->happy;
+            // printf("\033[1;30;42m\tmax happiness: %i\033[0m", gen->maxhappiness);
+        }
+        
+        int thehappiest = 0;
+        for(int i = 0; i < meatlistsize; i++)
+        {
+            if(1)
+            {
+                thehappiest = 1;
+            }
+        }
+        
+        if(thehappiest)
+        {
+            file_ptr = fopen("Genome.txt", "w");
+        
+            for(int i = 0; i < brainsize; i++)
+            {
+                fprintf(file_ptr, "%i\n",gen->commandlist[i]);
+            }
+            fclose(file_ptr);
+            
+            // KvadSetBlob(ptr, 10 + rand() % 60, 10, 12, 14);
+        }
+        
+        
+        
+        gen->happy = 0;
+        
+        
+    }
+    }
     
     // gen->happy = gen->eaten;
     // gen->energy = hmin(gen->energy + gen->eaten * 5, maxenergy);
     // gen->eaten = 0;
     
-    if(gen->energy >= 2000) gen->reproduce = 1;
+    // if(gen->energy >= 2000) gen->reproduce = 1;
     gen->delete = 1;
-    }
-    if(gen->lifetime <= 0 || gen->energy <= 0)
-    {
-        int distance = abs(gen->lastx - meatlist[n]->x);
-        if(gen->lastx == NULL) distance = 0;
-        int excreted = (gen->lastfullness - gen->eaten - gen->drank);
+    // }
+    // if(gen->lifetime <= 0 || gen->energy <= 0)
+    // {
+    //     int distance = abs(gen->lastx - meatlist[n]->x);
+    //     if(gen->lastx == NULL) distance = 0;
+    //     int excreted = (gen->lastfullness - gen->eaten - gen->drank);
         
-        gen->lastx = meatlist[n]->x;
-        gen->lastfullness = gen->eaten + gen->drank;
+    //     gen->lastx = meatlist[n]->x;
+    //     gen->lastfullness = gen->eaten + gen->drank;
         
-        gen->happy = 0;
-        gen->death = 1;
-    }
+    //     gen->happy = 0;
+    //     gen->death = 1;
+    // }
     
 }
 
@@ -7999,15 +8184,15 @@ void ArmorZero(Brain_t* gen)
 void ArmorApply(Brain_t* gen)
 {
     if(doprintdebug) printf("ArmorApply\n");
-    int maximum = 0;
-    for(int i = 0; i < brainsize; i++)
-    {
-        maximum = hmax(gen->usagelist[i], maximum);
-    }
+    // int maximum = 0;
+    // for(int i = 0; i < brainsize; i++)
+    // {
+    //     maximum = hmax(gen->usagelist[i], maximum);
+    // }
     
     for(int i = 0; i < brainsize; i++)
     {
-        if(gen->usagelist[i] >= maximum - 1)
+        if(gen->usagelist[i] == gen->usageth)
         {
             gen->armorlist[i] = hmin(gen->armorlist[i] + 1, usagearmormax);
         }
@@ -8020,9 +8205,10 @@ void BrainRewire(Kvad_t* ptr, int n)
     int dorewire = 0;
     
     Brain_t* gen = genomelist[n];
-    for(int i = 0; i < brainsize; i++)
+    gen->commandlist[0] = 35;
+    for(int i = 1; i < brainsize; i++)
     {
-        if(gen->usagelist[i] > rand() % (usagethreshold * (gen->happy + 1) * (gen->happy + 1))) dorewire = 1;
+        if(gen->usagelist[i] == gen->usageth) dorewire = 1;
         else dorewire = 0;
         if(dorewire)
         {
@@ -8039,22 +8225,22 @@ void Populate(Kvad_t* ptr)
 {
     int counter = 0;
     int step;
-    int random, nonchance = 20;
+    int random, nonchance = 25;
     
     KvadZero(ptr);
     
-    step = 5;
+    step = 20;
     for(int i = border; i < ptr->height - border; i += step)
     {
         for(int j = border; j < ptr->width - border; j += step)
         {
             
-            srand(time(NULL) + j * i * i);
+            // srand(time(NULL));
             random = rand() % nonchance / (nonchance - 1);
             if(random)
             {
                 // KvadSetBlob(ptr, j, i, 0, 1);
-                KvadSetBlob(ptr, j, i, 9, 3);
+                KvadSetBlob(ptr, j, i, 9, 0);
             }
         }
     }
@@ -8219,6 +8405,7 @@ void ChunkKvadZero()
 
 void ChunkKvadUpdate()
 {
+    int counter = 0;
     for (int i = 0; i < chunkkvadsize; i++)
     {
         for (int j = 0; j < chunkkvadsize; j++)
@@ -8228,6 +8415,7 @@ void ChunkKvadUpdate()
                 
             else if(chunkkvad[j][i] == 3)
             {
+                counter++;
                 int rad = 1;
                 int isthere2 = 0;
                 for(int i1 = - rad; i1 <=  + rad; i1++)
@@ -8261,7 +8449,7 @@ void ChunkKvadUpdate()
                 if(isthere2 == 1)
                     chunkkvad[j][i] = 3;
             }
-            
+            else if(chunkkvad[j][i] == 2) counter++;
             
             if(lightsourcekvad[j][i] == 0)
             {
@@ -8297,7 +8485,7 @@ void ChunkKvadUpdate()
             }
         }
     }
-    
+    // printf("%i\n", counter);
 }
 
 void ChunkKvadPrint()
@@ -8329,7 +8517,7 @@ void LightSourceKvadPrint()
 }
 
 void ChunkActivate(int z, int n)
-{   
+{
     
     int rad = 1;
     for(int i = - rad; i <=  + rad; i++)
@@ -8356,6 +8544,12 @@ void ChunkActivate(int z, int n)
             
     //     }
     // }
+}
+
+void LightSourceActivate(int z, int n)
+{
+    lightsourcekvad[mod(hdiv(z, chunksize), chunkkvadsize)][mod(hdiv(n, chunksize), chunkkvadsize)] = 1;
+    ChunkActivate(z, n);
 }
 
 int GetGravX(Kvad_t *ptr, int z, int n)
@@ -8433,6 +8627,7 @@ void KvadDownload(Kvad_t *ptr, int n)
 
 void KvadUpload(Kvad_t *ptr, int n)
 {
+    ChunkKvadZero();
     char buf[32];
     snprintf(buf, sizeof(buf), "kvads/kvad_%d.txt", n);
     
@@ -8457,21 +8652,58 @@ void KvadUpload(Kvad_t *ptr, int n)
 void KvadGenerate(Kvad_t *ptr, int n)
 {
     KvadZero(ptr);
-    EntityTeleport(e1);
+    
+    
     int step = 5, size;
     int random, nonchance = 10;
     int x, y, ang;
     int agents = 5, length = 1000;
-    int mult = 5;
+    int mult = 3;
     if(radial)
     {
-        for (int m = 0; m < 100 * mult; m++)
+        for (int m = 0; m < 50; m++)
         {
             x = center, y = center, ang = 0;
             for (int i = 0; i < 100 * mult; i++)
             {
                 step = rand() % 1;
                 KvadSetBlob(ptr, x, y, 11, step);
+                x += Yrot[ang] * (step + 1);
+                y += Yrot[mod(ang - 2, 6)] * (step + 1);
+                ang = cycle(ang, 0, 5, rand() % 3 - 1);
+            }
+        }
+        for (int m = 0; m < 50; m++)
+        {
+            x = center, y = center, ang = 0;
+            for (int i = 0; i < 30 * mult; i++)
+            {
+                step = rand() % 1;
+                KvadSetBlob(ptr, x, y, 14, step);
+                x += Yrot[ang] * (step + 1);
+                y += Yrot[mod(ang - 2, 6)] * (step + 1);
+                ang = cycle(ang, 0, 5, rand() % 3 - 1);
+            }
+        }
+        for (int m = 0; m < 20; m++)
+        {
+            x = center, y = center, ang = 0;
+            for (int i = 0; i < 300 * mult; i++)
+            {
+                step = rand() % 1;
+                KvadSetBlob(ptr, x, y, 15, step);
+                x += Yrot[ang] * (step + 1);
+                y += Yrot[mod(ang - 2, 6)] * (step + 1);
+                ang = cycle(ang, 0, 5, rand() % 3 - 1);
+            }
+        }
+        for (int m = 0; m < 5; m++)
+        {
+            x = center, y = center, ang = 0;
+            for (int i = 0; i < 300 * mult; i++)
+            {
+                step = rand() % 1;
+                KvadSetBlob(ptr, x, y, 3, step);
                 x += Yrot[ang] * (step + 1);
                 y += Yrot[mod(ang - 2, 6)] * (step + 1);
                 ang = cycle(ang, 0, 5, rand() % 3 - 1);
@@ -8490,4 +8722,28 @@ void KvadGenerate(Kvad_t *ptr, int n)
         }
         
     }
+    
+    EntitySpawn(ptr, e1);
+}
+
+void EntitySpawn(Kvad_t* ptr, Entity_t* p_e)
+{
+    p_e->health = 100;
+    p_e->oxygen = 100;
+    int z = side / 2, n = side / 2;
+    
+    for(int i = 0; i < ptr->height; i++)
+    {
+        for(int j = 0; j < ptr->width; j++)
+        {
+            if(KvadGetHexel(ptr, j, i)->mat == 15)
+            {
+                z = j, n = i;
+                j = ptr->width;
+                i = ptr->height;
+            }
+        }
+    }
+    
+    EntityTeleport(p_e, z, n);
 }

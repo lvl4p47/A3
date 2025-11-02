@@ -3,16 +3,18 @@
 
 #include "entity.h"
 
-extern const int mat_amount;
+// extern const int mat_amount;
 
 extern int **st8_dns_clr;
 
 enum chunk
 {
-    chunksize = 8,
+    chunksize = 16,
     chunkkvadsize = side / chunksize
 };
 
+extern int maxlit;
+extern int timer;
 
 
 enum size
@@ -22,6 +24,10 @@ enum size
     MEDIUM = 256,
     LARGE = 512,
     HUGE = 1024
+};
+enum materials
+{
+    mat_amount = 16
 };
 
 typedef struct
@@ -49,7 +55,7 @@ typedef struct
 
 typedef struct
 {
-    int mat, tmp, fld, fld2, val1, val2, dx, dy, st8, dns, clr, stress, v1t, v2t, pwr, flow[6], ded, nrj, org, lit;
+    int mat, tmp, fld, fld2, val1, val2, dx, dy, st8, dns, clr, opaque, stress, v1t, v2t, pwr, flow[6], ded, nrj, org, lit;
     
 } Cell_t;
 
@@ -77,10 +83,13 @@ typedef struct
     int eaten, drank;
     int inpx, inpy, delete, pull, push, retract, add, deltax, deltay, mathead, mattail, reproduce;
     int pointer;
-    int lastx, lastfullness, lifetime, energy, organics, lenght;
+    int lastx, lasty, lastfullness, lifetime, energy, organics, lenght;
     int happy, maxhappiness, memoryage;
     int whichlimb, limbs;
     int death, airborne;
+    int destx, desty;
+    int usageth;
+    int cooldown, time_mined;
 } Brain_t;
 
 typedef struct
@@ -130,6 +139,10 @@ void AudioCount(Kvad_t* ptr, int b_pause);
 void AudioUpdate(Kvad_t* ptr, int b_pause);
 
 void PhysicsUpdate(Kvad_t* ptr);
+
+void LightingUpdate(Kvad_t* ptr);
+
+void LightPropagate(Kvad_t* ptr, int z, int n, int lit);
 
 void PhysicsUpdate2(Kvad_t* ptr);
 
@@ -261,6 +274,8 @@ void LightSourceKvadPrint();
 
 void ChunkActivate(int z, int n);
 
+void LightSourceActivate(int z, int n);
+
 int GetGravX(Kvad_t *ptr, int z, int n);
 
 int GetGravY(Kvad_t *ptr, int z, int n);
@@ -270,5 +285,7 @@ void KvadDownload(Kvad_t *ptr, int n);
 void KvadUpload(Kvad_t *ptr, int n);
 
 void KvadGenerate(Kvad_t *ptr, int n);
+
+void EntitySpawn(Kvad_t* ptr, Entity_t* p_e);
 
 #endif
