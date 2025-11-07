@@ -14,7 +14,7 @@ const int maybe_color = 6;
 const int interact_color = 4;
 const int frame_color = 3;
 
-const int maxzoom = 14;
+const int maxzoom = 7;
 const int minzoom = -scale;
 
 int inventory[mat_amount];
@@ -97,7 +97,7 @@ void InterfaceInitialize()
     
     HUD.x = 1;
     HUD.y = 42;
-    HUD.w = 16;
+    HUD.w = 17;
     HUD.h = 2;
     
     s_rules_editor = L"  Порядок установления значений:\n1) \"ИЗ\";\n2) \"В\";\n3) \"УСЛ\";\n4) Остальное.\n\n  ФЛАГ:\n\"--\" игнорировать данный набор условий;\n\"+0\" необходимо >= зеленых соседей и < красных;\n\"+1\" необходимо точное (не)совпадение количества соседей.\n\n  Для перехода клетки из начального состояния в конечное необходимо выполнение хотя бы одного из условий в списке.";
@@ -112,7 +112,7 @@ void InterfaceInitialize()
     info_box.s = L"";
     info_box.shift = 0;
     
-    t_f = SDL_GetPerformanceFrequency() / 30;
+    t_f = SDL_GetPerformanceFrequency() / 60;
     t_s = SDL_GetPerformanceFrequency() / 25;
     
     ButtonListInitialize();
@@ -146,6 +146,9 @@ void InterfaceInitialize()
     {
         inventory[i] = 0;
     }
+    inventory[9] = 10;
+    inventory[10] = 10;
+    EscapeInitialize(b_escape);
     
 }
 
@@ -176,8 +179,6 @@ void InterfaceUpdate(Kvad_t* ptr)
     InfoBoxUpdate();
     SLListUpdate();
     
-    if(inpst.escape && b_gamemode == 0) b_escape = 1 - b_escape;
-    
     if(b_download) 
     {
         KvadDownload(ptr, savefile);
@@ -193,7 +194,12 @@ void InterfaceUpdate(Kvad_t* ptr)
         KvadGenerate(ptr, savefile);
         b_generate = 0;
     }
-    EscapeInitialize(b_escape);
+    
+    if(inpst.escape && b_gamemode == 0) 
+    {
+        b_escape = 1 - b_escape;
+        EscapeInitialize(b_escape);
+    }
 }
 
 void EscapeInitialize(int n)
@@ -219,6 +225,8 @@ void EscapeInitialize(int n)
         sllist[0]->rectangle.h = 16;
         
         b_entity = 1;
+        b_pause  = 0;
+        b_ui     = 0;
         
         cursor.lrad = 0;
         cursor.rrad = 0;
@@ -920,12 +928,13 @@ void ScreenInput(Kvad_t* ptr, Display_t* d)
         MouseToHex(d, &hexx, &hexy);
         int doplace;
         int b_distance = hdist(hexx, hexy, e1->z, e1->n) <= 3 ? 1 : 0;
+        int b_dead = KvadGetHexel(ptr, hexx, hexy)->ded;
         switch (b_escape)
         {
         case 0:
             if(inpst.mouse.rmc)
             {
-                if(b_distance && 
+                if(b_distance && b_dead &&
                 (inventory[cursor.rm] > 0 || cursor.rm == 0) && 
                 cooldown <= abs(timer - time_mined) && 
                 KvadGetHexel(ptr, hexx, hexy)->mat != cursor.rm)
@@ -937,14 +946,17 @@ void ScreenInput(Kvad_t* ptr, Display_t* d)
                         inventory[KvadGetHexel(ptr, hexx, hexy)->mat]++;
                         doplace = 1;
                     }
-                    else if(KvadGetHexel(ptr, hexx, hexy)->mat == 0)
+                    else
                     {
-                        cooldown = st8_dns_clr[cursor.rm][1] * 10;
+                        cooldown = (st8_dns_clr[cursor.rm][1] + KvadGetHexel(ptr, hexx, hexy)->dns) * 10;
                         inventory[cursor.rm]--;
+                        if(KvadGetHexel(ptr, hexx, hexy)->mat != 0)
+                            inventory[KvadGetHexel(ptr, hexx, hexy)->mat]++;
                         doplace = 1;
                     }
                     if(doplace == 1)
                     {
+                        KvadSetBlob(ptr, hexx, hexy, 0, cursor.rrad);
                         KvadSetBlob(ptr, hexx, hexy, cursor.rm, cursor.rrad);
                         time_mined = timer;
                     }
@@ -954,7 +966,7 @@ void ScreenInput(Kvad_t* ptr, Display_t* d)
             }
             if(inpst.mouse.lmc)
             {
-                if(b_distance && 
+                if(b_distance && b_dead &&
                 (inventory[cursor.lm] > 0 || cursor.lm == 0) && 
                 cooldown <= abs(timer - time_mined) && 
                 KvadGetHexel(ptr, hexx, hexy)->mat != cursor.lm)
@@ -966,14 +978,17 @@ void ScreenInput(Kvad_t* ptr, Display_t* d)
                         inventory[KvadGetHexel(ptr, hexx, hexy)->mat]++;
                         doplace = 1;
                     }
-                    else if(KvadGetHexel(ptr, hexx, hexy)->mat == 0)
+                    else
                     {
-                        cooldown = st8_dns_clr[cursor.lm][1] * 10;
+                        cooldown = (st8_dns_clr[cursor.lm][1] + KvadGetHexel(ptr, hexx, hexy)->dns) * 10;
                         inventory[cursor.lm]--;
+                        if(KvadGetHexel(ptr, hexx, hexy)->mat != 0)
+                            inventory[KvadGetHexel(ptr, hexx, hexy)->mat]++;
                         doplace = 1;
                     }
                     if(doplace)
                     {
+                        KvadSetBlob(ptr, hexx, hexy, 0, cursor.lrad);
                         KvadSetBlob(ptr, hexx, hexy, cursor.lm, cursor.lrad);
                         time_mined = timer;
                     }
@@ -1667,21 +1682,32 @@ void DrawCursor(Font_t* f)
     x = inpst.mouse.x / pixelsize;
     y = inpst.mouse.y / pixelsize;
     
-    point(x, y, 255, 0, 255);
+    cross(x, y, 255, 0, 255);
     
-    int number = 0;
+    int number = 99;
     if(cooldown != 0)
         number = hmin(abs(timer - time_mined) * 100 / cooldown, 99);
-    
-    FontNumberDraw(f, x / 8 + 1, y / 8 + 1, 2, 1, number, important_color, 0, 1); 
+    if(number != 99)
+        FontNumberDraw(f, x / 8 + 1, y / 8 + 1, 2, 1, number, important_color, 0, 1); 
 }
 
 void HUDDraw(Font_t* f)
 {
-    FontNumberDraw(f, HUD.x, HUD.y, 3, 1, e1->health, important_color, 0, 1);
-    BarDraw(f, HUD.x + 3, HUD.y, HUD.w, 1, e1->health, no_color, 'v');
-    FontNumberDraw(f, HUD.x, HUD.y + 1, 3, 1, e1->oxygen, important_color, 0, 1);
-    BarDraw(f, HUD.x + 3, HUD.y + 1, HUD.w, 1, e1->oxygen, frame_color, 'o');
+    switch (b_escape)
+    {
+    case 0:
+        FontNumberDraw(f, HUD.x, HUD.y, 3, 1, e1->health, important_color, 0, 1);
+        BarDraw(f, HUD.x + 3, HUD.y, HUD.w - 3, 1, e1->health, no_color, 'v');
+        FontNumberDraw(f, HUD.x, HUD.y + 1, 3, 1, e1->oxygen, important_color, 0, 1);
+        BarDraw(f, HUD.x + 3, HUD.y + 1, HUD.w - 3, 1, e1->oxygen, inform_color, 'o');
+        break;
+    case 1:
+        break;
+    
+    default:
+        break;
+    }
+    
 }
 
 void BarDraw(Font_t* f, int x, int y, int w, int h, int perc, int color, wchar_t fill)

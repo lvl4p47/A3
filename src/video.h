@@ -9,6 +9,8 @@ extern int minimap_speed;
 
 void point(int x, int y, int r, int g, int b);
 
+void cross(int x, int y, int r, int g, int b);
+
 void VideoInitialize();
 
 void VideoTerminate();

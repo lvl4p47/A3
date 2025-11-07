@@ -34,6 +34,14 @@ void point(int x, int y, int r, int g, int b)
     SDL_RenderDrawPoint(m_renderer, x, y);
 }
 
+void cross(int x, int y, int r, int g, int b)
+{
+    int size = 8;
+    SDL_SetRenderDrawColor(m_renderer, r, g, b, 100);
+    SDL_RenderDrawLineF(m_renderer, x - size, y, x + size, y);
+    SDL_RenderDrawLineF(m_renderer, x, y - size, x, y + size);
+}
+
 void VideoInitialize()
 {
     s1 = NULL, s2 = NULL;

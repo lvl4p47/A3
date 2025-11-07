@@ -55,7 +55,7 @@ typedef struct
 
 typedef struct
 {
-    int mat, tmp, fld, fld2, val1, val2, dx, dy, st8, dns, clr, opaque, stress, v1t, v2t, pwr, flow[6], ded, nrj, org, lit;
+    int mat, tmp, fld, fld2, fld3, fld4, val1, val2, dx, dy, st8, dns, clr, opaque, stress, v1t, v2t, pwr, flow[6], ded, nrj, org, lit;
     
 } Cell_t;
 
@@ -90,6 +90,7 @@ typedef struct
     int destx, desty;
     int usageth;
     int cooldown, time_mined;
+    int inventory[mat_amount];
 } Brain_t;
 
 typedef struct
@@ -140,9 +141,21 @@ void AudioUpdate(Kvad_t* ptr, int b_pause);
 
 void PhysicsUpdate(Kvad_t* ptr);
 
+void FieldUpdate(Kvad_t* ptr);
+
 void LightingUpdate(Kvad_t* ptr);
 
 void LightPropagate(Kvad_t* ptr, int z, int n, int lit);
+
+void Push(Kvad_t* ptr, int z, int n, int strenght, int dx, int dy);
+
+void PushPropagate(Kvad_t* ptr, int z, int n, int strenght, int dx, int dy);
+
+void PushClear(Kvad_t* ptr, int z, int n, int strenght, int dx, int dy);
+
+int PushCheck(Kvad_t* ptr, int z, int n, int strenght, int dx, int dy, int mode);
+
+int PushCheckClear(Kvad_t* ptr, int z, int n, int strenght, int dx, int dy);
 
 void PhysicsUpdate2(Kvad_t* ptr);
 
@@ -243,6 +256,8 @@ void BrainTerminate(int n);
 void BrainExecute(Kvad_t* ptr, int n);
 
 void UsageZero(Brain_t* gen);
+
+void UsageReset(Brain_t* gen);
 
 void UsageFlip(Brain_t* gen);
 
